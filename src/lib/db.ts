@@ -1,12 +1,26 @@
 import { createClient } from '@libsql/client'
 
-export const db = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
+let _db: ReturnType<typeof createClient> | null = null
+
+export function getDb() {
+  if (!_db) {
+    const url = process.env.TURSO_DATABASE_URL
+    const authToken = process.env.TURSO_AUTH_TOKEN
+    if (!url) throw new Error('TURSO_DATABASE_URL is not set')
+    _db = createClient({ url, authToken })
+  }
+  return _db
+}
+
+export const db = new Proxy({} as ReturnType<typeof createClient>, {
+  get(_, prop) {
+    return getDb()[prop as keyof ReturnType<typeof createClient>]
+  }
 })
 
 export async function initDB() {
-  await db.batch([
+  const client = getDb()
+  await client.batch([
     `CREATE TABLE IF NOT EXISTS clients (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL, email TEXT, phone TEXT, cellphone TEXT NOT NULL,
