@@ -1,4 +1,4 @@
-import { createClient } from '@libsql/client'
+import { createClient, InStatement } from '@libsql/client'
 
 let _db: ReturnType<typeof createClient> | null = null
 
@@ -13,8 +13,8 @@ export function getDb() {
 }
 
 export const db = {
-  execute: (sql: Parameters<ReturnType<typeof createClient>['execute']>[0]) => getDb().execute(sql),
-  batch: (stmts: Parameters<ReturnType<typeof createClient>['batch']>[0], mode?: Parameters<ReturnType<typeof createClient>['batch']>[1]) => getDb().batch(stmts, mode),
+  execute: (stmt: InStatement) => getDb().execute(stmt),
+  batch: (stmts: InStatement[], mode?: 'write' | 'read' | 'deferred') => getDb().batch(stmts, mode),
 }
 
 export async function initDB() {
