@@ -137,6 +137,18 @@ export default function Dashboard() {
   const openEditPayment = (p: Payment) => { setEditPayment(p); setPayForm({ client_id:p.client_id, amount:p.amount, period:p.period, method:p.method, status:p.status, notes:p.notes }); setShowPayModal(true) }
   const getPlanColor = (n: string) => PLANS.find(p => p.name===n)?.color ?? '#64748b'
 
+  const [search, setSearch] = useState('')
+  const [filterPlan, setFilterPlan] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+
+  const filteredClients = clients.filter(c => {
+    const q = search.toLowerCase()
+    const matchSearch = !q || c.name.toLowerCase().includes(q) || c.cellphone.includes(q) || c.reference.toLowerCase().includes(q) || c.neighborhood.toLowerCase().includes(q)
+    const matchPlan = !filterPlan || c.plan === filterPlan
+    const matchStatus = !filterStatus || c.status === filterStatus
+    return matchSearch && matchPlan && matchStatus
+  })
+
   const inputCls = "w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
   const inputStyle = { backgroundColor:'#111827', border:'1px solid #1e3a5f', color:'white' }
 
@@ -329,38 +341,81 @@ export default function Dashboard() {
 
         {/* ── CLIENTES ── */}
         {tab==='clients' && (
-          <div style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f'}} className="rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:'1px solid #1e3a5f'}}>
-              <h2 className="font-semibold">Gestión de Clientes <span style={{color:'#64748b'}}>({clients.length})</span></h2>
-              <button onClick={()=>{setEditClient(null);setForm(EMPTY_CLIENT);setShowModal(true)}} style={{backgroundColor:'#1d4ed8'}} className="flex items-center gap-2 hover:bg-blue-700 text-sm px-4 py-2 rounded-lg transition-colors font-medium">
-                <Plus className="w-4 h-4"/> Nuevo Cliente
-              </button>
+          <div className="space-y-3">
+            {/* Barra de búsqueda y filtros */}
+            <div style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f'}} className="rounded-xl p-4">
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre, celular, referencia, barrio..."
+                    value={search}
+                    onChange={e=>setSearch(e.target.value)}
+                    style={{backgroundColor:'#111827',border:'1px solid #1e3a5f',color:'white'}}
+                    className="w-full rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors pl-9"
+                  />
+                  <span className="absolute left-3 top-2.5 text-slate-500 text-sm">🔍</span>
+                </div>
+                <select value={filterPlan} onChange={e=>setFilterPlan(e.target.value)}
+                  style={{backgroundColor:'#111827',border:'1px solid #1e3a5f',color:'white'}}
+                  className="rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors">
+                  <option value="">Todos los planes</option>
+                  {PLANS.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}
+                </select>
+                <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}
+                  style={{backgroundColor:'#111827',border:'1px solid #1e3a5f',color:'white'}}
+                  className="rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors">
+                  <option value="">Todos los estados</option>
+                  <option value="active">Activos</option>
+                  <option value="suspended">Suspendidos</option>
+                </select>
+                {(search||filterPlan||filterStatus) && (
+                  <button onClick={()=>{setSearch('');setFilterPlan('');setFilterStatus('')}}
+                    style={{border:'1px solid #1e3a5f',color:'#94a3b8'}}
+                    className="px-3 py-2 rounded-lg text-sm hover:text-white transition-colors whitespace-nowrap">
+                    ✕ Limpiar
+                  </button>
+                )}
+              </div>
+              {(search||filterPlan||filterStatus) && (
+                <p className="text-xs mt-2" style={{color:'#64748b'}}>
+                  Mostrando <span className="text-blue-400 font-medium">{filteredClients.length}</span> de <span className="text-slate-300">{clients.length}</span> clientes
+                </p>
+              )}
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead><tr style={{borderBottom:'1px solid #1e3a5f',backgroundColor:'#111827'}}>
-                  {['Cliente','Celular','Plan','Valor','F. Pago','Referencia','Estado','Acciones'].map(h=><th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider" style={{color:'#64748b'}}>{h}</th>)}
-                </tr></thead>
-                <tbody>
-                  {clients.map(c=>(
-                    <tr key={c.id} style={{borderBottom:'1px solid #1e3a5f'}} className="hover:bg-blue-900/10 transition-colors">
-                      <td className="px-5 py-3 font-medium">{c.name}</td>
-                      <td className="px-5 py-3" style={{color:'#94a3b8'}}>{c.cellphone}</td>
-                      <td className="px-5 py-3"><span className="px-2 py-0.5 rounded text-xs text-white font-medium" style={{backgroundColor:getPlanColor(c.plan)}}>{c.plan}</span></td>
-                      <td className="px-5 py-3 text-green-400 font-semibold">{formatCurrency(c.plan_value)}</td>
-                      <td className="px-5 py-3 text-xs" style={{color:'#94a3b8'}}>{c.payment_date}</td>
-                      <td className="px-5 py-3 text-xs" style={{color:'#64748b'}}>{c.reference}</td>
-                      <td className="px-5 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${c.status==='active'?'bg-green-900/40 text-green-400':'bg-red-900/40 text-red-400'}`}>{c.status==='active'?'Activo':'Suspendido'}</span></td>
-                      <td className="px-5 py-3"><div className="flex gap-2">
-                        <button onClick={()=>openNewPayment(c.id)} title="Registrar pago" className="text-green-400 hover:text-green-300 transition-colors"><CreditCard className="w-4 h-4"/></button>
-                        <button onClick={()=>openEditClient(c)} className="text-blue-400 hover:text-blue-300 transition-colors"><Pencil className="w-4 h-4"/></button>
-                        <button onClick={()=>handleDeleteClient(c.id)} className="text-red-400 hover:text-red-300 transition-colors"><Trash2 className="w-4 h-4"/></button>
-                      </div></td>
-                    </tr>
-                  ))}
-                  {!clients.length&&<tr><td colSpan={8} className="py-12 text-center" style={{color:'#64748b'}}>No hay clientes. ¡Agrega el primero!</td></tr>}
-                </tbody>
-              </table>
+            <div style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f'}} className="rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:'1px solid #1e3a5f'}}>
+                <h2 className="font-semibold">Gestión de Clientes <span style={{color:'#64748b'}}>({filteredClients.length})</span></h2>
+                <button onClick={()=>{setEditClient(null);setForm(EMPTY_CLIENT);setShowModal(true)}} style={{backgroundColor:'#1d4ed8'}} className="flex items-center gap-2 hover:bg-blue-700 text-sm px-4 py-2 rounded-lg transition-colors font-medium">
+                  <Plus className="w-4 h-4"/> Nuevo Cliente
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr style={{borderBottom:'1px solid #1e3a5f',backgroundColor:'#111827'}}>
+                    {['Cliente','Celular','Plan','Valor','F. Pago','Referencia','Estado','Acciones'].map(h=><th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider" style={{color:'#64748b'}}>{h}</th>)}
+                  </tr></thead>
+                  <tbody>
+                    {filteredClients.map(c=>(
+                      <tr key={c.id} style={{borderBottom:'1px solid #1e3a5f'}} className="hover:bg-blue-900/10 transition-colors">
+                        <td className="px-5 py-3 font-medium">{c.name}</td>
+                        <td className="px-5 py-3" style={{color:'#94a3b8'}}>{c.cellphone}</td>
+                        <td className="px-5 py-3"><span className="px-2 py-0.5 rounded text-xs text-white font-medium" style={{backgroundColor:getPlanColor(c.plan)}}>{c.plan}</span></td>
+                        <td className="px-5 py-3 text-green-400 font-semibold">{formatCurrency(c.plan_value)}</td>
+                        <td className="px-5 py-3 text-xs" style={{color:'#94a3b8'}}>{c.payment_date}</td>
+                        <td className="px-5 py-3 text-xs" style={{color:'#64748b'}}>{c.reference}</td>
+                        <td className="px-5 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${c.status==='active'?'bg-green-900/40 text-green-400':'bg-red-900/40 text-red-400'}`}>{c.status==='active'?'Activo':'Suspendido'}</span></td>
+                        <td className="px-5 py-3"><div className="flex gap-2">
+                          <button onClick={()=>openNewPayment(c.id)} title="Registrar pago" className="text-green-400 hover:text-green-300 transition-colors"><CreditCard className="w-4 h-4"/></button>
+                          <button onClick={()=>openEditClient(c)} className="text-blue-400 hover:text-blue-300 transition-colors"><Pencil className="w-4 h-4"/></button>
+                          <button onClick={()=>handleDeleteClient(c.id)} className="text-red-400 hover:text-red-300 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                        </div></td>
+                      </tr>
+                    ))}
+                    {!filteredClients.length&&<tr><td colSpan={8} className="py-12 text-center" style={{color:'#64748b'}}>{clients.length?'Sin resultados para esa búsqueda':'No hay clientes. ¡Agrega el primero!'}</td></tr>}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
