@@ -12,11 +12,10 @@ export function getDb() {
   return _db
 }
 
-export const db = new Proxy({} as ReturnType<typeof createClient>, {
-  get(_, prop) {
-    return getDb()[prop as keyof ReturnType<typeof createClient>]
-  }
-})
+export const db = {
+  execute: (sql: Parameters<ReturnType<typeof createClient>['execute']>[0]) => getDb().execute(sql),
+  batch: (stmts: Parameters<ReturnType<typeof createClient>['batch']>[0], mode?: Parameters<ReturnType<typeof createClient>['batch']>[1]) => getDb().batch(stmts, mode),
+}
 
 export async function initDB() {
   const client = getDb()
