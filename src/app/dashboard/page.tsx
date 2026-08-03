@@ -4,6 +4,7 @@ import { PLANS, TV_PLAN, formatCurrency } from '@/lib/plans'
 import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv, CreditCard, CheckCircle, Clock, BarChart2, AlertCircle } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import Image from 'next/image'
+import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 
 type Client = {
@@ -187,10 +188,15 @@ export default function Dashboard() {
             <p className="text-xs" style={{color:'#64748b'}}>Sistema de Gestión</p>
           </div>
         </div>
-        <div style={{backgroundColor:'#0f172a',border:'1px solid #1e3a5f'}} className="flex items-center gap-4 px-4 py-2 rounded-lg">
-          <StatusDot status={dbStatus} label="Turso DB"/>
-          <div style={{width:1,height:14,backgroundColor:'#1e3a5f'}}/>
-          <StatusDot status={sseStatus} label="SSE Live"/>
+        <div className="flex items-center gap-3">
+          <Link href="/import" style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f'}} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white transition-colors">
+            <span>📥</span> Importar
+          </Link>
+          <div style={{backgroundColor:'#0f172a',border:'1px solid #1e3a5f'}} className="flex items-center gap-4 px-4 py-2 rounded-lg">
+            <StatusDot status={dbStatus} label="Turso DB"/>
+            <div style={{width:1,height:14,backgroundColor:'#1e3a5f'}}/>
+            <StatusDot status={sseStatus} label="SSE Live"/>
+          </div>
         </div>
       </header>
 
