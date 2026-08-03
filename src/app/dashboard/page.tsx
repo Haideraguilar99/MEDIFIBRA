@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { PLANS, TV_PLAN, formatCurrency } from '@/lib/plans'
-import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv } from 'lucide-react'
+import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv, CreditCard, CheckCircle, Clock } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import Image from 'next/image'
 
@@ -11,18 +11,32 @@ type Client = {
   consumption_date: string; payment_date: string; plan: string; plan_value: number
   reference: string; status: string; notes: string; created_at: string
 }
+type Payment = {
+  id: number; client_id: number; amount: number; period: string
+  method: string; status: string; notes: string; created_at: string
+  client_name: string; plan: string; cellphone: string
+}
 type Stats = { total: number; active: number; suspended: number; monthly_income: number }
-const EMPTY = { name:'',email:'',phone:'',cellphone:'',address:'',city:'',neighborhood:'',commune:'',consumption_date:'',payment_date:'',plan:'',plan_value:0,reference:'',status:'active',notes:'' }
+type PaymentStats = { total: number; total_amount: number; paid_amount: number; pending_amount: number }
+
+const EMPTY_CLIENT = { name:'',email:'',phone:'',cellphone:'',address:'',city:'',neighborhood:'',commune:'',consumption_date:'',payment_date:'',plan:'',plan_value:0,reference:'',status:'active',notes:'' }
+const EMPTY_PAYMENT = { client_id:0, amount:0, period:'', method:'efectivo', status:'paid', notes:'' }
+const METHODS = ['efectivo','transferencia','nequi','daviplata','bancolombia']
 
 export default function Dashboard() {
   const [clients, setClients] = useState<Client[]>([])
+  const [payments, setPayments] = useState<Payment[]>([])
   const [stats, setStats] = useState<Stats>({ total:0, active:0, suspended:0, monthly_income:0 })
+  const [payStats, setPayStats] = useState<PaymentStats>({ total:0, total_amount:0, paid_amount:0, pending_amount:0 })
   const [showModal, setShowModal] = useState(false)
+  const [showPayModal, setShowPayModal] = useState(false)
   const [editClient, setEditClient] = useState<Client | null>(null)
-  const [form, setForm] = useState(EMPTY)
+  const [editPayment, setEditPayment] = useState<Payment | null>(null)
+  const [form, setForm] = useState(EMPTY_CLIENT)
+  const [payForm, setPayForm] = useState(EMPTY_PAYMENT)
   const [sseStatus, setSseStatus] = useState<'connecting'|'connected'|'error'>('connecting')
   const [dbStatus, setDbStatus] = useState<'checking'|'ok'|'error'>('checking')
-  const [tab, setTab] = useState<'dashboard'|'plans'|'clients'>('dashboard')
+  const [tab, setTab] = useState<'dashboard'|'plans'|'clients'|'payments'>('dashboard')
 
   const fetchClients = useCallback(async () => {
     try {
@@ -35,48 +49,73 @@ export default function Dashboard() {
     } catch { setDbStatus('error') }
   }, [])
 
+  const fetchPayments = useCallback(async () => {
+    try {
+      const res = await fetch('/api/payments')
+      if (!res.ok) return
+      const data = await res.json()
+      setPayments(data.payments ?? [])
+      setPayStats(data.stats ?? { total:0, total_amount:0, paid_amount:0, pending_amount:0 })
+    } catch {}
+  }, [])
+
   useEffect(() => {
     fetch('/api/init')
       .then(r => { if (r.ok) setDbStatus('ok'); else setDbStatus('error') })
       .catch(() => setDbStatus('error'))
-      .finally(() => fetchClients())
-  }, [fetchClients])
+      .finally(() => { fetchClients(); fetchPayments() })
+  }, [fetchClients, fetchPayments])
 
   useEffect(() => {
     setSseStatus('connecting')
     const es = new EventSource('/api/sse')
     es.addEventListener('connected', () => setSseStatus('connected'))
-    es.addEventListener('new-client', e => {
-      const c = JSON.parse(e.data)
-      setClients(prev => [c, ...prev])
-      toast.success('✅ Nuevo cliente: ' + c.name)
-      fetchClients()
-    })
-    es.addEventListener('update-client', e => {
-      const u = JSON.parse(e.data)
-      setClients(prev => prev.map(c => c.id === u.id ? u : c))
-      toast.success('📝 Actualizado: ' + u.name)
-    })
+    es.addEventListener('new-client', e => { const c = JSON.parse(e.data); setClients(p => [c, ...p]); toast.success('✅ Nuevo cliente: ' + c.name); fetchClients() })
+    es.addEventListener('update-client', e => { const u = JSON.parse(e.data); setClients(p => p.map(c => c.id === u.id ? u : c)); toast.success('📝 Actualizado: ' + u.name) })
     es.addEventListener('delete-client', () => { fetchClients(); toast.success('🗑️ Cliente eliminado') })
+    es.addEventListener('new-payment', e => { const p = JSON.parse(e.data); setPayments(prev => [p, ...prev]); toast.success('💰 Pago registrado: ' + p.client_name); fetchPayments() })
+    es.addEventListener('update-payment', e => { const u = JSON.parse(e.data); setPayments(p => p.map(x => x.id === u.id ? u : x)) })
+    es.addEventListener('delete-payment', () => { fetchPayments(); toast.success('🗑️ Pago eliminado') })
     es.onerror = () => setSseStatus('error')
     return () => es.close()
-  }, [fetchClients])
+  }, [fetchClients, fetchPayments])
 
-  const handleSave = async () => {
+  const handleSaveClient = async () => {
     if (!form.name || !form.cellphone || !form.plan) { toast.error('Completa los campos obligatorios'); return }
     const url = editClient ? `/api/clients/${editClient.id}` : '/api/clients'
     const res = await fetch(url, { method: editClient ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-    if (res.ok) { setShowModal(false); setEditClient(null); setForm(EMPTY); fetchClients() }
-    else toast.error('Error al guardar')
+    if (res.ok) { setShowModal(false); setEditClient(null); setForm(EMPTY_CLIENT); fetchClients() }
+    else toast.error('Error al guardar cliente')
   }
 
-  const handleDelete = async (id: number) => {
+  const handleSavePayment = async () => {
+    if (!payForm.client_id || !payForm.amount || !payForm.period) { toast.error('Cliente, monto y período son obligatorios'); return }
+    const url = editPayment ? `/api/payments/${editPayment.id}` : '/api/payments'
+    const res = await fetch(url, { method: editPayment ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payForm) })
+    if (res.ok) { setShowPayModal(false); setEditPayment(null); setPayForm(EMPTY_PAYMENT); fetchPayments() }
+    else toast.error('Error al guardar pago')
+  }
+
+  const handleDeleteClient = async (id: number) => {
     if (!confirm('¿Eliminar este cliente?')) return
     await fetch(`/api/clients/${id}`, { method: 'DELETE' })
     fetchClients()
   }
 
-  const openEdit = (c: Client) => { setEditClient(c); setForm({...c}); setShowModal(true) }
+  const handleDeletePayment = async (id: number) => {
+    if (!confirm('¿Eliminar este pago?')) return
+    await fetch(`/api/payments/${id}`, { method: 'DELETE' })
+    fetchPayments()
+  }
+
+  const openEditClient = (c: Client) => { setEditClient(c); setForm({...c}); setShowModal(true) }
+  const openNewPayment = (clientId?: number) => {
+    setEditPayment(null)
+    const client = clientId ? clients.find(c => c.id === clientId) : null
+    setPayForm({ ...EMPTY_PAYMENT, client_id: clientId ?? 0, amount: client?.plan_value ?? 0, period: new Date().toISOString().slice(0,7) })
+    setShowPayModal(true)
+  }
+  const openEditPayment = (p: Payment) => { setEditPayment(p); setPayForm({ client_id:p.client_id, amount:p.amount, period:p.period, method:p.method, status:p.status, notes:p.notes }); setShowPayModal(true) }
   const getPlanColor = (n: string) => PLANS.find(p => p.name === n)?.color ?? '#64748b'
 
   const StatusDot = ({ status, label }: { status: string, label: string }) => {
@@ -93,9 +132,14 @@ export default function Dashboard() {
     )
   }
 
+  const inputCls = "w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+  const inputStyle = { backgroundColor:'#111827', border:'1px solid #1e3a5f', color:'white' }
+
   return (
     <div className="min-h-screen text-white" style={{backgroundColor:'#1a1f2e'}}>
       <Toaster position="top-right" />
+
+      {/* Header */}
       <header style={{backgroundColor:'#111827',borderBottom:'1px solid #1e3a5f'}} className="px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative w-12 h-12 flex-shrink-0">
@@ -112,14 +156,19 @@ export default function Dashboard() {
           <StatusDot status={sseStatus} label="SSE Live" />
         </div>
       </header>
+
+      {/* Nav */}
       <nav style={{backgroundColor:'#111827',borderBottom:'1px solid #1e3a5f'}} className="px-6 flex gap-1">
-        {(['dashboard','plans','clients'] as const).map(t => (
+        {(['dashboard','plans','clients','payments'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${tab===t ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-white'}`}>
-            {t==='dashboard'?'Dashboard':t==='plans'?'Planes':'Clientes'}
+            {t==='dashboard'?'Dashboard':t==='plans'?'Planes':t==='clients'?'Clientes':'Pagos'}
           </button>
         ))}
       </nav>
+
       <main className="p-6 max-w-7xl mx-auto space-y-5">
+
+        {/* TAB: DASHBOARD */}
         {tab==='dashboard' && (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -128,6 +177,18 @@ export default function Dashboard() {
                 {label:'Activos',value:stats.active,icon:<UserCheck className="w-5 h-5"/>,accent:'#22c55e'},
                 {label:'Suspendidos',value:stats.suspended,icon:<UserX className="w-5 h-5"/>,accent:'#ef4444'},
                 {label:'Ingresos / Mes',value:formatCurrency(stats.monthly_income??0),icon:<DollarSign className="w-5 h-5"/>,accent:'#f59e0b'},
+              ].map((s,i) => (
+                <div key={i} style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f',borderTop:`3px solid ${s.accent}`}} className="rounded-xl p-4 flex items-center gap-4">
+                  <div style={{backgroundColor:s.accent+'22',color:s.accent}} className="p-2.5 rounded-lg">{s.icon}</div>
+                  <div><p className="text-2xl font-bold">{s.value}</p><p className="text-xs" style={{color:'#64748b'}}>{s.label}</p></div>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                {label:'Total Cobrado',value:formatCurrency(payStats.paid_amount??0),icon:<CheckCircle className="w-5 h-5"/>,accent:'#22c55e'},
+                {label:'Pendiente',value:formatCurrency(payStats.pending_amount??0),icon:<Clock className="w-5 h-5"/>,accent:'#f59e0b'},
+                {label:'Pagos Registrados',value:payStats.total??0,icon:<CreditCard className="w-5 h-5"/>,accent:'#8b5cf6'},
               ].map((s,i) => (
                 <div key={i} style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f',borderTop:`3px solid ${s.accent}`}} className="rounded-xl p-4 flex items-center gap-4">
                   <div style={{backgroundColor:s.accent+'22',color:s.accent}} className="p-2.5 rounded-lg">{s.icon}</div>
@@ -156,8 +217,32 @@ export default function Dashboard() {
                 </tbody>
               </table>
             </div>
+            <div style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f'}} className="rounded-xl overflow-hidden">
+              <div className="px-5 py-4" style={{borderBottom:'1px solid #1e3a5f'}}>
+                <h2 className="text-sm font-semibold text-slate-300">Últimos Pagos</h2>
+              </div>
+              <table className="w-full text-sm">
+                <thead><tr style={{borderBottom:'1px solid #1e3a5f'}}>
+                  {['Cliente','Período','Monto','Método','Estado'].map(h=><th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider" style={{color:'#64748b'}}>{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {payments.slice(0,5).map(p=>(
+                    <tr key={p.id} style={{borderBottom:'1px solid #1e3a5f'}} className="hover:bg-blue-900/10 transition-colors">
+                      <td className="px-5 py-3 font-medium">{p.client_name}</td>
+                      <td className="px-5 py-3 text-xs" style={{color:'#94a3b8'}}>{p.period}</td>
+                      <td className="px-5 py-3 text-green-400 font-semibold">{formatCurrency(p.amount)}</td>
+                      <td className="px-5 py-3 text-xs capitalize" style={{color:'#94a3b8'}}>{p.method}</td>
+                      <td className="px-5 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${p.status==='paid'?'bg-green-900/40 text-green-400':'bg-yellow-900/40 text-yellow-400'}`}>{p.status==='paid'?'Pagado':'Pendiente'}</span></td>
+                    </tr>
+                  ))}
+                  {!payments.length&&<tr><td colSpan={5} className="py-10 text-center" style={{color:'#64748b'}}>No hay pagos registrados aún</td></tr>}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
+
+        {/* TAB: PLANES */}
         {tab==='plans' && (
           <div className="space-y-5">
             <div className="text-center pt-2">
@@ -203,11 +288,13 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* TAB: CLIENTES */}
         {tab==='clients' && (
           <div style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f'}} className="rounded-xl overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:'1px solid #1e3a5f'}}>
               <h2 className="font-semibold">Gestión de Clientes <span style={{color:'#64748b'}}>({clients.length})</span></h2>
-              <button onClick={()=>{setEditClient(null);setForm(EMPTY);setShowModal(true)}} style={{backgroundColor:'#1d4ed8'}} className="flex items-center gap-2 hover:bg-blue-700 text-sm px-4 py-2 rounded-lg transition-colors font-medium">
+              <button onClick={()=>{setEditClient(null);setForm(EMPTY_CLIENT);setShowModal(true)}} style={{backgroundColor:'#1d4ed8'}} className="flex items-center gap-2 hover:bg-blue-700 text-sm px-4 py-2 rounded-lg transition-colors font-medium">
                 <Plus className="w-4 h-4"/> Nuevo Cliente
               </button>
             </div>
@@ -227,8 +314,9 @@ export default function Dashboard() {
                       <td className="px-5 py-3 text-xs" style={{color:'#64748b'}}>{c.reference}</td>
                       <td className="px-5 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${c.status==='active'?'bg-green-900/40 text-green-400':'bg-red-900/40 text-red-400'}`}>{c.status==='active'?'Activo':'Suspendido'}</span></td>
                       <td className="px-5 py-3"><div className="flex gap-2">
-                        <button onClick={()=>openEdit(c)} className="text-blue-400 hover:text-blue-300 transition-colors"><Pencil className="w-4 h-4"/></button>
-                        <button onClick={()=>handleDelete(c.id)} className="text-red-400 hover:text-red-300 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                        <button onClick={()=>openNewPayment(c.id)} title="Registrar pago" className="text-green-400 hover:text-green-300 transition-colors"><CreditCard className="w-4 h-4"/></button>
+                        <button onClick={()=>openEditClient(c)} className="text-blue-400 hover:text-blue-300 transition-colors"><Pencil className="w-4 h-4"/></button>
+                        <button onClick={()=>handleDeleteClient(c.id)} className="text-red-400 hover:text-red-300 transition-colors"><Trash2 className="w-4 h-4"/></button>
                       </div></td>
                     </tr>
                   ))}
@@ -238,7 +326,61 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* TAB: PAGOS */}
+        {tab==='payments' && (
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                {label:'Total Pagos',value:payStats.total??0,icon:<CreditCard className="w-5 h-5"/>,accent:'#8b5cf6'},
+                {label:'Total Recaudado',value:formatCurrency(payStats.total_amount??0),icon:<DollarSign className="w-5 h-5"/>,accent:'#3b82f6'},
+                {label:'Cobrado',value:formatCurrency(payStats.paid_amount??0),icon:<CheckCircle className="w-5 h-5"/>,accent:'#22c55e'},
+                {label:'Pendiente',value:formatCurrency(payStats.pending_amount??0),icon:<Clock className="w-5 h-5"/>,accent:'#f59e0b'},
+              ].map((s,i) => (
+                <div key={i} style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f',borderTop:`3px solid ${s.accent}`}} className="rounded-xl p-4 flex items-center gap-4">
+                  <div style={{backgroundColor:s.accent+'22',color:s.accent}} className="p-2.5 rounded-lg">{s.icon}</div>
+                  <div><p className="text-2xl font-bold">{s.value}</p><p className="text-xs" style={{color:'#64748b'}}>{s.label}</p></div>
+                </div>
+              ))}
+            </div>
+            <div style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f'}} className="rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:'1px solid #1e3a5f'}}>
+                <h2 className="font-semibold">Registro de Pagos <span style={{color:'#64748b'}}>({payments.length})</span></h2>
+                <button onClick={()=>openNewPayment()} style={{backgroundColor:'#16a34a'}} className="flex items-center gap-2 hover:bg-green-700 text-sm px-4 py-2 rounded-lg transition-colors font-medium">
+                  <Plus className="w-4 h-4"/> Registrar Pago
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr style={{borderBottom:'1px solid #1e3a5f',backgroundColor:'#111827'}}>
+                    {['Cliente','Celular','Período','Monto','Método','Estado','Fecha','Acciones'].map(h=><th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider" style={{color:'#64748b'}}>{h}</th>)}
+                  </tr></thead>
+                  <tbody>
+                    {payments.map(p=>(
+                      <tr key={p.id} style={{borderBottom:'1px solid #1e3a5f'}} className="hover:bg-blue-900/10 transition-colors">
+                        <td className="px-5 py-3 font-medium">{p.client_name}</td>
+                        <td className="px-5 py-3 text-xs" style={{color:'#94a3b8'}}>{p.cellphone}</td>
+                        <td className="px-5 py-3 text-xs" style={{color:'#94a3b8'}}>{p.period}</td>
+                        <td className="px-5 py-3 text-green-400 font-semibold">{formatCurrency(p.amount)}</td>
+                        <td className="px-5 py-3 text-xs capitalize" style={{color:'#94a3b8'}}>{p.method}</td>
+                        <td className="px-5 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${p.status==='paid'?'bg-green-900/40 text-green-400':'bg-yellow-900/40 text-yellow-400'}`}>{p.status==='paid'?'Pagado':'Pendiente'}</span></td>
+                        <td className="px-5 py-3 text-xs" style={{color:'#64748b'}}>{p.created_at?.slice(0,10)}</td>
+                        <td className="px-5 py-3"><div className="flex gap-2">
+                          <button onClick={()=>openEditPayment(p)} className="text-blue-400 hover:text-blue-300 transition-colors"><Pencil className="w-4 h-4"/></button>
+                          <button onClick={()=>handleDeletePayment(p.id)} className="text-red-400 hover:text-red-300 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                        </div></td>
+                      </tr>
+                    ))}
+                    {!payments.length&&<tr><td colSpan={8} className="py-12 text-center" style={{color:'#64748b'}}>No hay pagos registrados aún</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* MODAL CLIENTE */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.75)',backdropFilter:'blur(4px)'}}>
           <div style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f'}} className="rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -250,35 +392,85 @@ export default function Dashboard() {
               {[{label:'Nombre Completo *',key:'name',type:'text'},{label:'Celular *',key:'cellphone',type:'text'},{label:'Correo',key:'email',type:'email'},{label:'Teléfono Fijo',key:'phone',type:'text'},{label:'Dirección',key:'address',type:'text'},{label:'Ciudad',key:'city',type:'text'},{label:'Barrio',key:'neighborhood',type:'text'},{label:'Comuna',key:'commune',type:'text'},{label:'Fecha Consumo',key:'consumption_date',type:'date'},{label:'Fecha Pago',key:'payment_date',type:'date'},{label:'Referencia / Llave BRE-B',key:'reference',type:'text'}].map(f=>(
                 <div key={f.key}>
                   <label className="block text-xs font-medium mb-1" style={{color:'#64748b'}}>{f.label}</label>
-                  <input type={f.type} value={(form as Record<string,string|number>)[f.key] as string} onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))} style={{backgroundColor:'#111827',border:'1px solid #1e3a5f',color:'white'}} className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"/>
+                  <input type={f.type} value={(form as Record<string,string|number>)[f.key] as string} onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))} style={inputStyle} className={inputCls}/>
                 </div>
               ))}
               <div>
                 <label className="block text-xs font-medium mb-1" style={{color:'#64748b'}}>Plan *</label>
-                <select value={form.plan} onChange={e=>{const p=PLANS.find(x=>x.name===e.target.value);setForm(prev=>({...prev,plan:e.target.value,plan_value:p?.value??0}))}} style={{backgroundColor:'#111827',border:'1px solid #1e3a5f',color:'white'}} className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors">
+                <select value={form.plan} onChange={e=>{const p=PLANS.find(x=>x.name===e.target.value);setForm(prev=>({...prev,plan:e.target.value,plan_value:p?.value??0}))}} style={inputStyle} className={inputCls}>
                   <option value="">Seleccionar plan...</option>
                   {PLANS.map(p=><option key={p.id} value={p.name}>{p.name} — {formatCurrency(p.value)}/mes</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1" style={{color:'#64748b'}}>Valor ($)</label>
-                <input type="number" value={form.plan_value} onChange={e=>setForm(p=>({...p,plan_value:Number(e.target.value)}))} style={{backgroundColor:'#111827',border:'1px solid #1e3a5f',color:'white'}} className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"/>
+                <input type="number" value={form.plan_value} onChange={e=>setForm(p=>({...p,plan_value:Number(e.target.value)}))} style={inputStyle} className={inputCls}/>
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1" style={{color:'#64748b'}}>Estado</label>
-                <select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))} style={{backgroundColor:'#111827',border:'1px solid #1e3a5f',color:'white'}} className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors">
+                <select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))} style={inputStyle} className={inputCls}>
                   <option value="active">Activo</option>
                   <option value="suspended">Suspendido</option>
                 </select>
               </div>
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium mb-1" style={{color:'#64748b'}}>Novedades</label>
-                <textarea value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} rows={3} style={{backgroundColor:'#111827',border:'1px solid #1e3a5f',color:'white'}} className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 resize-none transition-colors"/>
+                <textarea value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} rows={3} style={inputStyle} className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 resize-none transition-colors"/>
               </div>
             </div>
             <div className="flex justify-end gap-3 p-5" style={{borderTop:'1px solid #1e3a5f'}}>
               <button onClick={()=>setShowModal(false)} style={{border:'1px solid #1e3a5f',color:'#94a3b8'}} className="px-4 py-2 text-sm rounded-lg hover:text-white transition-colors">Cancelar</button>
-              <button onClick={handleSave} style={{backgroundColor:'#1d4ed8'}} className="px-6 py-2 text-sm rounded-lg font-medium hover:bg-blue-700 transition-colors">{editClient?'Actualizar':'Guardar'}</button>
+              <button onClick={handleSaveClient} style={{backgroundColor:'#1d4ed8'}} className="px-6 py-2 text-sm rounded-lg font-medium hover:bg-blue-700 transition-colors">{editClient?'Actualizar':'Guardar'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PAGO */}
+      {showPayModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.75)',backdropFilter:'blur(4px)'}}>
+          <div style={{backgroundColor:'#1e2a3d',border:'1px solid #1e3a5f'}} className="rounded-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-5" style={{borderBottom:'1px solid #1e3a5f'}}>
+              <h3 className="font-semibold text-base">{editPayment?'Editar Pago':'Registrar Pago'}</h3>
+              <button onClick={()=>setShowPayModal(false)} style={{color:'#64748b'}} className="hover:text-white transition-colors"><X className="w-5 h-5"/></button>
+            </div>
+            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-medium mb-1" style={{color:'#64748b'}}>Cliente *</label>
+                <select value={payForm.client_id} onChange={e=>{const c=clients.find(x=>x.id===Number(e.target.value));setPayForm(p=>({...p,client_id:Number(e.target.value),amount:c?.plan_value??p.amount}))}} style={inputStyle} className={inputCls}>
+                  <option value={0}>Seleccionar cliente...</option>
+                  {clients.map(c=><option key={c.id} value={c.id}>{c.name} — {c.cellphone}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{color:'#64748b'}}>Período * (YYYY-MM)</label>
+                <input type="month" value={payForm.period} onChange={e=>setPayForm(p=>({...p,period:e.target.value}))} style={inputStyle} className={inputCls}/>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{color:'#64748b'}}>Monto *</label>
+                <input type="number" value={payForm.amount} onChange={e=>setPayForm(p=>({...p,amount:Number(e.target.value)}))} style={inputStyle} className={inputCls}/>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{color:'#64748b'}}>Método de Pago</label>
+                <select value={payForm.method} onChange={e=>setPayForm(p=>({...p,method:e.target.value}))} style={inputStyle} className={inputCls}>
+                  {METHODS.map(m=><option key={m} value={m} className="capitalize">{m.charAt(0).toUpperCase()+m.slice(1)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{color:'#64748b'}}>Estado</label>
+                <select value={payForm.status} onChange={e=>setPayForm(p=>({...p,status:e.target.value}))} style={inputStyle} className={inputCls}>
+                  <option value="paid">Pagado</option>
+                  <option value="pending">Pendiente</option>
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs font-medium mb-1" style={{color:'#64748b'}}>Notas</label>
+                <textarea value={payForm.notes} onChange={e=>setPayForm(p=>({...p,notes:e.target.value}))} rows={2} style={inputStyle} className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 resize-none transition-colors"/>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-5" style={{borderTop:'1px solid #1e3a5f'}}>
+              <button onClick={()=>setShowPayModal(false)} style={{border:'1px solid #1e3a5f',color:'#94a3b8'}} className="px-4 py-2 text-sm rounded-lg hover:text-white transition-colors">Cancelar</button>
+              <button onClick={handleSavePayment} style={{backgroundColor:'#16a34a'}} className="px-6 py-2 text-sm rounded-lg font-medium hover:bg-green-700 transition-colors">{editPayment?'Actualizar':'Guardar Pago'}</button>
             </div>
           </div>
         </div>

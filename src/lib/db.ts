@@ -32,5 +32,15 @@ export async function initDB() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       endpoint TEXT NOT NULL UNIQUE, p256dh TEXT NOT NULL, auth TEXT NOT NULL,
       created_at TEXT DEFAULT (datetime('now')))`,
+    `CREATE TABLE IF NOT EXISTS payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL,
+      amount INTEGER NOT NULL,
+      period TEXT NOT NULL,
+      method TEXT DEFAULT 'efectivo',
+      status TEXT DEFAULT 'paid',
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE)`,
   ], 'write')
 }
