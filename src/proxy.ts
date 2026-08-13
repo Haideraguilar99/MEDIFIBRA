@@ -3,7 +3,6 @@ import { jwtVerify } from 'jose'
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET ?? 'fallback-dev-secret')
 
-// Rutas públicas (no requieren auth)
 const PUBLIC = [
   '/login',
   '/api/auth/login',
@@ -14,10 +13,9 @@ const PUBLIC = [
   '/api/webhook',
 ]
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Permitir rutas públicas
   if (PUBLIC.some(p => pathname.startsWith(p))) return NextResponse.next()
 
   const token = req.cookies.get('mf_token')?.value
