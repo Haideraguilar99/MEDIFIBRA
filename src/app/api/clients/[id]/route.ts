@@ -2,6 +2,17 @@ import { db } from '@/lib/db'
 import { broadcast } from '@/lib/sse'
 import { NextRequest, NextResponse } from 'next/server'
 
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  try {
+    const result = await db.execute({ sql: 'SELECT * FROM clients WHERE id=?', args: [id] })
+    if (!result.rows[0]) return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
+    return NextResponse.json({ client: result.rows[0] })
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 })
+  }
+}
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await req.json()
