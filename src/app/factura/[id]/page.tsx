@@ -76,7 +76,7 @@ export default function FacturaPage() {
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               {/* Logo + empresa */}
               <div style={{display:'flex',alignItems:'center',gap:20}}>
-                <img src="/logo.webp" alt="Medifibra" style={{width:110,height:75,objectFit:'contain',filter:'drop-shadow(0 2px 8px rgba(0,0,0,0.4))'}}/>
+                <img src="/logo.png" alt="Medifibra" style={{width:110,height:75,objectFit:'contain',filter:'drop-shadow(0 2px 8px rgba(0,0,0,0.4))'}}/>
                 <div>
                   <div style={{color:'white',fontSize:30,fontWeight:900,letterSpacing:3,lineHeight:1}}>MEDIFIBRA</div>
                   <div style={{color:'#90caf9',fontSize:11,marginTop:4}}>S.A.S — NIT: 901.XXX.XXX-X</div>
