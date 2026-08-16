@@ -249,11 +249,11 @@ export default function Dashboard() {
   ] as const
 
   const MetricCard = ({ label, value, icon, sub }:{ label:string; value:string|number; icon:React.ReactNode; sub?:string }) => (
-    <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-5 flex items-center gap-4">
-      <div style={{backgroundColor:CARD2,color:LIGHT}} className="p-3 rounded-lg flex-shrink-0">{icon}</div>
-      <div>
-        <p className="text-4xl font-bold" style={{color:TEXT}}>{value}</p>
-        <p className="text-sm mt-1" style={{color:MUTED}}>{label}</p>
+    <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-3 sm:p-5 flex items-center gap-2 sm:gap-4 min-w-0 overflow-hidden">
+      <div style={{backgroundColor:CARD2,color:LIGHT}} className="p-2 sm:p-3 rounded-lg flex-shrink-0">{icon}</div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight break-all" style={{color:TEXT}}>{value}</p>
+        <p className="text-xs sm:text-sm mt-1 leading-tight" style={{color:MUTED}}>{label}</p>
         {sub&&<p className="text-xs mt-0.5" style={{color:BLUE}}>{sub}</p>}
       </div>
     </div>
