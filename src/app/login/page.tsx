@@ -157,21 +157,21 @@ export default function LoginPage() {
 
           {/* Contenido central */}
           <div className="relative z-10 text-center px-10">
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{background:'rgba(37,99,235,0.2)',border:'1px solid rgba(37,99,235,0.3)',backdropFilter:'blur(10px)'}}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                <path d="M1.5 8.5C5.5 4.5 18.5 4.5 22.5 8.5" stroke="#2563eb" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M5 12C7.5 9.5 16.5 9.5 19 12" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M8.5 15.5C10 14 14 14 15.5 15.5" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round"/>
-                <circle cx="12" cy="19" r="1.5" fill="#93c5fd"/>
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">Fibra Óptica</h3>
-            <p className="text-sm leading-relaxed" style={{color:'#94a3b8'}}>Gestión inteligente de clientes, planes y pagos para Medifibra S.A.S</p>
-            <div className="flex items-center justify-center gap-6 mt-8">
-              {[['492','Clientes'],['441','Activos'],['6','Planes']].map(([n,l])=>(
-                <div key={l} className="text-center">
-                  <p className="text-xl font-bold text-white">{n}</p>
-                  <p className="text-xs mt-0.5" style={{color:'#64748b'}}>{l}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] mb-4" style={{color:'#2563eb'}}>Panel Administrativo</p>
+            <h3 className="text-2xl font-bold text-white mb-4 leading-snug">Gestión centralizada<br/>de tu red de clientes</h3>
+            <p className="text-sm leading-relaxed mb-10" style={{color:'#64748b'}}>Controla clientes, planes, pagos y reportes desde un solo lugar. Diseñado exclusivamente para el equipo de Medifibra S.A.S.</p>
+            <div className="space-y-3 text-left">
+              {[
+                ['Clientes y cartera','Visualiza el estado de pago de cada cliente'],
+                ['Facturación','Registra y gestiona pagos con historial completo'],
+                ['Reportes','Métricas de ingresos y distribución por plan'],
+              ].map(([t,d])=>(
+                <div key={t} className="flex items-start gap-3 rounded-xl px-4 py-3" style={{background:'rgba(37,99,235,0.08)',border:'1px solid rgba(37,99,235,0.15)'}}>
+                  <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{background:'#2563eb'}}/>
+                  <div>
+                    <p className="text-sm font-semibold text-white">{t}</p>
+                    <p className="text-xs mt-0.5" style={{color:'#64748b'}}>{d}</p>
+                  </div>
                 </div>
               ))}
             </div>
