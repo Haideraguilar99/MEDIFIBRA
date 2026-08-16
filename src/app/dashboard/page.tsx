@@ -457,8 +457,12 @@ export default function Dashboard() {
                     const cfg=getCC(cs.classification); const active=filterClass===cs.classification
                     return (
                       <button key={cs.classification} onClick={()=>setFilterClass(active?'':cs.classification)}
-                        className="px-2.5 py-1 rounded-full text-xs font-semibold transition-all"
-                        style={{backgroundColor:active?cfg.bg:'transparent',color:cfg.text,border:`1px solid ${active?cfg.border:'transparent'}`}}>
+                        className="px-2.5 py-1 rounded-full text-xs font-medium transition-all"
+                        style={{
+                          backgroundColor: active ? BLUE+'22' : 'transparent',
+                          color: active ? 'white' : LIGHT,
+                          border: `1px solid ${active ? BLUE : 'transparent'}`,
+                        }}>
                         {cfg.label} ({cs.n})
                       </button>
                     )
