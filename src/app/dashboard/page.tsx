@@ -69,9 +69,9 @@ const ClassBadge = ({ cls, size='sm' }:{ cls:string; size?:'xs'|'sm' }) => {
 }
 
 const SectionHeader = ({ icon, title }:{ icon:React.ReactNode; title:string }) => (
-  <div className="md:col-span-2 flex items-center gap-2 mt-2 mb-1 pb-2" style={{borderBottom:`1px solid ${BORDER}`}}>
+  <div className="md:col-span-2 flex items-center gap-2 mt-2 mb-1 pb-2" style={{borderBottom:'1px solid #1e2533'}}>
     <span style={{color:BLUE}}>{icon}</span>
-    <span className="text-sm font-semibold uppercase tracking-wider" style={{color:LIGHT}}>{title}</span>
+    <span className="text-sm font-semibold uppercase tracking-wider" style={{color:'#9ca3af'}}>{title}</span>
   </div>
 )
 
@@ -281,7 +281,7 @@ export default function Dashboard() {
           <button onClick={()=>setDark(d=>!d)} style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,color:LIGHT}} className="flex items-center justify-center w-9 h-9 rounded-lg hover:opacity-80 transition-opacity flex-shrink-0">
             {dark ? <Sun className="w-4 h-4"/> : <Moon className="w-4 h-4"/>}
           </button>
-          <button onClick={handleLogout} style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium hover:text-red-400 transition-colors" style2={{color:LIGHT}}>
+          <button onClick={handleLogout} style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium hover:text-red-400 transition-colors">
             <LogOut className="w-4 h-4"/><span className="hidden sm:inline" style={{color:LIGHT}}>Salir</span>
           </button>
         </div>
