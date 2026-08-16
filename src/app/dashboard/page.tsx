@@ -261,13 +261,28 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen" style={{backgroundColor:BG, color:TEXT}}>
+      <style>{'@keyframes mfPulse { 0%,100%{ opacity:1; text-shadow:0 0 8px rgba(220,38,38,0.9); } 50%{ opacity:0.35; text-shadow:none; } } .mf-pulse{ animation: mfPulse 1.4s ease-in-out infinite; }'}</style>
       {!dark && <style>{'.tw-white { color: #0f172a } .text-white { color: #0f172a !important } .text-green-400 { color: #15803d !important } .text-blue-400 { color: #1d4ed8 !important } .text-red-400 { color: #b91c1c !important } .text-yellow-400 { color: #a16207 !important } .bg-green-900\/40 { background-color: #dcfce7 !important } .bg-red-900\/40 { background-color: #fee2e2 !important } .bg-yellow-900\/40 { background-color: #fef9c3 !important }'}</style>}
       <Toaster position="top-right" toastOptions={{style:{background:CARD,color:TEXT,border:`1px solid ${BORDER}`}}}/>
 
       <header style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-3 md:px-6 py-3 flex items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold tracking-widest" style={{color:TEXT}}>MEDIFIBRA</h1>
-          <p className="text-sm" style={{color:MUTED}}>Sistema de Gestión</p>
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="Medifibra" className="h-10 sm:h-12 w-auto flex-shrink-0" style={{filter:'drop-shadow(0 0 6px rgba(220,38,38,0.35))'}}/>
+          <div>
+            <div className="flex items-baseline leading-none">
+              <span className="text-lg sm:text-xl font-black tracking-widest mf-pulse" style={{color:'#dc2626'}}>M</span>
+              <span className="text-lg sm:text-xl font-black tracking-widest" style={{color:TEXT}}>EDI</span>
+              <span className="text-lg sm:text-xl font-black tracking-widest mf-pulse" style={{color:'#dc2626'}}>F</span>
+              <span className="text-lg sm:text-xl font-black tracking-widest" style={{color:TEXT}}>IBRA</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-1.5 mt-1">
+              <span className="text-xs font-medium" style={{color:MUTED}}>NIT 902060057-8</span>
+              <span className="text-xs" style={{color:BORDER}}>·</span>
+              <span className="text-xs font-medium" style={{color:MUTED}}>Adm. Mariana</span>
+              <span className="text-xs" style={{color:BORDER}}>·</span>
+              <span className="text-xs font-medium" style={{color:MUTED}}>Medellín / Blanquizal</span>
+            </div>
+          </div>
         </div>
         <div className="flex items-center gap-2 md:gap-3">
           <Link href="/import" style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white transition-colors">
