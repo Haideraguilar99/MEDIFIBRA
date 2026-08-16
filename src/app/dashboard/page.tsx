@@ -266,22 +266,20 @@ export default function Dashboard() {
       <Toaster position="top-right" toastOptions={{style:{background:CARD,color:TEXT,border:`1px solid ${BORDER}`}}}/>
 
       <header style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-3 md:px-6 py-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Medifibra" className="h-10 sm:h-12 w-auto flex-shrink-0" style={{filter:'drop-shadow(0 0 6px rgba(220,38,38,0.35))'}}/>
-          <div>
-            <div className="flex items-baseline leading-none">
-              <span className="text-lg sm:text-xl font-black tracking-widest mf-pulse" style={{color:'#dc2626'}}>M</span>
-              <span className="text-lg sm:text-xl font-black tracking-widest" style={{color:TEXT}}>EDI</span>
-              <span className="text-lg sm:text-xl font-black tracking-widest mf-pulse" style={{color:'#dc2626'}}>F</span>
-              <span className="text-lg sm:text-xl font-black tracking-widest" style={{color:TEXT}}>IBRA</span>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-1.5 mt-1">
-              <span className="text-xs font-medium" style={{color:MUTED}}>NIT 902060057-8</span>
-              <span className="text-xs" style={{color:BORDER}}>·</span>
-              <span className="text-xs font-medium" style={{color:MUTED}}>Adm. Mariana</span>
-              <span className="text-xs" style={{color:BORDER}}>·</span>
-              <span className="text-xs font-medium" style={{color:MUTED}}>Medellín / Blanquizal</span>
-            </div>
+        <div>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@900&display=swap"/>
+          <div className="flex items-baseline leading-none" style={{fontFamily:"'Nunito', sans-serif"}}>
+            <span className="text-2xl sm:text-3xl font-black mf-pulse" style={{color:'#dc2626',letterSpacing:'0.04em'}}>M</span>
+            <span className="text-2xl sm:text-3xl font-black" style={{color:TEXT,letterSpacing:'0.04em'}}>EDI</span>
+            <span className="text-2xl sm:text-3xl font-black mf-pulse" style={{color:'#dc2626',letterSpacing:'0.04em'}}>F</span>
+            <span className="text-2xl sm:text-3xl font-black" style={{color:TEXT,letterSpacing:'0.04em'}}>IBRA</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-1.5 mt-0.5">
+            <span className="text-xs font-medium" style={{color:MUTED}}>NIT 902060057-8</span>
+            <span className="text-xs" style={{color:BORDER}}>·</span>
+            <span className="text-xs font-medium" style={{color:MUTED}}>Secretaria / Mariana</span>
+            <span className="text-xs" style={{color:BORDER}}>·</span>
+            <span className="text-xs font-medium" style={{color:MUTED}}>Medellín / Blanquizal</span>
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-3">
