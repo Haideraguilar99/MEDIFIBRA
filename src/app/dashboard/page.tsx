@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { PLANS, TV_PLAN, formatCurrency } from '@/lib/plans'
 import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv,
          CreditCard, CheckCircle, Clock, BarChart2, AlertCircle, FileText, LogOut,
-         Phone, MapPin, Calendar, UserPlus, Image } from 'lucide-react'
+         Phone, MapPin, Calendar, UserPlus, Image, Sun, Moon } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -34,14 +34,7 @@ type ReportData   = {
   pendingClients: { id: number; name: string; cellphone: string; plan: string; plan_value: number; payment_date: string }[]
 }
 
-const BG    = '#0b0f19'
-const BG2   = '#0f1420'
-const CARD  = '#131920'
-const CARD2 = '#161d28'
-const BORDER= '#1e2533'
-const BLUE  = '#2563eb'
-const MUTED = '#6b7280'
-const LIGHT = '#9ca3af'
+const BLUE = '#2563eb'
 
 const CLASSIFICATIONS = [
   'AL DÍA','PRÓXIMO A PAGAR','RECORDAR ENVIAR RECIBO',
@@ -68,7 +61,7 @@ function getCC(cls: string) {
 const ClassBadge = ({ cls, size='sm' }:{ cls:string; size?:'xs'|'sm' }) => {
   const c = getCC(cls)
   return (
-    <span className={`inline-flex items-center font-semibold rounded-full whitespace-nowrap ${size==='xs'?'px-1.5 py-0.5 text-[10px]':'px-2.5 py-1 text-xs'}`}
+    <span className={`inline-flex items-center font-semibold rounded-full whitespace-nowrap ${size==='xs'?'px-2 py-0.5 text-xs':'px-3 py-1.5 text-sm'}`}
       style={{ backgroundColor:c.bg, color:c.text, border:`1px solid ${c.border}` }}>
       {c.label}
     </span>
@@ -78,7 +71,7 @@ const ClassBadge = ({ cls, size='sm' }:{ cls:string; size?:'xs'|'sm' }) => {
 const SectionHeader = ({ icon, title }:{ icon:React.ReactNode; title:string }) => (
   <div className="md:col-span-2 flex items-center gap-2 mt-2 mb-1 pb-2" style={{borderBottom:`1px solid ${BORDER}`}}>
     <span style={{color:BLUE}}>{icon}</span>
-    <span className="text-xs font-semibold uppercase tracking-wider" style={{color:LIGHT}}>{title}</span>
+    <span className="text-sm font-semibold uppercase tracking-wider" style={{color:LIGHT}}>{title}</span>
   </div>
 )
 
@@ -95,6 +88,16 @@ const METHODS = ['efectivo','transferencia','nequi','daviplata','bancolombia']
 
 export default function Dashboard() {
   const router = useRouter()
+  const [dark, setDark] = useState(true)
+
+  const BG    = dark ? '#0b0f19' : '#f0f4f8'
+  const BG2   = dark ? '#0f1420' : '#ffffff'
+  const CARD  = dark ? '#131920' : '#ffffff'
+  const CARD2 = dark ? '#161d28' : '#e8edf2'
+  const BORDER= dark ? '#1e2533' : '#cbd5e1'
+  const MUTED = dark ? '#6b7280' : '#64748b'
+  const LIGHT = dark ? '#9ca3af' : '#334155'
+  const TEXT  = dark ? '#ffffff' : '#0f172a'
   const [clients,      setClients]      = useState<Client[]>([])
   const [payments,     setPayments]     = useState<Payment[]>([])
   const [stats,        setStats]        = useState<Stats>({ total:0, active:0, suspended:0, monthly_income:0 })
@@ -206,12 +209,12 @@ export default function Dashboard() {
 
   const handleLogout = async () => { await fetch('/api/auth/logout',{method:'POST'}); router.push('/login'); router.refresh() }
 
-  const iStyle = { backgroundColor:BG, border:`1px solid ${BORDER}`, color:'white' }
-  const iCls   = "w-full rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors"
+  const iStyle = { backgroundColor:BG, border:`1px solid ${BORDER}`, color:TEXT }
+  const iCls   = "w-full rounded-lg px-3 py-2.5 text-base focus:outline-none transition-colors"
 
   const F = ({ label, children, span2=false }:{ label:string; children:React.ReactNode; span2?:boolean }) => (
     <div className={span2?'md:col-span-2':''}>
-      <label className="block text-xs font-medium mb-1" style={{color:MUTED}}>{label}</label>
+      <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>{label}</label>
       {children}
     </div>
   )
@@ -249,21 +252,22 @@ export default function Dashboard() {
     <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-5 flex items-center gap-4">
       <div style={{backgroundColor:CARD2,color:LIGHT}} className="p-3 rounded-lg flex-shrink-0">{icon}</div>
       <div>
-        <p className="text-2xl font-bold text-white">{value}</p>
-        <p className="text-xs mt-0.5" style={{color:MUTED}}>{label}</p>
+        <p className="text-4xl font-bold" style={{color:TEXT}}>{value}</p>
+        <p className="text-sm mt-1" style={{color:MUTED}}>{label}</p>
         {sub&&<p className="text-xs mt-0.5" style={{color:BLUE}}>{sub}</p>}
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen text-white" style={{backgroundColor:BG}}>
-      <Toaster position="top-right" toastOptions={{style:{background:CARD,color:'white',border:`1px solid ${BORDER}`}}}/>
+    <div className="min-h-screen" style={{backgroundColor:BG, color:TEXT}}>
+      {!dark && <style>{'.tw-white { color: #0f172a } .text-white { color: #0f172a !important } .text-green-400 { color: #15803d !important } .text-blue-400 { color: #1d4ed8 !important } .text-red-400 { color: #b91c1c !important } .text-yellow-400 { color: #a16207 !important } .bg-green-900\/40 { background-color: #dcfce7 !important } .bg-red-900\/40 { background-color: #fee2e2 !important } .bg-yellow-900\/40 { background-color: #fef9c3 !important }'}</style>}
+      <Toaster position="top-right" toastOptions={{style:{background:CARD,color:TEXT,border:`1px solid ${BORDER}`}}}/>
 
-      <header style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-4 md:px-6 py-3 flex items-center justify-between">
+      <header style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-3 md:px-6 py-3 flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl font-bold tracking-widest text-white">MEDIFIBRA</h1>
-          <p className="text-xs" style={{color:MUTED}}>Sistema de Gestión</p>
+          <h1 className="text-2xl font-bold tracking-widest" style={{color:TEXT}}>MEDIFIBRA</h1>
+          <p className="text-sm" style={{color:MUTED}}>Sistema de Gestión</p>
         </div>
         <div className="flex items-center gap-2 md:gap-3">
           <Link href="/import" style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white transition-colors">
@@ -274,8 +278,11 @@ export default function Dashboard() {
             <div style={{width:1,height:14,backgroundColor:BORDER}}/>
             <StatusDot status={sseStatus} label="SSE Live"/>
           </div>
-          <button onClick={handleLogout} style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-red-400 transition-colors">
-            <LogOut className="w-4 h-4"/><span className="hidden sm:inline">Salir</span>
+          <button onClick={()=>setDark(d=>!d)} style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,color:LIGHT}} className="flex items-center justify-center w-9 h-9 rounded-lg hover:opacity-80 transition-opacity flex-shrink-0">
+            {dark ? <Sun className="w-4 h-4"/> : <Moon className="w-4 h-4"/>}
+          </button>
+          <button onClick={handleLogout} style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium hover:text-red-400 transition-colors" style2={{color:LIGHT}}>
+            <LogOut className="w-4 h-4"/><span className="hidden sm:inline" style={{color:LIGHT}}>Salir</span>
           </button>
         </div>
       </header>
@@ -283,18 +290,18 @@ export default function Dashboard() {
       <nav style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-4 md:px-6 flex gap-1 overflow-x-auto">
         {TABS.map(t=>(
           <button key={t.key} onClick={()=>setTab(t.key)}
-            className={`px-4 md:px-5 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${tab===t.key?'border-blue-500 text-white':'border-transparent hover:text-white'}`}
+            className={`px-4 md:px-5 py-3 text-base font-semibold border-b-2 whitespace-nowrap transition-colors ${tab===t.key?'border-blue-500 text-white':'border-transparent hover:text-white'}`}
             style={{color:tab===t.key?'white':MUTED}}>{t.label}
           </button>
         ))}
       </nav>
 
-      <main className="p-4 md:p-6 max-w-7xl mx-auto space-y-5">
+      <main className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto space-y-4 md:space-y-5">
 
         {/* ── DASHBOARD ── */}
         {tab==='dashboard'&&(
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
               <MetricCard label="Total Clientes" value={stats.total}                             icon={<Users className="w-5 h-5"/>}/>
               <MetricCard label="Activos"         value={stats.active}                            icon={<UserCheck className="w-5 h-5"/>}/>
               <MetricCard label="Suspendidos"     value={stats.suspended}                         icon={<UserX className="w-5 h-5"/>}/>
@@ -308,7 +315,7 @@ export default function Dashboard() {
 
             {classStats.length>0&&(
               <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-5">
-                <h2 className="text-sm font-semibold mb-4" style={{color:LIGHT}}>Estado de la Cartera — {stats.total} clientes</h2>
+                <h2 className="text-base font-semibold mb-4" style={{color:LIGHT}}>Estado de la Cartera — {stats.total} clientes</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                   {classStats.map(cs=>{
                     const cfg=getCC(cs.classification)
@@ -338,7 +345,7 @@ export default function Dashboard() {
                 </div>
                 <table className="w-full text-sm">
                   <thead><tr style={{borderBottom:`1px solid ${BORDER}`}}>
-                    {['Cliente','Estado'].map(h=><th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider" style={{color:MUTED}}>{h}</th>)}
+                    {['Cliente','Estado'].map(h=><th key={h} className="text-left px-5 py-3 text-sm font-semibold uppercase tracking-wider" style={{color:MUTED}}>{h}</th>)}
                   </tr></thead>
                   <tbody>
                     {clients.slice(0,6).map(c=>(
@@ -360,12 +367,12 @@ export default function Dashboard() {
                 </div>
                 <table className="w-full text-sm">
                   <thead><tr style={{borderBottom:`1px solid ${BORDER}`}}>
-                    {['Cliente','Monto','Estado'].map(h=><th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider" style={{color:MUTED}}>{h}</th>)}
+                    {['Cliente','Monto','Estado'].map(h=><th key={h} className="text-left px-5 py-3 text-sm font-semibold uppercase tracking-wider" style={{color:MUTED}}>{h}</th>)}
                   </tr></thead>
                   <tbody>
                     {payments.slice(0,6).map(p=>(
                       <tr key={p.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-white/5">
-                        <td className="px-5 py-2.5 font-medium text-white">{p.client_name}</td>
+                        <td className="px-5 py-2.5 font-medium text-base">{p.client_name}</td>
                         <td className="px-5 py-2.5 text-green-400 font-semibold">{formatCurrency(p.amount)}</td>
                         <td className="px-5 py-2.5"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${p.status==='paid'?'bg-green-900/40 text-green-400':'bg-yellow-900/40 text-yellow-400'}`}>{p.status==='paid'?'Pagado':'Pendiente'}</span></td>
                       </tr>
@@ -479,7 +486,7 @@ export default function Dashboard() {
             <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
                 <h2 className="font-semibold text-white">Clientes <span style={{color:MUTED}}>({filteredClients.length})</span></h2>
-                <button onClick={()=>{setEditClient(null);setForm(EMPTY_CLIENT);setShowModal(true)}} style={{backgroundColor:BLUE}} className="flex items-center gap-2 hover:opacity-90 text-sm px-4 py-2 rounded-lg transition-opacity font-medium text-white">
+                <button onClick={()=>{setEditClient(null);setForm(EMPTY_CLIENT);setShowModal(true)}} style={{backgroundColor:BLUE}} className="flex items-center gap-2 hover:opacity-90 text-base px-4 py-2.5 rounded-lg transition-opacity font-semibold text-white">
                   <Plus className="w-4 h-4"/><span className="hidden sm:inline">Nuevo Cliente</span>
                 </button>
               </div>
@@ -487,7 +494,7 @@ export default function Dashboard() {
                 <table className="w-full text-sm">
                   <thead><tr style={{borderBottom:`1px solid ${BORDER}`,backgroundColor:BG}}>
                     {['Cliente','Cédula','Celular','Plan','Estado','F. Pago','Acciones'].map(h=>(
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
+                      <th key={h} className="text-left px-4 py-3 text-sm font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
@@ -497,8 +504,8 @@ export default function Dashboard() {
                           <p className="font-medium text-white truncate">{c.name}</p>
                           {c.address&&<p className="text-xs truncate mt-0.5" style={{color:MUTED}}>{c.address}</p>}
                         </td>
-                        <td className="px-4 py-3 text-xs whitespace-nowrap" style={{color:LIGHT}}>{c.cedula||'—'}</td>
-                        <td className="px-4 py-3 text-xs whitespace-nowrap" style={{color:LIGHT}}>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>{c.cedula||'—'}</td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>
                           <p>{c.cellphone}</p>
                           {c.telefono_alternativo&&<p className="text-xs mt-0.5" style={{color:MUTED}}>{c.telefono_alternativo}</p>}
                         </td>
@@ -508,7 +515,7 @@ export default function Dashboard() {
                           {c.incluye_tv?<p className="text-xs mt-0.5" style={{color:LIGHT}}>📺 MediTV</p>:null}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap"><ClassBadge cls={c.classification}/></td>
-                        <td className="px-4 py-3 text-xs whitespace-nowrap" style={{color:LIGHT}}>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>
                           <p>Día {c.dia_pago}</p>
                           {c.fecha_instalacion&&<p className="mt-0.5" style={{color:MUTED}}>Inst: {c.fecha_instalacion}</p>}
                         </td>
@@ -533,7 +540,7 @@ export default function Dashboard() {
         {/* ── PAGOS ── */}
         {tab==='payments'&&(
           <div className="space-y-5">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
               <MetricCard label="Total Pagos"     value={payStats.total??0}                         icon={<CreditCard className="w-5 h-5"/>}/>
               <MetricCard label="Total Recaudado" value={formatCurrency(payStats.total_amount??0)}   icon={<DollarSign className="w-5 h-5"/>}/>
               <MetricCard label="Cobrado"          value={formatCurrency(payStats.paid_amount??0)}    icon={<CheckCircle className="w-5 h-5"/>}/>
@@ -542,7 +549,7 @@ export default function Dashboard() {
             <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
                 <h2 className="font-semibold text-white">Pagos <span style={{color:MUTED}}>({payments.length})</span></h2>
-                <button onClick={()=>openNewPayment()} style={{backgroundColor:'#16a34a'}} className="flex items-center gap-2 hover:opacity-90 text-sm px-4 py-2 rounded-lg transition-opacity font-medium text-white">
+                <button onClick={()=>openNewPayment()} style={{backgroundColor:'#16a34a'}} className="flex items-center gap-2 hover:opacity-90 text-base px-4 py-2.5 rounded-lg transition-opacity font-semibold text-white">
                   <Plus className="w-4 h-4"/><span className="hidden sm:inline">Registrar Pago</span>
                 </button>
               </div>
@@ -550,19 +557,19 @@ export default function Dashboard() {
                 <table className="w-full text-sm">
                   <thead><tr style={{borderBottom:`1px solid ${BORDER}`,backgroundColor:BG}}>
                     {['Cliente','Celular','Período','Monto','Método','Estado','Fecha','Acciones'].map(h=>(
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
+                      <th key={h} className="text-left px-4 py-3 text-sm font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
                     {payments.map(p=>(
                       <tr key={p.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-white/5 transition-colors">
                         <td className="px-4 py-3 font-medium text-white whitespace-nowrap">{p.client_name}</td>
-                        <td className="px-4 py-3 text-xs whitespace-nowrap" style={{color:LIGHT}}>{p.cellphone}</td>
-                        <td className="px-4 py-3 text-xs whitespace-nowrap" style={{color:LIGHT}}>{p.period}</td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>{p.cellphone}</td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>{p.period}</td>
                         <td className="px-4 py-3 text-green-400 font-semibold whitespace-nowrap">{formatCurrency(p.amount)}</td>
                         <td className="px-4 py-3 text-xs capitalize whitespace-nowrap" style={{color:LIGHT}}>{p.method}</td>
                         <td className="px-4 py-3 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${p.status==='paid'?'bg-green-900/40 text-green-400':'bg-yellow-900/40 text-yellow-400'}`}>{p.status==='paid'?'Pagado':'Pendiente'}</span></td>
-                        <td className="px-4 py-3 text-xs whitespace-nowrap" style={{color:MUTED}}>{p.created_at?.slice(0,10)}</td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:MUTED}}>{p.created_at?.slice(0,10)}</td>
                         <td className="px-4 py-3 whitespace-nowrap"><div className="flex gap-2">
                           <button onClick={()=>openEditPayment(p)} className="text-blue-400 hover:text-blue-300 transition-colors"><Pencil className="w-4 h-4"/></button>
                           <button onClick={()=>handleDeletePayment(p.id)} className="text-red-400 hover:text-red-300 transition-colors"><Trash2 className="w-4 h-4"/></button>
@@ -642,17 +649,17 @@ export default function Dashboard() {
                 <table className="w-full text-sm">
                   <thead><tr style={{borderBottom:`1px solid ${BORDER}`,backgroundColor:BG}}>
                     {['Cliente','Celular','Plan','Valor','F. Pago','Acción'].map(h=>(
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
+                      <th key={h} className="text-left px-4 py-3 text-sm font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
                     {reports?.pendingClients?.map(c=>(
                       <tr key={c.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-white/5 transition-colors">
                         <td className="px-4 py-3 font-medium text-white whitespace-nowrap">{c.name}</td>
-                        <td className="px-4 py-3 text-xs whitespace-nowrap" style={{color:LIGHT}}>{c.cellphone}</td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>{c.cellphone}</td>
                         <td className="px-4 py-3 whitespace-nowrap"><span className="px-2 py-0.5 rounded text-xs text-white font-medium" style={{backgroundColor:getPlanColor(c.plan)}}>{c.plan}</span></td>
                         <td className="px-4 py-3 text-yellow-400 font-semibold whitespace-nowrap">{formatCurrency(c.plan_value)}</td>
-                        <td className="px-4 py-3 text-xs whitespace-nowrap" style={{color:LIGHT}}>{c.payment_date}</td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>{c.payment_date}</td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <button onClick={()=>openNewPayment(c.id)} style={{backgroundColor:'#16a34a'}} className="flex items-center gap-1 hover:opacity-90 text-xs px-3 py-1.5 rounded-lg transition-opacity font-medium text-white">
                             <CreditCard className="w-3 h-3"/> Registrar
@@ -844,35 +851,35 @@ export default function Dashboard() {
             </div>
             <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-xs font-medium mb-1" style={{color:MUTED}}>Cliente *</label>
+                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Cliente *</label>
                 <select value={payForm.client_id} onChange={e=>{const c=clients.find(x=>x.id===Number(e.target.value));setPayForm(p=>({...p,client_id:Number(e.target.value),amount:c?.plan_value??p.amount}))}} style={iStyle} className={iCls}>
                   <option value={0}>Seleccionar cliente...</option>
                   {clients.map(c=><option key={c.id} value={c.id}>{c.name} — {c.cellphone}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{color:MUTED}}>Período *</label>
+                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Período *</label>
                 <input type="month" value={payForm.period} onChange={e=>setPayForm(p=>({...p,period:e.target.value}))} style={iStyle} className={iCls}/>
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{color:MUTED}}>Monto *</label>
+                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Monto *</label>
                 <input type="number" value={payForm.amount} onChange={e=>setPayForm(p=>({...p,amount:Number(e.target.value)}))} style={iStyle} className={iCls}/>
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{color:MUTED}}>Método de Pago</label>
+                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Método de Pago</label>
                 <select value={payForm.method} onChange={e=>setPayForm(p=>({...p,method:e.target.value}))} style={iStyle} className={iCls}>
                   {METHODS.map(m=><option key={m} value={m}>{m.charAt(0).toUpperCase()+m.slice(1)}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{color:MUTED}}>Estado</label>
+                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Estado</label>
                 <select value={payForm.status} onChange={e=>setPayForm(p=>({...p,status:e.target.value}))} style={iStyle} className={iCls}>
                   <option value="paid">Pagado</option>
                   <option value="pending">Pendiente</option>
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs font-medium mb-1" style={{color:MUTED}}>Notas</label>
+                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Notas</label>
                 <textarea value={payForm.notes} onChange={e=>setPayForm(p=>({...p,notes:e.target.value}))} rows={2} style={iStyle} className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none resize-none transition-colors"/>
               </div>
             </div>
