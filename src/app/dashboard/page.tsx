@@ -316,14 +316,14 @@ export default function Dashboard() {
                     return (
                       <button key={cs.classification}
                         onClick={()=>{setTab('clients');setFilterClass(cs.classification)}}
-                        className="rounded-xl p-3 text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
-                        style={{backgroundColor:cfg.bg,border:`1px solid ${cfg.border}`}}>
-                        <p className="text-xl font-bold" style={{color:cfg.text}}>{cs.n}</p>
-                        <p className="text-xs font-medium mt-0.5 leading-tight" style={{color:cfg.text,opacity:.9}}>{cfg.label}</p>
-                        <div className="mt-2 h-1 rounded-full" style={{backgroundColor:cfg.border}}>
-                          <div className="h-full rounded-full" style={{width:`${pct}%`,backgroundColor:cfg.text}}/>
+                        className="rounded-xl p-3 text-left transition-all hover:border-blue-500/50 active:scale-[0.98]"
+                        style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`}}>
+                        <p className="text-xl font-bold" style={{color:BLUE}}>{cs.n}</p>
+                        <p className="text-xs font-medium mt-0.5 leading-tight" style={{color:BLUE,opacity:.8}}>{cfg.label}</p>
+                        <div className="mt-2 h-0.5 rounded-full" style={{backgroundColor:BORDER}}>
+                          <div className="h-full rounded-full" style={{width:`${pct}%`,backgroundColor:BLUE}}/>
                         </div>
-                        <p className="text-xs mt-1" style={{color:cfg.text,opacity:.6}}>{pct}%</p>
+                        <p className="text-xs mt-1" style={{color:MUTED}}>{pct}%</p>
                       </button>
                     )
                   })}
