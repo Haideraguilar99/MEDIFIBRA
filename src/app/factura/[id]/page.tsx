@@ -79,12 +79,12 @@ export default function FacturaPage() {
       const pdfH    = pdf.internal.pageSize.getHeight()
       const imgH    = pdfW * (canvas.height / canvas.width)
 
-      const ratio = canvas.width / canvas.height
-      const finalH = pdfW / ratio
-      const finalW = finalH > pdfH ? pdfH * ratio : pdfW
-      const finalH2 = finalH > pdfH ? pdfH : finalH
-      const ox = (pdfW - finalW) / 2
-      pdf.addImage(imgData, 'JPEG', ox, 0, finalW, finalH2)
+      // Llenar A4 completo sin bordes blancos
+      //
+      //
+      //
+      //
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
 
       const safeName = client.name
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
