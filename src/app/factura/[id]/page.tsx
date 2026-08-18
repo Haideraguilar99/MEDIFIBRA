@@ -68,18 +68,23 @@ export default function FacturaPage() {
       const { default: jsPDF }       = await import('jspdf')
 
       const canvas = await html2canvas(invoiceRef.current, {
-        scale: 1.5, useCORS: true, allowTaint: true,
+        scale: 2, useCORS: true, allowTaint: true,
         backgroundColor: '#ffffff', logging: false,
         imageTimeout: 15000, windowWidth: 794,
       })
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.88)
+      const imgData = canvas.toDataURL('image/jpeg', 0.95)
       const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       const pdfW    = pdf.internal.pageSize.getWidth()
       const pdfH    = pdf.internal.pageSize.getHeight()
       const imgH    = pdfW * (canvas.height / canvas.width)
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, Math.min(imgH, pdfH))
+      const ratio = canvas.width / canvas.height
+      const finalH = pdfW / ratio
+      const finalW = finalH > pdfH ? pdfH * ratio : pdfW
+      const finalH2 = finalH > pdfH ? pdfH : finalH
+      const ox = (pdfW - finalW) / 2
+      pdf.addImage(imgData, 'JPEG', ox, 0, finalW, finalH2)
 
       const safeName = client.name
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
