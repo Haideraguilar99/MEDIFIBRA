@@ -28,7 +28,7 @@ export default function FacturaPage() {
   const invoiceNum = `MF-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${String(id).padStart(4, '0')}`
   const dateStr    = now.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })
 
-  // Escala proporcional en movil — no afecta el PDF
+  // Escala responsiva en movil
   useEffect(() => {
     const calc = () => {
       const vw = window.innerWidth
@@ -46,7 +46,7 @@ export default function FacturaPage() {
       .catch(() => setLoading(false))
   }, [id])
 
-  // Codigo de barras
+  // Codigo de barras CODE128
   useEffect(() => {
     if (!client || !barcodeRef.current) return
     import('jsbarcode').then(({ default: JsBarcode }) => {
@@ -61,30 +61,59 @@ export default function FacturaPage() {
   const handleDownload = useCallback(async () => {
     if (!invoiceRef.current || downloading || !client) return
     setDownloading(true)
-    setIsCapturing(true)   // desactiva el zoom para captura limpia
-    await new Promise(r => setTimeout(r, 120))
+    setIsCapturing(true)
+    await new Promise(r => setTimeout(r, 150))
+
     try {
       const { default: html2canvas } = await import('html2canvas')
       const { default: jsPDF }       = await import('jspdf')
 
       const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2, useCORS: true, allowTaint: true,
-        backgroundColor: '#ffffff', logging: false,
-        imageTimeout: 15000, windowWidth: 794,
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
+        windowWidth: 794,
       })
 
       const imgData = canvas.toDataURL('image/jpeg', 0.95)
       const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pdfW    = pdf.internal.pageSize.getWidth()
-      const pdfH    = pdf.internal.pageSize.getHeight()
-      const imgH    = pdfW * (canvas.height / canvas.width)
+      const pdfW    = pdf.internal.pageSize.getWidth()   // 210mm
+      const pdfH    = pdf.internal.pageSize.getHeight()  // 297mm
 
-      // Llenar A4 completo sin bordes blancos
-      //
-      //
-      //
-      //
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
+      // Fondo azul marino profesional — mismo color que el header
+      pdf.setFillColor(13, 27, 62)
+      pdf.rect(0, 0, pdfW, pdfH, 'F')
+
+      // Calcular posicion centrada manteniendo aspect ratio exacto
+      const canvasRatio = canvas.width / canvas.height
+      const pageRatio   = pdfW / pdfH
+      let imgW: number, imgH: number, posX: number, posY: number
+
+      if (canvasRatio > pageRatio) {
+        // Imagen mas ancha que la pagina -> ajustar por ancho
+        imgW = pdfW
+        imgH = pdfW / canvasRatio
+        posX = 0
+        posY = (pdfH - imgH) / 2
+      } else {
+        // Imagen mas alta que la pagina -> ajustar por alto
+        imgH = pdfH
+        imgW = pdfH * canvasRatio
+        posX = (pdfW - imgW) / 2
+        posY = 0
+      }
+
+      // Sombra sutil detras del documento
+      pdf.setFillColor(0, 0, 0)
+      pdf.setGState(new (pdf as any).GState({ opacity: 0.3 }))
+      pdf.rect(posX + 1.5, posY + 1.5, imgW, imgH, 'F')
+
+      // Documento centrado
+      pdf.setGState(new (pdf as any).GState({ opacity: 1 }))
+      pdf.addImage(imgData, 'JPEG', posX, posY, imgW, imgH)
 
       const safeName = client.name
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -132,9 +161,7 @@ export default function FacturaPage() {
 
   const speedMatch = client.plan.match(/\d+/)
   const speedMbps  = speedMatch ? `${speedMatch[0]} Mbps` : '—'
-
-  // Zoom visual para movil; durante captura se fuerza 1
-  const viewZoom = isCapturing ? 1 : mobileScale
+  const viewZoom   = isCapturing ? 1 : mobileScale
 
   return (
     <>
@@ -152,23 +179,12 @@ export default function FacturaPage() {
         * { box-sizing:border-box; } body { margin:0; padding:0; }
       `}</style>
 
-      {/* Fondo gris — viewport completo */}
-      <div style={{ minHeight: '100vh', backgroundColor: '#d1d5db', padding: '20px 0', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: '#0d1b3e', padding: '20px 0', overflow: 'hidden' }}>
+        <div style={{ width: 794, margin: '0 auto', transformOrigin: 'top center', transform: `scale(${viewZoom})`, marginBottom: viewZoom < 1 ? `${-794 * (1 - viewZoom) * 1.4}px` : 0 }}>
 
-        {/* Wrapper de escala movil — no se captura */}
-        <div style={{
-          width: 794,
-          margin: '0 auto',
-          transformOrigin: 'top center',
-          transform: `scale(${viewZoom})`,
-          // Compensar espacio vacío abajo cuando se reduce
-          marginBottom: viewZoom < 1 ? `${-794 * (1 - viewZoom) * 1.4}px` : 0,
-        }}>
+          <div ref={invoiceRef} style={{ width: 794, backgroundColor: '#ffffff', overflow: 'hidden' }}>
 
-          {/* ══ CONTENIDO QUE SE CAPTURA ══ */}
-          <div ref={invoiceRef} style={{ width: 794, backgroundColor: '#ffffff', boxShadow: '0 8px 32px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
-
-            {/* ── CABECERA ── */}
+            {/* CABECERA */}
             <div style={{ background: 'linear-gradient(135deg,#0d1b3e 0%,#1a237e 55%,#0d47a1 100%)', padding: '22px 36px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -195,7 +211,7 @@ export default function FacturaPage() {
               </div>
             </div>
 
-            {/* ── CLIENTE + COBRO ── */}
+            {/* CLIENTE + COBRO */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '2px solid #e8eaf6' }}>
               <div style={{ padding: '20px 36px', borderRight: '1px solid #e8eaf6' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#1565c0', letterSpacing: 2.5, textTransform: 'uppercase', marginBottom: 12 }}>Informacion del Cliente</div>
@@ -246,7 +262,7 @@ export default function FacturaPage() {
               </div>
             </div>
 
-            {/* ── SERVICIOS ── */}
+            {/* SERVICIOS */}
             <div style={{ padding: '18px 36px 14px' }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#1565c0', letterSpacing: 2.5, textTransform: 'uppercase', marginBottom: 12 }}>Detalle de Servicios</div>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -284,7 +300,7 @@ export default function FacturaPage() {
               </table>
             </div>
 
-            {/* ── CANALES DE PAGO ── */}
+            {/* CANALES DE PAGO */}
             <div style={{ margin: '0 36px 18px', padding: '18px 20px', backgroundColor: '#f0f4ff', borderRadius: 10, border: '1px solid #c5cae9' }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#1565c0', letterSpacing: 2.5, textTransform: 'uppercase', marginBottom: 14 }}>Canales de Pago Disponibles</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
@@ -327,7 +343,7 @@ export default function FacturaPage() {
               </div>
             </div>
 
-            {/* ── FOOTER ── */}
+            {/* FOOTER */}
             <div style={{ backgroundColor: '#0d1b3e', padding: '16px 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ color: '#90caf9', fontSize: 11, letterSpacing: 1.5, marginBottom: 4, textTransform: 'uppercase' }}>Contacto y Soporte</div>
@@ -341,14 +357,14 @@ export default function FacturaPage() {
               </div>
             </div>
 
-            {/* ── NOTA DE PAGO ── */}
+            {/* NOTA PAGO */}
             <div style={{ padding: '10px 36px', backgroundColor: '#fff9c4', borderTop: '3px solid #f9a825', textAlign: 'center' }}>
               <p style={{ fontSize: 13, color: '#555', lineHeight: 1.7, margin: 0 }}>
                 Al realizar el pago, envie el comprobante al WhatsApp <strong style={{ color: '#333' }}>333 728 8745</strong> indicando nombre completo y numero de factura <strong style={{ color: '#1565c0' }}>{invoiceNum}</strong>. Gracias por su pago puntual — <strong>Medifibra S.A.S</strong>
               </p>
             </div>
 
-            {/* ── AVISO DIAN ── */}
+            {/* AVISO DIAN */}
             <div style={{ padding: '8px 36px', backgroundColor: '#f1f5f9', borderTop: '1px solid #cbd5e1', textAlign: 'center' }}>
               <p style={{ fontSize: 11, color: '#64748b', margin: 0, letterSpacing: 0.3 }}>
                 <strong>Documento comercial</strong> — no valido como factura electronica DIAN &nbsp;|&nbsp; NIT 902060057-8 &nbsp;|&nbsp; Medifibra S.A.S &nbsp;|&nbsp; Medellin, Colombia
@@ -356,9 +372,7 @@ export default function FacturaPage() {
             </div>
 
           </div>
-          {/* fin invoiceRef */}
         </div>
-        {/* fin scale wrapper */}
       </div>
     </>
   )
