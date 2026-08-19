@@ -7,6 +7,7 @@ import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv,
 import toast, { Toaster } from 'react-hot-toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import NotificationBell from '@/components/NotificationBell'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 
 type Client = {
@@ -291,6 +292,7 @@ export default function Dashboard() {
             <div style={{width:1,height:14,backgroundColor:BORDER}}/>
             <StatusDot status={sseStatus} label="SSE Live"/>
           </div>
+          <NotificationBell dark={dark} BG={BG} BG2={BG2} CARD={CARD} BORDER={BORDER} MUTED={MUTED} TEXT={TEXT} LIGHT={LIGHT}/>
           <button onClick={()=>setDark(d=>!d)} style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,color:LIGHT}} className="flex items-center justify-center w-9 h-9 rounded-lg hover:opacity-80 transition-opacity flex-shrink-0">
             {dark ? <Sun className="w-4 h-4"/> : <Moon className="w-4 h-4"/>}
           </button>
