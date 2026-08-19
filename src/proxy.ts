@@ -11,6 +11,7 @@ const PUBLIC = [
   '/api/sse',
   '/api/push',
   '/api/webhook',
+  '/api/notifications',
 ]
 
 export async function proxy(req: NextRequest) {

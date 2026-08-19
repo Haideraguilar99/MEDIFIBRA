@@ -131,7 +131,7 @@ export default function NotificationBell({
     if (!silent) setLoading(true)
     setError(null)
     try {
-      const res  = await fetch('/api/notifications/upcoming-payments', { cache: 'no-store' })
+      const res  = await fetch('/api/notifications/upcoming-payments', { cache: 'no-store', credentials: 'include' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       const incoming: UpcomingClient[] = data.clients ?? []
