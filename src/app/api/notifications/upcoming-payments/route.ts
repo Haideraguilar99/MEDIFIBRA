@@ -5,22 +5,19 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     const today = new Date()
-    const daysToCheck = [0, 1, 3, 5]
     const clientsFound: Record<string, unknown>[] = []
     const seenIds = new Set<number>()
 
-    for (const days of daysToCheck) {
+    for (let days = 0; days <= 5; days++) {
       const target = new Date(today)
       target.setDate(today.getDate() + days)
       const targetDay = String(target.getDate())
 
       const result = await db.execute({
-        sql: `SELECT
-                id, name, cellphone, phone, plan, plan_value,
-                dia_pago, neighborhood, address, status, classification
+        sql: `SELECT id, name, cellphone, phone, plan, plan_value,
+                     dia_pago, neighborhood, address, status, classification
               FROM clients
-              WHERE dia_pago = ?
-                AND status = 'active'
+              WHERE dia_pago = ? AND status = 'active'
               ORDER BY name ASC`,
         args: [targetDay],
       })
@@ -29,18 +26,12 @@ export async function GET() {
         const clientId = Number(row.id)
         if (!seenIds.has(clientId)) {
           seenIds.add(clientId)
-          clientsFound.push({
-            ...row,
-            daysUntilPayment: days,
-            paymentDay: Number(targetDay),
-          })
+          clientsFound.push({ ...row, daysUntilPayment: days, paymentDay: Number(targetDay) })
         }
       }
     }
 
-    clientsFound.sort(
-      (a, b) => Number(a.daysUntilPayment) - Number(b.daysUntilPayment)
-    )
+    clientsFound.sort((a, b) => Number(a.daysUntilPayment) - Number(b.daysUntilPayment))
 
     return NextResponse.json({
       clients: clientsFound,

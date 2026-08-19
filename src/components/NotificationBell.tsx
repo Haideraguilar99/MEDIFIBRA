@@ -187,7 +187,7 @@ export default function NotificationBell({
 
   const totalCount  = clients.length
   const badgeLabel  = totalCount > 99 ? '99+' : String(totalCount)
-  const groupedDays = [0, 1, 3, 5].filter(d => clients.some(c => c.daysUntilPayment === d))
+  const groupedDays = [0, 1, 2, 3, 4, 5].filter(d => clients.some(c => c.daysUntilPayment === d))
 
   return (
     <div className="relative">
