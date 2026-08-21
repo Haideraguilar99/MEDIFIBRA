@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { PLANS, TV_PLAN, formatCurrency } from '@/lib/plans'
 import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv,
          CreditCard, CheckCircle, Clock, BarChart2, AlertCircle, FileText, LogOut,
-         Phone, MapPin, Calendar, UserPlus, Image, Sun, Moon } from 'lucide-react'
+         Phone, MapPin, Calendar, UserPlus, Image, Sun, Moon, MessageCircle } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -198,6 +198,47 @@ export default function Dashboard() {
   }
   const openEditPayment = (p:Payment) => { setEditPayment(p); setPayForm({ client_id:p.client_id, amount:p.amount, period:p.period, method:p.method, status:p.status, notes:p.notes }); setShowPayModal(true) }
   const getPlanColor = (n:string) => PLANS.find(p=>p.name===n)?.color ?? '#64748b'
+  const sendWhatsAppReminder = async (c: Client) => {
+    const diaTexto = c.dia_pago ? `el dia ${c.dia_pago} de este mes` : 'proximamente'
+    const valor = formatCurrency(c.plan_value)
+    const cedula = c.cedula ? `CC ${c.cedula}` : 'sin cedula registrada'
+    const lineas = [
+      `Estimado(a) ${c.name},`,
+      `${cedula}`,
+      ``,
+      `Le informamos que su factura del servicio de internet ${c.plan} por valor de ${valor} tiene fecha de pago ${diaTexto}.`,
+      ``,
+      `Medios de pago disponibles:`,
+      ``,
+      `Bancolombia - Cuenta de Ahorros`,
+      `Numero: 009-952025-14`,
+      `A nombre de: Medifibra S.A.S`,
+      ``,
+      `Nequi`,
+      `Numero: 301 508 0961`,
+      `A nombre de: Medifibra S.A.S`,
+      ``,
+      `Recuerde enviar el comprobante de pago al WhatsApp de Medifibra una vez realizada la transferencia.`,
+      ``,
+      `Gracias por preferirnos.`,
+      `Medifibra S.A.S`,
+    ].join('\n')
+    const phone = (c.cellphone ?? '').replace(/\D/g, '')
+    window.open(`https://wa.me/57${phone}?text=${encodeURIComponent(lineas)}`, '_blank')
+    try {
+      await fetch('/api/notifications/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: c.id,
+          channel: 'whatsapp',
+          type: 'payment_reminder',
+          message: lineas,
+          status: 'sent',
+        }),
+      })
+    } catch {}
+  }
 
   const filteredClients = clients.filter(c => {
     const q = search.toLowerCase()
@@ -538,6 +579,7 @@ export default function Dashboard() {
                           <div className="flex gap-2">
                             <button onClick={()=>openNewPayment(c.id)} title="Registrar pago" className="text-green-400 hover:text-green-300 transition-colors"><CreditCard className="w-4 h-4"/></button>
                             <Link href={`/factura/${c.id}`} target="_blank" title="Factura" className="text-blue-400 hover:text-blue-300 transition-colors"><FileText className="w-4 h-4"/></Link>
+                            <button onClick={()=>sendWhatsAppReminder(c)} title="Recordatorio de pago WhatsApp" className="text-emerald-400 hover:text-emerald-300 transition-colors"><MessageCircle className="w-4 h-4"/></button>
                             <button onClick={()=>openEditClient(c)} className="hover:text-white transition-colors" style={{color:LIGHT}}><Pencil className="w-4 h-4"/></button>
                             <button onClick={()=>handleDeleteClient(c.id)} className="text-red-400 hover:text-red-300 transition-colors"><Trash2 className="w-4 h-4"/></button>
                           </div>
