@@ -69,6 +69,13 @@ const ClassBadge = ({ cls, size='sm' }:{ cls:string; size?:'xs'|'sm' }) => {
   )
 }
 
+const F = ({ label, children, span2=false, muted }:{ label:string; children:React.ReactNode; span2?:boolean; muted:string }) => (
+  <div className={span2?'md:col-span-2':''}>
+    <label className="block text-sm font-medium mb-1.5" style={{color:muted}}>{label}</label>
+    {children}
+  </div>
+)
+
 const SectionHeader = ({ icon, title }:{ icon:React.ReactNode; title:string }) => (
   <div className="md:col-span-2 flex items-center gap-2 mt-2 mb-1 pb-2" style={{borderBottom:'1px solid #1e2533'}}>
     <span style={{color:BLUE}}>{icon}</span>
@@ -254,12 +261,7 @@ export default function Dashboard() {
   const iStyle = useMemo(() => ({ backgroundColor:BG, border:`1px solid ${BORDER}`, color:TEXT }), [BG, BORDER, TEXT])
   const iCls   = "w-full rounded-lg px-3 py-2.5 text-base focus:outline-none transition-colors"
 
-  const F = ({ label, children, span2=false }:{ label:string; children:React.ReactNode; span2?:boolean }) => (
-    <div className={span2?'md:col-span-2':''}>
-      <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>{label}</label>
-      {children}
-    </div>
-  )
+
 
   const StatusDot = ({ status, label }:{ status:string; label:string }) => {
     const ok=status==='ok'||status==='connected'; const err=status==='error'
@@ -748,49 +750,49 @@ export default function Dashboard() {
 
               {/* ── Identificación ── */}
               <SectionHeader icon={<Users className="w-3.5 h-3.5"/>} title="Identificación"/>
-              <F label="Nombre Completo *">
+              <F muted={MUTED} label="Nombre Completo *">
                 <input type="text" value={form.name} onChange={e=>{const v=e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,"");setForm(p=>({...p,name:v}))}} style={iStyle} className={iCls} placeholder="Nombre y apellidos"/>
               </F>
-              <F label="Cédula de Ciudadanía">
+              <F muted={MUTED} label="Cédula de Ciudadanía">
                 <input type="text" value={form.cedula} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,12);setForm(p=>({...p,cedula:v}))}} style={iStyle} className={iCls} placeholder="Número de cédula"/>
               </F>
 
               {/* ── Contacto ── */}
               <SectionHeader icon={<Phone className="w-3.5 h-3.5"/>} title="Contacto"/>
-              <F label="Celular Principal *">
+              <F muted={MUTED} label="Celular Principal *">
                 <input type="text" value={form.cellphone} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,10);setForm(p=>({...p,cellphone:v}))}} style={iStyle} className={iCls} placeholder="3XX XXX XXXX"/>
               </F>
-              <F label="Teléfono Alternativo">
+              <F muted={MUTED} label="Teléfono Alternativo">
                 <input type="text" value={form.telefono_alternativo} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,10);setForm(p=>({...p,telefono_alternativo:v}))}} style={iStyle} className={iCls} placeholder="Otro número de contacto"/>
               </F>
-              <F label="Teléfono Fijo">
+              <F muted={MUTED} label="Teléfono Fijo">
                 <input type="text" value={form.phone} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,10);setForm(p=>({...p,phone:v}))}} style={iStyle} className={iCls} placeholder="Fijo residencial"/>
               </F>
-              <F label="Correo Electrónico">
+              <F muted={MUTED} label="Correo Electrónico">
                 <input type="email" value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} style={iStyle} className={iCls} placeholder="correo@ejemplo.com"/>
               </F>
 
               {/* ── Ubicación ── */}
               <SectionHeader icon={<MapPin className="w-3.5 h-3.5"/>} title="Ubicación"/>
-              <F label="Dirección de Instalación" span2>
+              <F muted={MUTED} label="Dirección de Instalación" span2>
                 <input type="text" value={form.address} onChange={e=>setForm(p=>({...p,address:e.target.value}))} style={iStyle} className={iCls} placeholder="Calle, carrera, número..."/>
               </F>
-              <F label="Punto de Referencia" span2>
+              <F muted={MUTED} label="Punto de Referencia" span2>
                 <input type="text" value={form.punto_referencia} onChange={e=>setForm(p=>({...p,punto_referencia:e.target.value}))} style={iStyle} className={iCls} placeholder="Casa azul, frente al parque..."/>
               </F>
-              <F label="Barrio">
+              <F muted={MUTED} label="Barrio">
                 <input type="text" value={form.neighborhood} onChange={e=>setForm(p=>({...p,neighborhood:e.target.value}))} style={iStyle} className={iCls} placeholder="Nombre del barrio"/>
               </F>
-              <F label="Comuna">
+              <F muted={MUTED} label="Comuna">
                 <input type="text" value={form.commune} onChange={e=>setForm(p=>({...p,commune:e.target.value}))} style={iStyle} className={iCls} placeholder="Comuna o sector"/>
               </F>
-              <F label="Ciudad">
+              <F muted={MUTED} label="Ciudad">
                 <input type="text" value={form.city} onChange={e=>setForm(p=>({...p,city:e.target.value}))} style={iStyle} className={iCls} placeholder="Medellín"/>
               </F>
 
               {/* ── Foto de ubicación ── */}
               <SectionHeader icon={<Image className="w-3.5 h-3.5"/>} title="Foto de Ubicación"/>
-              <F label="URL Foto Fachada / Cuadra" span2>
+              <F muted={MUTED} label="URL Foto Fachada / Cuadra" span2>
                 <input type="text" value={form.foto_fachada} onChange={e=>setForm(p=>({...p,foto_fachada:e.target.value}))} style={iStyle} className={iCls} placeholder="https://... (link de Google Photos, Drive, etc.)"/>
               </F>
               {form.foto_fachada&&(
@@ -805,16 +807,16 @@ export default function Dashboard() {
 
               {/* ── Servicio ── */}
               <SectionHeader icon={<Wifi className="w-3.5 h-3.5"/>} title="Plan y Servicio"/>
-              <F label="Plan de Internet *">
+              <F muted={MUTED} label="Plan de Internet *">
                 <select value={form.plan} onChange={e=>{const p=PLANS.find(x=>x.name===e.target.value);setForm(prev=>({...prev,plan:e.target.value,plan_value:p?.value??0}))}} style={iStyle} className={iCls}>
                   <option value="">Seleccionar plan...</option>
                   {PLANS.map(p=><option key={p.id} value={p.name}>{p.name} — {formatCurrency(p.value)}/mes</option>)}
                 </select>
               </F>
-              <F label="Valor Mensual ($)">
+              <F muted={MUTED} label="Valor Mensual ($)">
                 <input type="number" value={form.plan_value} onChange={e=>setForm(p=>({...p,plan_value:Number(e.target.value)}))} style={iStyle} className={iCls}/>
               </F>
-              <F label="¿Incluye MediTV (TV satelital)?">
+              <F muted={MUTED} label="¿Incluye MediTV (TV satelital)?">
                 <div className="flex items-center gap-3 mt-1">
                   {[{v:1,l:'Sí, incluye MediTV'},{v:0,l:'No incluye TV'}].map(opt=>(
                     <label key={opt.v} className="flex items-center gap-2 cursor-pointer">
@@ -825,37 +827,37 @@ export default function Dashboard() {
                   ))}
                 </div>
               </F>
-              <F label="Fecha de Instalación">
+              <F muted={MUTED} label="Fecha de Instalación">
                 <input type="date" value={form.fecha_instalacion} onChange={e=>setForm(p=>({...p,fecha_instalacion:e.target.value}))} style={iStyle} className={iCls}/>
               </F>
 
               {/* ── Facturación ── */}
               <SectionHeader icon={<Calendar className="w-3.5 h-3.5"/>} title="Facturación"/>
-              <F label="Día Preferido de Pago">
+              <F muted={MUTED} label="Día Preferido de Pago">
                 <select value={form.dia_pago} onChange={e=>setForm(p=>({...p,dia_pago:e.target.value}))} style={iStyle} className={iCls}>
                   <option value="15">Día 15 de cada mes</option>
                   <option value="30">Día 30 de cada mes</option>
                 </select>
               </F>
-              <F label="Referencia / Llave BRE-B">
+              <F muted={MUTED} label="Referencia / Llave BRE-B">
                 <input type="text" value={form.reference} onChange={e=>setForm(p=>({...p,reference:e.target.value}))} style={iStyle} className={iCls} placeholder="Código de referencia"/>
               </F>
-              <F label="Fecha Consumo">
+              <F muted={MUTED} label="Fecha Consumo">
                 <input type="date" value={form.consumption_date} onChange={e=>setForm(p=>({...p,consumption_date:e.target.value}))} style={iStyle} className={iCls}/>
               </F>
-              <F label="Fecha Pago (sistema)">
+              <F muted={MUTED} label="Fecha Pago (sistema)">
                 <input type="date" value={form.payment_date} onChange={e=>setForm(p=>({...p,payment_date:e.target.value}))} style={iStyle} className={iCls}/>
               </F>
 
               {/* ── Clasificación ── */}
               <SectionHeader icon={<CheckCircle className="w-3.5 h-3.5"/>} title="Estado y Clasificación"/>
-              <F label="Estado del sistema">
+              <F muted={MUTED} label="Estado del sistema">
                 <select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))} style={iStyle} className={iCls}>
                   <option value="active">Activo</option>
                   <option value="suspended">Suspendido</option>
                 </select>
               </F>
-              <F label="Clasificación de cobro">
+              <F muted={MUTED} label="Clasificación de cobro">
                 <select value={form.classification} onChange={e=>setForm(p=>({...p,classification:e.target.value}))} style={iStyle} className={iCls}>
                   {CLASSIFICATIONS.map(c=><option key={c} value={c}>{getCC(c).label}</option>)}
                 </select>
@@ -868,10 +870,10 @@ export default function Dashboard() {
 
               {/* ── Referido ── */}
               <SectionHeader icon={<UserPlus className="w-3.5 h-3.5"/>} title="Programa de Referidos"/>
-              <F label="¿Deseas referir a alguien? — Nombre">
+              <F muted={MUTED} label="¿Deseas referir a alguien? — Nombre">
                 <input type="text" value={form.referido_nombre} onChange={e=>{const v=e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,"");setForm(p=>({...p,referido_nombre:v}))}} style={iStyle} className={iCls} placeholder="Nombre del referido"/>
               </F>
-              <F label="Teléfono del Referido">
+              <F muted={MUTED} label="Teléfono del Referido">
                 <input type="text" value={form.referido_telefono} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,10);setForm(p=>({...p,referido_telefono:v}))}} style={iStyle} className={iCls} placeholder="Celular del referido"/>
               </F>
               {(form.referido_nombre||form.referido_telefono)&&(
