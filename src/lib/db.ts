@@ -44,7 +44,7 @@ export async function initDB() {
       telefono_alternativo TEXT DEFAULT '',
       fecha_instalacion    TEXT DEFAULT '',
       incluye_tv           INTEGER DEFAULT 0,
-      dia_pago             TEXT DEFAULT '30',
+      dia_pago             TEXT DEFAULT '',
       referido_nombre      TEXT DEFAULT '',
       referido_telefono    TEXT DEFAULT '',
       created_at           TEXT DEFAULT (datetime('now')))`,
@@ -128,7 +128,7 @@ export async function initDB() {
     `ALTER TABLE clients ADD COLUMN telefono_alternativo TEXT DEFAULT ''`,
     `ALTER TABLE clients ADD COLUMN fecha_instalacion    TEXT DEFAULT ''`,
     `ALTER TABLE clients ADD COLUMN incluye_tv           INTEGER DEFAULT 0`,
-    `ALTER TABLE clients ADD COLUMN dia_pago             TEXT DEFAULT '30'`,
+    `ALTER TABLE clients ADD COLUMN dia_pago             TEXT DEFAULT ''`,
     `ALTER TABLE clients ADD COLUMN referido_nombre      TEXT DEFAULT ''`,
     `ALTER TABLE clients ADD COLUMN referido_telefono    TEXT DEFAULT ''`,
   ]

@@ -88,7 +88,7 @@ const EMPTY_CLIENT = {
   neighborhood:'', commune:'', consumption_date:'', payment_date:'',
   plan:'', plan_value:0, reference:'', status:'active', classification:'AL DÍA', notes:'',
   cedula:'', punto_referencia:'', foto_fachada:'', telefono_alternativo:'',
-  fecha_instalacion:'', incluye_tv:0, dia_pago:'30',
+  fecha_instalacion:'', incluye_tv:0, dia_pago:'',
   referido_nombre:'', referido_telefono:'',
 }
 const EMPTY_PAYMENT = { client_id:0, amount:0, period:'', method:'efectivo', status:'paid', notes:'' }
@@ -574,7 +574,7 @@ export default function Dashboard() {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap"><ClassBadge cls={c.classification}/></td>
                         <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>
-                          <p>Día {c.dia_pago}</p>
+                          <p>{c.dia_pago ? `Día ${c.dia_pago}` : <span style={{color:MUTED}}>Sin definir</span>}</p>
                           {c.fecha_instalacion&&<p className="mt-0.5" style={{color:MUTED}}>Inst: {c.fecha_instalacion}</p>}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
@@ -835,8 +835,14 @@ export default function Dashboard() {
               <SectionHeader icon={<Calendar className="w-3.5 h-3.5"/>} title="Facturación"/>
               <F muted={MUTED} label="Día Preferido de Pago">
                 <select value={form.dia_pago} onChange={e=>setForm(p=>({...p,dia_pago:e.target.value}))} style={iStyle} className={iCls}>
-                  <option value="15">Día 15 de cada mes</option>
-                  <option value="30">Día 30 de cada mes</option>
+                  <option value="">Sin definir</option>
+                  <option value="1">Día 1 (primeros de mes)</option>
+                  <option value="5">Día 5</option>
+                  <option value="12">Día 12</option>
+                  <option value="15">Día 15</option>
+                  <option value="20">Día 20</option>
+                  <option value="25">Día 25</option>
+                  <option value="30">Día 30</option>
                 </select>
               </F>
               <F muted={MUTED} label="Referencia / Llave BRE-B">
