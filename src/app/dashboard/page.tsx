@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo, memo } from 'react'
 import { PLANS, TV_PLAN, formatCurrency } from '@/lib/plans'
 import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv,
          CreditCard, CheckCircle, Clock, BarChart2, AlertCircle, FileText, LogOut,
@@ -251,7 +251,7 @@ export default function Dashboard() {
 
   const handleLogout = async () => { await fetch('/api/auth/logout',{method:'POST'}); router.push('/login'); router.refresh() }
 
-  const iStyle = { backgroundColor:BG, border:`1px solid ${BORDER}`, color:TEXT }
+  const iStyle = useMemo(() => ({ backgroundColor:BG, border:`1px solid ${BORDER}`, color:TEXT }), [BG, BORDER, TEXT])
   const iCls   = "w-full rounded-lg px-3 py-2.5 text-base focus:outline-none transition-colors"
 
   const F = ({ label, children, span2=false }:{ label:string; children:React.ReactNode; span2?:boolean }) => (
@@ -749,22 +749,22 @@ export default function Dashboard() {
               {/* ── Identificación ── */}
               <SectionHeader icon={<Users className="w-3.5 h-3.5"/>} title="Identificación"/>
               <F label="Nombre Completo *">
-                <input type="text" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} style={iStyle} className={iCls} placeholder="Nombre y apellidos"/>
+                <input type="text" value={form.name} onChange={e=>{const v=e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,"");setForm(p=>({...p,name:v}))}} style={iStyle} className={iCls} placeholder="Nombre y apellidos"/>
               </F>
               <F label="Cédula de Ciudadanía">
-                <input type="text" value={form.cedula} onChange={e=>setForm(p=>({...p,cedula:e.target.value}))} style={iStyle} className={iCls} placeholder="Número de cédula"/>
+                <input type="text" value={form.cedula} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,12);setForm(p=>({...p,cedula:v}))}} style={iStyle} className={iCls} placeholder="Número de cédula"/>
               </F>
 
               {/* ── Contacto ── */}
               <SectionHeader icon={<Phone className="w-3.5 h-3.5"/>} title="Contacto"/>
               <F label="Celular Principal *">
-                <input type="text" value={form.cellphone} onChange={e=>setForm(p=>({...p,cellphone:e.target.value}))} style={iStyle} className={iCls} placeholder="3XX XXX XXXX"/>
+                <input type="text" value={form.cellphone} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,10);setForm(p=>({...p,cellphone:v}))}} style={iStyle} className={iCls} placeholder="3XX XXX XXXX"/>
               </F>
               <F label="Teléfono Alternativo">
-                <input type="text" value={form.telefono_alternativo} onChange={e=>setForm(p=>({...p,telefono_alternativo:e.target.value}))} style={iStyle} className={iCls} placeholder="Otro número de contacto"/>
+                <input type="text" value={form.telefono_alternativo} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,10);setForm(p=>({...p,telefono_alternativo:v}))}} style={iStyle} className={iCls} placeholder="Otro número de contacto"/>
               </F>
               <F label="Teléfono Fijo">
-                <input type="text" value={form.phone} onChange={e=>setForm(p=>({...p,phone:e.target.value}))} style={iStyle} className={iCls} placeholder="Fijo residencial"/>
+                <input type="text" value={form.phone} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,10);setForm(p=>({...p,phone:v}))}} style={iStyle} className={iCls} placeholder="Fijo residencial"/>
               </F>
               <F label="Correo Electrónico">
                 <input type="email" value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} style={iStyle} className={iCls} placeholder="correo@ejemplo.com"/>
@@ -869,10 +869,10 @@ export default function Dashboard() {
               {/* ── Referido ── */}
               <SectionHeader icon={<UserPlus className="w-3.5 h-3.5"/>} title="Programa de Referidos"/>
               <F label="¿Deseas referir a alguien? — Nombre">
-                <input type="text" value={form.referido_nombre} onChange={e=>setForm(p=>({...p,referido_nombre:e.target.value}))} style={iStyle} className={iCls} placeholder="Nombre del referido"/>
+                <input type="text" value={form.referido_nombre} onChange={e=>{const v=e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,"");setForm(p=>({...p,referido_nombre:v}))}} style={iStyle} className={iCls} placeholder="Nombre del referido"/>
               </F>
               <F label="Teléfono del Referido">
-                <input type="text" value={form.referido_telefono} onChange={e=>setForm(p=>({...p,referido_telefono:e.target.value}))} style={iStyle} className={iCls} placeholder="Celular del referido"/>
+                <input type="text" value={form.referido_telefono} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,10);setForm(p=>({...p,referido_telefono:v}))}} style={iStyle} className={iCls} placeholder="Celular del referido"/>
               </F>
               {(form.referido_nombre||form.referido_telefono)&&(
                 <div className="md:col-span-2 rounded-lg p-3 text-xs" style={{backgroundColor:'#0d1f12',border:'1px solid #166534',color:'#4ade80'}}>
