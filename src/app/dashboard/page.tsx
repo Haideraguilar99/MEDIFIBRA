@@ -1,4 +1,5 @@
 'use client'
+import TecnicosTab from '@/components/TecnicosTab';
 import { useEffect, useState, useCallback, useMemo, memo } from 'react'
 import { PLANS, TV_PLAN, formatCurrency } from '@/lib/plans'
 import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv,
@@ -120,7 +121,7 @@ export default function Dashboard() {
   const [payForm,      setPayForm]      = useState(EMPTY_PAYMENT)
   const [sseStatus,    setSseStatus]    = useState<'connecting'|'connected'|'error'>('connecting')
   const [dbStatus,     setDbStatus]     = useState<'checking'|'ok'|'error'>('checking')
-  const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'>('dashboard')
+  const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'|'tecnicos'>('dashboard')
   const [search,       setSearch]       = useState('')
   const [filterPlan,   setFilterPlan]   = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -289,7 +290,7 @@ export default function Dashboard() {
 
   const TABS = [
     {key:'dashboard',label:'Dashboard'},{key:'plans',label:'Planes'},
-    {key:'clients',label:'Clientes'},{key:'payments',label:'Pagos'},{key:'reports',label:'Reportes'},
+    {key:'clients',label:'Clientes'},{key:'payments',label:'Pagos'},{key:'reports',label:'Reportes'},{key:'tecnicos',label:'Técnicos'},
   ] as const
 
   const MetricCard = ({ label, value, icon, sub }:{ label:string; value:string|number; icon:React.ReactNode; sub?:string }) => (
@@ -644,6 +645,11 @@ export default function Dashboard() {
         )}
 
         {/* ── REPORTES ── */}
+        {tab==='tecnicos'&&(
+          <div style={{padding:'0'}}>
+            <TecnicosTab />
+          </div>
+        )}
         {tab==='reports'&&(
           <div className="space-y-5">
             <div className="flex items-center gap-3 pb-1">
