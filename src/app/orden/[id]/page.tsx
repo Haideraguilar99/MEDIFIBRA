@@ -43,28 +43,17 @@ const TASK_LABELS: Record<string, string> = {
 };
 
 const PRIORITY_CFG: Record<string, { label: string; color: string }> = {
-  low:    { label: 'Prioridad Baja',    color: '#6b7280' },
-  normal: { label: 'Prioridad Normal',  color: '#3b82f6' },
-  high:   { label: 'Prioridad Alta',    color: '#f97316' },
-  urgent: { label: 'URGENTE',           color: '#ef4444' },
+  low:    { label: 'Prioridad Baja',   color: '#6b7280' },
+  normal: { label: 'Prioridad Normal', color: '#1d4ed8' },
+  high:   { label: 'Prioridad Alta',   color: '#ea580c' },
+  urgent: { label: 'URGENTE',          color: '#dc2626' },
 };
 
 const STATUS_CFG: Record<string, { label: string; color: string }> = {
-  pending:     { label: 'Pendiente',   color: '#eab308' },
-  in_progress: { label: 'En Proceso',  color: '#3b82f6' },
-  completed:   { label: 'Completada',  color: '#22c55e' },
-  cancelled:   { label: 'Cancelada',   color: '#6b7280' },
-};
-
-const TASK_ICON: Record<string, string> = {
-  INSTALACION_SERVICIO:  '📡',
-  ESTUDIO_ZONA:          '🗺',
-  RETIRO_EQUIPOS:        '📦',
-  ACTUALIZACION:         '⬆',
-  REPARACION:            '🔧',
-  SOPORTE:               '🛠',
-  INSTALACION_ELECTRICA: '⚡',
-  OTRA:                  '📋',
+  pending:     { label: 'Pendiente',  color: '#ca8a04' },
+  in_progress: { label: 'En Proceso', color: '#1d4ed8' },
+  completed:   { label: 'Completada', color: '#16a34a' },
+  cancelled:   { label: 'Cancelada',  color: '#6b7280' },
 };
 
 function fmtDate(d: string): string {
@@ -106,11 +95,11 @@ export default function OrdenPage() {
     if (order?.order_number && barcodeRef.current) {
       try {
         JsBarcode(barcodeRef.current, order.order_number, {
-          format: 'CODE128', width: 1.5, height: 36,
-          displayValue: true, fontSize: 9,
-          background: 'transparent', lineColor: '#94a3b8',
+          format: 'CODE128', width: 1.8, height: 44,
+          displayValue: true, fontSize: 11,
+          background: 'transparent', lineColor: '#64748b',
         });
-      } catch (_e) { /* ignore barcode errors */ }
+      } catch (_e) { /* ignore */ }
     }
   }, [order]);
 
@@ -122,16 +111,16 @@ export default function OrdenPage() {
       const { jsPDF } = await import('jspdf');
 
       const canvas = await html2canvas(contentRef.current, {
-        scale: 2, useCORS: true,
-        backgroundColor: '#060d1f', logging: false,
+        scale: 2.5, useCORS: true,
+        backgroundColor: '#ffffff', logging: false,
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgData = canvas.toDataURL('image/jpeg', 0.97);
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pw = pdf.internal.pageSize.getWidth();
       const ph = pdf.internal.pageSize.getHeight();
 
-      pdf.setFillColor(6, 13, 31);
+      pdf.setFillColor(255, 255, 255);
       pdf.rect(0, 0, pw, ph, 'F');
 
       const imgW = pw - 16;
@@ -149,7 +138,6 @@ export default function OrdenPage() {
     }
   }, [generating, order]);
 
-  // Auto-descarga única
   useEffect(() => {
     if (order && !autoDownloaded) {
       setAutoDownloaded(true);
@@ -159,178 +147,191 @@ export default function OrdenPage() {
   }, [order, autoDownloaded, handleDownloadPDF]);
 
   if (loading) return (
-    <div style={{ background: '#060d1f', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontFamily: 'system-ui, sans-serif', flexDirection: 'column', gap: 16 }}>
-      <div style={{ fontSize: 32 }}>⚙️</div>
-      <div>Cargando orden de servicio...</div>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontFamily: 'system-ui, sans-serif', flexDirection: 'column', gap: 16 }}>
+      <div style={{ fontSize: 16, fontWeight: 600 }}>Cargando orden de servicio...</div>
     </div>
   );
 
   if (!order) return (
-    <div style={{ background: '#060d1f', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', fontFamily: 'system-ui, sans-serif', flexDirection: 'column', gap: 16 }}>
-      <div style={{ fontSize: 32 }}>❌</div>
-      <div>Orden no encontrada.</div>
+    <div style={{ background: '#f1f5f9', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626', fontFamily: 'system-ui, sans-serif', flexDirection: 'column', gap: 16 }}>
+      <div style={{ fontSize: 16, fontWeight: 600 }}>Orden no encontrada.</div>
     </div>
   );
 
-  const prio   = PRIORITY_CFG[order.priority]    ?? PRIORITY_CFG.normal;
-  const stat   = STATUS_CFG[order.status]         ?? STATUS_CFG.pending;
-  const tLabel = TASK_LABELS[order.task_type]     ?? order.task_type;
-  const tIcon  = TASK_ICON[order.task_type]       ?? '📋';
+  const prio   = PRIORITY_CFG[order.priority]  ?? PRIORITY_CFG.normal;
+  const stat   = STATUS_CFG[order.status]       ?? STATUS_CFG.pending;
+  const tLabel = TASK_LABELS[order.task_type]   ?? order.task_type;
 
   return (
-    <div style={{ background: '#060d1f', minHeight: '100vh', padding: '20px 12px', fontFamily: "'Segoe UI', Arial, sans-serif" }}>
+    <div style={{ background: '#e2e8f0', minHeight: '100vh', padding: '24px 16px', fontFamily: "'Segoe UI', Arial, sans-serif" }}>
 
       {/* Action bar */}
-      <div style={{ maxWidth: 794, margin: '0 auto 16px', display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-        <button onClick={handleDownloadPDF} disabled={generating} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', cursor: generating ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13, opacity: generating ? 0.7 : 1 }}>
-          {generating ? '⏳ Generando...' : '⬇ Descargar PDF'}
+      <div style={{ maxWidth: 860, margin: '0 auto 20px', display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+        <button onClick={handleDownloadPDF} disabled={generating} style={{ background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 8, padding: '11px 24px', cursor: generating ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: generating ? 0.7 : 1 }}>
+          {generating ? 'Generando...' : 'Descargar PDF'}
         </button>
-        <button onClick={() => window.print()} style={{ background: '#1e2a3a', color: '#e2e8f0', border: '1px solid #2a3a4a', borderRadius: 8, padding: '10px 22px', cursor: 'pointer', fontSize: 13 }}>
-          🖨 Imprimir
+        <button onClick={() => window.print()} style={{ background: '#334155', color: '#f8fafc', border: 'none', borderRadius: 8, padding: '11px 24px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+          Imprimir
         </button>
-        <button onClick={() => window.close()} style={{ background: '#1e2a3a', color: '#94a3b8', border: '1px solid #1e2a3a', borderRadius: 8, padding: '10px 18px', cursor: 'pointer', fontSize: 13 }}>
-          ✕ Cerrar
+        <button onClick={() => window.close()} style={{ background: '#94a3b8', color: '#fff', border: 'none', borderRadius: 8, padding: '11px 20px', cursor: 'pointer', fontSize: 14 }}>
+          Cerrar
         </button>
       </div>
 
-      {/* ───── DOCUMENTO PDF ───── */}
-      <div ref={contentRef} style={{ maxWidth: 794, margin: '0 auto', background: 'linear-gradient(160deg, #0b1120 0%, #0d1530 60%, #0a1040 100%)', borderRadius: 14, overflow: 'hidden' }}>
+      {/* DOCUMENTO */}
+      <div ref={contentRef} style={{ maxWidth: 860, margin: '0 auto', background: '#ffffff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 32px rgba(0,0,0,0.15)' }}>
 
-        {/* HEADER */}
-        <div style={{ background: 'linear-gradient(135deg, #0f1f5c 0%, #1a3a8f 50%, #0d47a1 100%)', padding: '26px 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '3px solid #2563eb' }}>
+        {/* HEADER azul profesional */}
+        <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #2563eb 100%)', padding: '32px 44px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '4px solid #1d4ed8' }}>
           <div>
-            <div style={{ fontWeight: 900, fontSize: 30, color: '#fff', letterSpacing: '-1px', lineHeight: 1 }}>
-              MEDI<span style={{ color: '#ef4444' }}>FIBRA</span>
+            <div style={{ fontWeight: 900, fontSize: 40, color: '#ffffff', letterSpacing: '-1.5px', lineHeight: 1, marginBottom: 6 }}>
+              MEDI<span style={{ color: '#fca5a5' }}>FIBRA</span>
             </div>
-            <div style={{ color: '#93c5fd', fontSize: 10, marginTop: 4, letterSpacing: 0.5 }}>"Conectate con velocidad real"</div>
-            <div style={{ color: '#7dd3fc', fontSize: 9.5, marginTop: 2 }}>NIT: 902060057-8 · Blanquizal, Comuna 13, Medellin, Colombia</div>
-            <div style={{ color: '#7dd3fc', fontSize: 9.5 }}>WhatsApp: 333 728 8745</div>
+            <div style={{ color: '#bfdbfe', fontSize: 13, marginBottom: 3, fontStyle: 'italic' }}>"Conectate con velocidad real"</div>
+            <div style={{ color: '#dbeafe', fontSize: 12.5, marginBottom: 2 }}>NIT: 902060057-8</div>
+            <div style={{ color: '#dbeafe', fontSize: 12.5, marginBottom: 2 }}>Blanquizal, Comuna 13, Medellin, Colombia</div>
+            <div style={{ color: '#dbeafe', fontSize: 12.5 }}>WhatsApp: 333 728 8745</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 8, padding: '10px 16px', marginBottom: 8, backdropFilter: 'blur(4px)' }}>
-              <div style={{ color: '#bfdbfe', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5 }}>Orden de Servicio</div>
-              <div style={{ color: '#fff', fontSize: 18, fontWeight: 900, fontFamily: 'monospace', marginTop: 2 }}>{order.order_number}</div>
+            <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 10, padding: '14px 22px', marginBottom: 12, backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.25)' }}>
+              <div style={{ color: '#bfdbfe', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 6 }}>Orden de Servicio</div>
+              <div style={{ color: '#ffffff', fontSize: 22, fontWeight: 900, fontFamily: 'monospace', letterSpacing: 1 }}>{order.order_number}</div>
             </div>
-            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-              <span style={{ background: prio.color + '25', color: prio.color, border: `1px solid ${prio.color}55`, borderRadius: 20, padding: '3px 10px', fontSize: 10, fontWeight: 700 }}>{prio.label}</span>
-              <span style={{ background: stat.color + '25', color: stat.color, border: `1px solid ${stat.color}55`, borderRadius: 20, padding: '3px 10px', fontSize: 10, fontWeight: 700 }}>{stat.label}</span>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <span style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.35)', borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 700 }}>{prio.label}</span>
+              <span style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.35)', borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 700 }}>{stat.label}</span>
             </div>
           </div>
         </div>
 
-        {/* TAREA BANNER */}
-        <div style={{ background: 'linear-gradient(90deg, #111827 0%, #1a2540 100%)', padding: '14px 36px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', borderBottom: '1px solid #1e3a5f' }}>
-          <div style={{ background: 'linear-gradient(135deg, #1d4ed8, #2563eb)', borderRadius: 8, padding: '10px 18px', fontWeight: 800, fontSize: 14, color: '#fff', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            <span style={{ fontSize: 18 }}>{tIcon}</span> {tLabel.toUpperCase()}
+        {/* BANNER TAREA */}
+        <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '18px 44px', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+          <div style={{ background: '#1d4ed8', borderRadius: 8, padding: '10px 22px', fontWeight: 800, fontSize: 16, color: '#ffffff', display: 'inline-block', letterSpacing: 0.5 }}>
+            {tLabel.toUpperCase()}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ color: '#94a3b8', fontSize: 11 }}>
+            <div style={{ fontSize: 15, color: '#1e293b' }}>
               <span style={{ color: '#64748b', fontWeight: 600 }}>Fecha programada: </span>
-              <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{fmtDate(order.scheduled_date)}</span>
-              {order.scheduled_time && <span style={{ color: '#60a5fa' }}> · {order.scheduled_time} hrs</span>}
+              <span style={{ color: '#1e293b', fontWeight: 700 }}>{fmtDate(order.scheduled_date)}</span>
+              {order.scheduled_time && <span style={{ color: '#1d4ed8', fontWeight: 700 }}> — {order.scheduled_time} hrs</span>}
             </div>
           </div>
-          <div style={{ color: '#475569', fontSize: 10, textAlign: 'right' }}>
+          <div style={{ color: '#94a3b8', fontSize: 12, textAlign: 'right', lineHeight: 1.7 }}>
             Emitida: {fmtDateTime(order.created_at)}<br/>
-            Por: {order.created_by}
+            Por: <strong style={{ color: '#64748b' }}>{order.created_by}</strong>
           </div>
         </div>
 
-        {/* TÉCNICO + CLIENTE */}
-        <div style={{ padding: '22px 36px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        {/* TECNICO + CLIENTE */}
+        <div style={{ padding: '28px 44px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
-          {/* Card Técnico */}
-          <div style={{ background: '#0d1623', borderRadius: 10, padding: 18, border: '1px solid #1e3a5f' }}>
-            <div style={{ color: '#475569', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 14 }}>
-              👷 Tecnico Asignado
+          {/* Card Tecnico */}
+          <div style={{ background: '#f8fafc', borderRadius: 10, padding: 24, border: '1px solid #e2e8f0' }}>
+            <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 10 }}>
+              TECNICO ASIGNADO
             </div>
-            <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-              <div style={{ width: 60, height: 60, borderRadius: 10, background: '#1a2a3a', border: '2px solid #2563eb', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
-                {order.technician_photo
-                  ? <img src={order.technician_photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
-                  : '👷'}
+            <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>
+              <div style={{ width: 110, height: 110, borderRadius: 12, background: '#e2e8f0', border: '3px solid #1d4ed8', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {order.technician_photo ? (
+                  <img
+                    src={order.technician_photo}
+                    alt={order.technician_name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    crossOrigin="anonymous"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div style={{ fontSize: 44, color: '#94a3b8', fontWeight: 700, lineHeight: 1, textAlign: 'center' }}>
+                    {order.technician_name ? order.technician_name.charAt(0).toUpperCase() : 'T'}
+                  </div>
+                )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#f1f5f9', marginBottom: 4, lineHeight: 1.2 }}>{order.technician_name || 'Sin asignar'}</div>
-                <div style={{ background: '#2563eb18', color: '#60a5fa', border: '1px solid #2563eb33', borderRadius: 4, padding: '2px 8px', fontSize: 10, fontWeight: 600, display: 'inline-block', marginBottom: 8 }}>{order.technician_role}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <div style={{ fontSize: 11, color: '#94a3b8' }}><span style={{ color: '#475569' }}>C.C.</span> {order.technician_cedula || 'No registrada'}</div>
-                  <div style={{ fontSize: 11, color: '#94a3b8' }}><span style={{ color: '#475569' }}>Tel.</span> {order.technician_phone || 'No registrado'}</div>
+                <div style={{ fontWeight: 800, fontSize: 18, color: '#0f172a', marginBottom: 6, lineHeight: 1.2 }}>{order.technician_name || 'Sin asignar'}</div>
+                <div style={{ background: '#dbeafe', color: '#1d4ed8', border: '1px solid #93c5fd', borderRadius: 6, padding: '3px 10px', fontSize: 12, fontWeight: 700, display: 'inline-block', marginBottom: 12 }}>{order.technician_role}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ fontSize: 14, color: '#334155' }}><span style={{ color: '#94a3b8', fontWeight: 600 }}>C.C. </span>{order.technician_cedula || 'No registrada'}</div>
+                  <div style={{ fontSize: 14, color: '#334155' }}><span style={{ color: '#94a3b8', fontWeight: 600 }}>Tel. </span>{order.technician_phone || 'No registrado'}</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Card Cliente */}
-          <div style={{ background: '#0d1623', borderRadius: 10, padding: 18, border: '1px solid #1e3a5f' }}>
-            <div style={{ color: '#475569', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 14 }}>
-              👤 Datos del Cliente
+          <div style={{ background: '#f8fafc', borderRadius: 10, padding: 24, border: '1px solid #e2e8f0' }}>
+            <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 10 }}>
+              DATOS DEL CLIENTE
             </div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: '#f1f5f9', marginBottom: 6, lineHeight: 1.2 }}>{order.client_name}</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-              <span style={{ background: order.client_status === 'active' ? '#052e1633' : '#2d0a0a33', color: order.client_status === 'active' ? '#4ade80' : '#f87171', border: `1px solid ${order.client_status === 'active' ? '#16653444' : '#991b1b44'}`, borderRadius: 4, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>
-                {order.client_status === 'active' ? '● Activo' : '● Inactivo'}
+            <div style={{ fontWeight: 800, fontSize: 18, color: '#0f172a', marginBottom: 10, lineHeight: 1.2 }}>{order.client_name}</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+              <span style={{ background: order.client_status === 'active' ? '#dcfce7' : '#fee2e2', color: order.client_status === 'active' ? '#16a34a' : '#dc2626', border: `1px solid ${order.client_status === 'active' ? '#86efac' : '#fca5a5'}`, borderRadius: 6, padding: '3px 10px', fontSize: 12, fontWeight: 700 }}>
+                {order.client_status === 'active' ? 'Activo' : 'Inactivo'}
               </span>
-              <span style={{ background: '#1e3a5f33', color: '#93c5fd', border: '1px solid #1e3a5f44', borderRadius: 4, padding: '2px 8px', fontSize: 10 }}>{order.client_plan}</span>
+              <span style={{ background: '#dbeafe', color: '#1d4ed8', border: '1px solid #93c5fd', borderRadius: 6, padding: '3px 10px', fontSize: 12, fontWeight: 600 }}>{order.client_plan}</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}><span style={{ color: '#475569' }}>C.C.</span> {order.client_cedula || 'N/R'}</div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}><span style={{ color: '#475569' }}>Tel.</span> {order.client_phone}</div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}><span style={{ color: '#475569' }}>Dir.</span> {order.client_address}{order.client_neighborhood ? `, ${order.client_neighborhood}` : ''}{order.client_commune ? ` · ${order.client_commune}` : ''}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <div style={{ fontSize: 14, color: '#334155' }}><span style={{ color: '#94a3b8', fontWeight: 600 }}>C.C. </span>{order.client_cedula || 'No registrada'}</div>
+              <div style={{ fontSize: 14, color: '#334155' }}><span style={{ color: '#94a3b8', fontWeight: 600 }}>Tel. </span>{order.client_phone}</div>
+              <div style={{ fontSize: 14, color: '#334155' }}><span style={{ color: '#94a3b8', fontWeight: 600 }}>Dir. </span>{order.client_address}{order.client_neighborhood ? `, ${order.client_neighborhood}` : ''}{order.client_commune ? ` — ${order.client_commune}` : ''}</div>
               {order.client_punto_referencia && (
-                <div style={{ fontSize: 11, color: '#fbbf24' }}><span style={{ color: '#475569' }}>Ref.</span> {order.client_punto_referencia}</div>
+                <div style={{ fontSize: 14, color: '#92400e', background: '#fef3c7', padding: '6px 10px', borderRadius: 6, marginTop: 2 }}>
+                  <span style={{ fontWeight: 700 }}>Referencia: </span>{order.client_punto_referencia}
+                </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* DESCRIPCIÓN */}
+        {/* DESCRIPCION */}
         {order.task_description && (
-          <div style={{ padding: '16px 36px 0' }}>
-            <div style={{ background: '#0d1623', borderRadius: 10, padding: 18, border: '1px solid #1e3a5f' }}>
-              <div style={{ color: '#475569', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>📋 Descripcion del Trabajo</div>
-              <div style={{ color: '#cbd5e1', fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{order.task_description}</div>
+          <div style={{ padding: '20px 44px 0' }}>
+            <div style={{ background: '#f8fafc', borderRadius: 10, padding: 24, border: '1px solid #e2e8f0' }}>
+              <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12, borderBottom: '1px solid #e2e8f0', paddingBottom: 10 }}>
+                DESCRIPCION DEL TRABAJO
+              </div>
+              <div style={{ color: '#1e293b', fontSize: 15, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{order.task_description}</div>
             </div>
           </div>
         )}
 
         {/* NOVEDADES */}
         {order.notes && (
-          <div style={{ padding: '16px 36px 0' }}>
-            <div style={{ background: '#1a0f00', borderRadius: 10, padding: 18, border: '1px solid #92400e44' }}>
-              <div style={{ color: '#f59e0b', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>⚠ Novedades / Observaciones</div>
-              <div style={{ color: '#fcd34d', fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{order.notes}</div>
+          <div style={{ padding: '20px 44px 0' }}>
+            <div style={{ background: '#fffbeb', borderRadius: 10, padding: 24, border: '1px solid #fcd34d' }}>
+              <div style={{ color: '#92400e', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12, borderBottom: '1px solid #fde68a', paddingBottom: 10 }}>
+                NOVEDADES / OBSERVACIONES
+              </div>
+              <div style={{ color: '#78350f', fontSize: 15, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{order.notes}</div>
             </div>
           </div>
         )}
 
         {/* FIRMAS */}
-        <div style={{ padding: '16px 36px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={{ padding: '20px 44px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           {[
             { label: 'Firma del Tecnico', name: order.technician_name },
-            { label: 'Firma del Cliente', name: order.client_name },
+            { label: 'Firma del Cliente',  name: order.client_name },
           ].map(({ label, name }) => (
-            <div key={label} style={{ background: '#0d1623', borderRadius: 10, padding: '18px 18px 14px', border: '1px solid #1e3a5f', textAlign: 'center' }}>
-              <div style={{ height: 56, borderBottom: '1px dashed #2a3a4a', marginBottom: 10 }}></div>
-              <div style={{ color: '#475569', fontSize: 10 }}>{label}</div>
-              <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600, marginTop: 2 }}>{name}</div>
+            <div key={label} style={{ background: '#f8fafc', borderRadius: 10, padding: '24px 20px 18px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+              <div style={{ height: 70, borderBottom: '1.5px solid #cbd5e1', marginBottom: 12 }}></div>
+              <div style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>{label}</div>
+              <div style={{ color: '#1e293b', fontSize: 14, fontWeight: 700, marginTop: 4 }}>{name}</div>
             </div>
           ))}
         </div>
 
         {/* FOOTER + BARCODE */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 36px 22px', marginTop: 16, borderTop: '1px solid #1e2a3a' }}>
-          <div style={{ color: '#334155', fontSize: 9, lineHeight: 1.8 }}>
-            <div style={{ fontWeight: 700, color: '#475569', marginBottom: 2 }}>Medifibra S.A.S</div>
-            <div>NIT: 902060057-8 · Blanquizal, Comuna 13, Medellin</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 44px 30px', marginTop: 20, borderTop: '1px solid #e2e8f0' }}>
+          <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 2 }}>
+            <div style={{ fontWeight: 700, color: '#64748b', marginBottom: 2, fontSize: 13 }}>Medifibra S.A.S</div>
+            <div>NIT: 902060057-8 — Blanquizal, Comuna 13, Medellin</div>
             <div>WhatsApp: 333 728 8745</div>
-            <div style={{ marginTop: 4, color: '#1e3a5f' }}>
-              Este documento es una orden de servicio interna.<br/>
-              No tiene validez como factura de venta.
+            <div style={{ marginTop: 6, color: '#cbd5e1', fontSize: 11 }}>
+              Este documento es una orden de servicio interna. No tiene validez como factura de venta.
             </div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <svg ref={barcodeRef} style={{ maxWidth: 160 }}></svg>
+            <svg ref={barcodeRef} style={{ maxWidth: 180 }}></svg>
           </div>
         </div>
 
