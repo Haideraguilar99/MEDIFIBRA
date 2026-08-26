@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         b.status??'active', b.classification??'AL DÍA', b.notes??'',
         b.cedula??'', b.punto_referencia??'', b.foto_fachada??'',
         b.telefono_alternativo??'', b.fecha_instalacion??'',
-        b.incluye_tv?1:0, b.dia_pago??'30',
+        b.incluye_tv?1:0, b.dia_pago??'',
         b.referido_nombre??'', b.referido_telefono??'',
       ]
     })

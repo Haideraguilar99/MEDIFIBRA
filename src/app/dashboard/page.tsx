@@ -473,22 +473,33 @@ export default function Dashboard() {
             </div>
             <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-5">
               <h3 className="text-sm font-semibold mb-4" style={{color:LIGHT}}>Distribución por Plan</h3>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {PLANS.map(plan=>{
-                  const count=clients.filter(c=>c.plan===plan.name).length
+                  const planClients=clients.filter(c=>c.plan===plan.name)
+                  const count=planClients.length
+                  const conTv=planClients.filter(c=>c.incluye_tv).length
+                  const ingresos=planClients.reduce((s,c)=>s+Number(c.plan_value),0)
                   const pct=clients.length?Math.round((count/clients.length)*100):0
                   return (
                     <div key={plan.id}>
                       <div className="flex justify-between text-xs mb-1">
-                        <span style={{color:LIGHT}}>{plan.name}</span>
-                        <span style={{color:LIGHT}}>{count} · {pct}%</span>
+                        <span style={{color:LIGHT}} className="font-medium">{plan.name}</span>
+                        <span style={{color:LIGHT}}>{count} clientes · {pct}%</span>
                       </div>
-                      <div className="h-1.5 rounded-full overflow-hidden" style={{backgroundColor:BG}}>
+                      <div className="h-1.5 rounded-full overflow-hidden mb-1.5" style={{backgroundColor:BG}}>
                         <div className="h-full rounded-full transition-all duration-500" style={{width:`${pct}%`,backgroundColor:plan.color}}/>
+                      </div>
+                      <div className="flex gap-4 text-xs">
+                        <span style={{color:'#4ade80'}}>💰 {formatCurrency(ingresos)}/mes</span>
+                        {conTv>0&&<span style={{color:LIGHT}}>📺 {conTv} con MediTV</span>}
                       </div>
                     </div>
                   )
                 })}
+              </div>
+              <div className="mt-5 pt-4 flex items-center justify-between" style={{borderTop:`1px solid ${BORDER}`}}>
+                <span className="text-sm font-semibold" style={{color:LIGHT}}>Ingreso mensual potencial</span>
+                <span className="text-lg font-bold" style={{color:'#4ade80'}}>{formatCurrency(clients.filter(c=>c.plan!=='Sin plan').reduce((s,c)=>s+Number(c.plan_value),0))}</span>
               </div>
             </div>
           </div>
