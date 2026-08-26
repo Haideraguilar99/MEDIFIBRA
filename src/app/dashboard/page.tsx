@@ -99,14 +99,14 @@ export default function Dashboard() {
   const router = useRouter()
   const [dark, setDark] = useState(true)
 
-  const BG    = dark ? '#0b0f19' : '#f0f4f8'
-  const BG2   = dark ? '#0f1420' : '#ffffff'
-  const CARD  = dark ? '#131920' : '#ffffff'
-  const CARD2 = dark ? '#161d28' : '#e8edf2'
-  const BORDER= dark ? '#1e2533' : '#cbd5e1'
-  const MUTED = dark ? '#6b7280' : '#64748b'
-  const LIGHT = dark ? '#9ca3af' : '#334155'
-  const TEXT  = dark ? '#ffffff' : '#0f172a'
+  const BG    = dark ? '#0F1117' : '#F8FAFC'
+  const BG2   = dark ? '#161B27' : '#FFFFFF'
+  const CARD  = dark ? '#1C2333' : '#FFFFFF'
+  const CARD2 = dark ? '#232D3F' : '#F1F5F9'
+  const BORDER= dark ? '#2A3547' : '#E2E8F0'
+  const MUTED = dark ? '#64748B' : '#64748B'
+  const LIGHT = dark ? '#94A3B8' : '#475569'
+  const TEXT  = dark ? '#F1F5F9' : '#0F172A'
   const [clients,      setClients]      = useState<Client[]>([])
   const [payments,     setPayments]     = useState<Payment[]>([])
   const [stats,        setStats]        = useState<Stats>({ total:0, active:0, suspended:0, monthly_income:0 })
@@ -294,68 +294,70 @@ export default function Dashboard() {
   ] as const
 
   const MetricCard = ({ label, value, icon, sub }:{ label:string; value:string|number; icon:React.ReactNode; sub?:string }) => (
-    <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-3 sm:p-5 flex items-center gap-2 sm:gap-4 min-w-0 overflow-hidden">
-      <div style={{backgroundColor:CARD2,color:LIGHT}} className="p-2 sm:p-3 rounded-lg flex-shrink-0">{icon}</div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight break-all" style={{color:TEXT}}>{value}</p>
-        <p className="text-xs sm:text-sm mt-1 leading-tight" style={{color:MUTED}}>{label}</p>
-        {sub&&<p className="text-xs mt-0.5" style={{color:BLUE}}>{sub}</p>}
+    <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,boxShadow:'0 1px 3px rgba(0,0,0,0.04)'}} className="rounded-xl overflow-hidden">
+      <div style={{height:3,backgroundColor:'#2563EB'}}/>
+      <div className="p-4 sm:p-5 flex items-center gap-3 sm:gap-4 min-w-0">
+        <div style={{backgroundColor:'#2563EB15',color:'#2563EB'}} className="p-2.5 rounded-lg flex-shrink-0">{icon}</div>
+        <div className="min-w-0 flex-1">
+          <p className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight break-all" style={{color:TEXT}}>{value}</p>
+          <p className="text-xs sm:text-sm mt-0.5 font-medium" style={{color:MUTED}}>{label}</p>
+          {sub&&<p className="text-xs mt-0.5 font-semibold" style={{color:'#2563EB'}}>{sub}</p>}
+        </div>
       </div>
     </div>
   )
 
   return (
     <div className="min-h-screen" style={{backgroundColor:BG, color:TEXT}}>
-      <style>{'@keyframes mfPulse { 0%,100%{ opacity:1; text-shadow:0 0 8px rgba(220,38,38,0.9); } 50%{ opacity:0.35; text-shadow:none; } } .mf-pulse{ animation: mfPulse 1.4s ease-in-out infinite; }'}</style>
-      {!dark && <style>{'.tw-white { color: #0f172a } .text-white { color: #0f172a !important } .text-green-400 { color: #15803d !important } .text-blue-400 { color: #1d4ed8 !important } .text-red-400 { color: #b91c1c !important } .text-yellow-400 { color: #a16207 !important } .bg-green-900\/40 { background-color: #dcfce7 !important } .bg-red-900\/40 { background-color: #fee2e2 !important } .bg-yellow-900\/40 { background-color: #fef9c3 !important }'}</style>}
       <Toaster position="top-right" toastOptions={{style:{background:CARD,color:TEXT,border:`1px solid ${BORDER}`}}}/>
 
-      <header style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-3 md:px-6 py-3 flex items-center justify-between gap-2">
-        <div>
-          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@900&display=swap"/>
-          <div className="flex items-baseline leading-none" style={{fontFamily:"'Nunito', sans-serif"}}>
-            <span className="text-2xl sm:text-3xl font-black mf-pulse" style={{color:'#dc2626',letterSpacing:'0.04em'}}>M</span>
-            <span className="text-2xl sm:text-3xl font-black" style={{color:TEXT,letterSpacing:'0.04em'}}>EDI</span>
-            <span className="text-2xl sm:text-3xl font-black mf-pulse" style={{color:'#dc2626',letterSpacing:'0.04em'}}>F</span>
-            <span className="text-2xl sm:text-3xl font-black" style={{color:TEXT,letterSpacing:'0.04em'}}>IBRA</span>
+      <header style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-4 md:px-8 h-16 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-0.5">
+            <span className="text-xl font-black tracking-tight" style={{color:'#2563EB'}}>MEDI</span>
+            <span className="text-xl font-black tracking-tight" style={{color:TEXT}}>FIBRA</span>
           </div>
-          <div className="flex flex-wrap items-center gap-x-1.5 mt-0.5">
-            <span className="text-xs font-medium" style={{color:MUTED}}>NIT 902060057-8</span>
-            <span className="text-xs" style={{color:BORDER}}>·</span>
-            <span className="text-xs font-medium" style={{color:MUTED}}>Secretaria / Mariana</span>
-            <span className="text-xs" style={{color:BORDER}}>·</span>
-            <span className="text-xs font-medium" style={{color:MUTED}}>Medellín / Blanquizal</span>
+          <div style={{width:1,height:18,backgroundColor:BORDER}} className="hidden sm:block"/>
+          <div className="hidden md:flex items-center gap-2 text-xs font-medium" style={{color:MUTED}}>
+            <span>NIT 902060057-8</span>
+            <span style={{color:BORDER}}>·</span>
+            <span>Mariana Lujan</span>
+            <span style={{color:BORDER}}>·</span>
+            <span>Blanquizal, Medellín</span>
           </div>
         </div>
-        <div className="flex items-center gap-2 md:gap-3">
-          <Link href="/import" style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white transition-colors">
-            📥 Importar
-          </Link>
-          <div style={{backgroundColor:BG,border:`1px solid ${BORDER}`}} className="hidden sm:flex items-center gap-4 px-4 py-2 rounded-lg">
-            <StatusDot status={dbStatus} label="Turso DB"/>
-            <div style={{width:1,height:14,backgroundColor:BORDER}}/>
-            <StatusDot status={sseStatus} label="SSE Live"/>
+        <div className="flex items-center gap-2">
+          <div style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`}} className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-medium">
+            <StatusDot status={dbStatus} label="DB"/>
+            <div style={{width:1,height:12,backgroundColor:BORDER}}/>
+            <StatusDot status={sseStatus} label="Live"/>
           </div>
+          <Link href="/import" style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`,color:LIGHT}} className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-75 transition-opacity">
+            <span>📥</span><span>Importar</span>
+          </Link>
           <NotificationBell dark={dark} BG={BG} BG2={BG2} CARD={CARD} BORDER={BORDER} MUTED={MUTED} TEXT={TEXT} LIGHT={LIGHT}/>
-          <button onClick={()=>setDark(d=>!d)} style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,color:LIGHT}} className="flex items-center justify-center w-9 h-9 rounded-lg hover:opacity-80 transition-opacity flex-shrink-0">
+          <button onClick={()=>setDark(d=>!d)} style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`,color:LIGHT}} className="flex items-center justify-center w-8 h-8 rounded-lg hover:opacity-75 transition-opacity">
             {dark ? <Sun className="w-4 h-4"/> : <Moon className="w-4 h-4"/>}
           </button>
-          <button onClick={handleLogout} style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium hover:text-red-400 transition-colors">
-            <LogOut className="w-4 h-4"/><span className="hidden sm:inline" style={{color:LIGHT}}>Salir</span>
+          <button onClick={handleLogout} style={{backgroundColor:'#FEF2F2',border:`1px solid #FECACA`,color:'#DC2626'}} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-80 transition-opacity">
+            <LogOut className="w-3.5 h-3.5"/><span className="hidden sm:inline">Salir</span>
           </button>
         </div>
       </header>
 
-      <nav style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-4 md:px-6 flex gap-1 overflow-x-auto">
+      <nav style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-4 md:px-8 flex gap-0 overflow-x-auto">
         {TABS.map(t=>(
           <button key={t.key} onClick={()=>setTab(t.key)}
-            className={`px-4 md:px-5 py-3 text-base font-semibold border-b-2 whitespace-nowrap transition-colors ${tab===t.key?'border-blue-500 text-white':'border-transparent hover:text-white'}`}
-            style={{color:tab===t.key?'white':MUTED}}>{t.label}
+            className="px-4 md:px-5 py-4 text-sm font-semibold whitespace-nowrap transition-all relative"
+            style={{
+              color: tab===t.key ? '#2563EB' : MUTED,
+              borderBottom: tab===t.key ? '2px solid #2563EB' : '2px solid transparent',
+            }}>{t.label}
           </button>
         ))}
       </nav>
 
-      <main className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto space-y-4 md:space-y-5">
+      <main className="p-4 sm:p-5 md:p-8 max-w-7xl mx-auto space-y-5 md:space-y-6">
 
         {/* ── DASHBOARD ── */}
         {tab==='dashboard'&&(
@@ -373,23 +375,26 @@ export default function Dashboard() {
             </div>
 
             {classStats.length>0&&(
-              <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-5">
-                <h2 className="text-base font-semibold mb-4" style={{color:LIGHT}}>Estado de la Cartera — {stats.total} clientes</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+              <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,boxShadow:'0 1px 3px rgba(0,0,0,0.04)'}} className="rounded-xl overflow-hidden">
+                <div className="px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
+                  <h2 className="text-sm font-semibold uppercase tracking-wider" style={{color:MUTED}}>Estado de Cartera</h2>
+                  <p className="text-2xl font-bold mt-0.5" style={{color:TEXT}}>{stats.total} <span className="text-base font-normal" style={{color:MUTED}}>clientes</span></p>
+                </div>
+                <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
                   {classStats.map(cs=>{
                     const cfg=getCC(cs.classification)
                     const pct=stats.total?Math.round((Number(cs.n)/stats.total)*100):0
                     return (
                       <button key={cs.classification}
                         onClick={()=>{setTab('clients');setFilterClass(cs.classification)}}
-                        className="rounded-xl p-3 text-left transition-all hover:border-blue-500/50 active:scale-[0.98]"
+                        className="rounded-lg p-3 text-left transition-all active:scale-[0.98] hover:shadow-sm"
                         style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`}}>
-                        <p className="text-xl font-bold" style={{color:BLUE}}>{cs.n}</p>
-                        <p className="text-xs font-medium mt-0.5 leading-tight" style={{color:BLUE,opacity:.8}}>{cfg.label}</p>
-                        <div className="mt-2 h-0.5 rounded-full" style={{backgroundColor:BORDER}}>
-                          <div className="h-full rounded-full" style={{width:`${pct}%`,backgroundColor:BLUE}}/>
+                        <p className="text-2xl font-bold tracking-tight" style={{color:TEXT}}>{cs.n}</p>
+                        <p className="text-xs font-medium mt-1 leading-tight" style={{color:MUTED}}>{cfg.label}</p>
+                        <div className="mt-2.5 h-1 rounded-full overflow-hidden" style={{backgroundColor:BORDER}}>
+                          <div className="h-full rounded-full" style={{width:`${pct}%`,backgroundColor:'#2563EB'}}/>
                         </div>
-                        <p className="text-xs mt-1" style={{color:MUTED}}>{pct}%</p>
+                        <p className="text-xs mt-1 font-semibold" style={{color:'#2563EB'}}>{pct}%</p>
                       </button>
                     )
                   })}
@@ -398,45 +403,53 @@ export default function Dashboard() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl overflow-hidden">
-                <div className="px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
-                  <h2 className="text-sm font-semibold" style={{color:LIGHT}}>Clientes Recientes</h2>
+              <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,boxShadow:'0 1px 3px rgba(0,0,0,0.04)'}} className="rounded-xl overflow-hidden">
+                <div className="px-5 py-4 flex items-center justify-between" style={{borderBottom:`1px solid ${BORDER}`}}>
+                  <h2 className="text-sm font-semibold uppercase tracking-wider" style={{color:MUTED}}>Clientes Recientes</h2>
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{backgroundColor:CARD2,color:MUTED}}>{clients.length} total</span>
                 </div>
-                <table className="w-full text-sm">
-                  <thead><tr style={{borderBottom:`1px solid ${BORDER}`}}>
-                    {['Cliente','Estado'].map(h=><th key={h} className="text-left px-5 py-3 text-sm font-semibold uppercase tracking-wider" style={{color:MUTED}}>{h}</th>)}
+                <table className="w-full">
+                  <thead><tr style={{backgroundColor:CARD2,borderBottom:`1px solid ${BORDER}`}}>
+                    {['Cliente','Estado'].map(h=><th key={h} className="text-left px-5 py-2.5 text-xs font-semibold uppercase tracking-wider" style={{color:MUTED}}>{h}</th>)}
                   </tr></thead>
                   <tbody>
                     {clients.slice(0,6).map(c=>(
-                      <tr key={c.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-white/5">
-                        <td className="px-5 py-2.5">
-                          <p className="font-medium text-white text-sm truncate max-w-[180px]">{c.name}</p>
-                          <p className="text-xs mt-0.5" style={{color:MUTED}}>{c.plan}</p>
+                      <tr key={c.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-black/[0.02] transition-colors">
+                        <td className="px-5 py-3">
+                          <p className="font-semibold text-sm truncate max-w-[180px]" style={{color:TEXT}}>{c.name}</p>
+                          <p className="text-xs mt-0.5 font-medium" style={{color:MUTED}}>{c.plan}</p>
                         </td>
-                        <td className="px-5 py-2.5"><ClassBadge cls={c.classification} size="xs"/></td>
+                        <td className="px-5 py-3"><ClassBadge cls={c.classification} size="xs"/></td>
                       </tr>
                     ))}
-                    {!clients.length&&<tr><td colSpan={2} className="py-8 text-center text-sm" style={{color:MUTED}}>Sin clientes aún</td></tr>}
+                    {!clients.length&&<tr><td colSpan={2} className="py-10 text-center text-sm" style={{color:MUTED}}>Sin clientes aún</td></tr>}
                   </tbody>
                 </table>
               </div>
-              <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl overflow-hidden">
-                <div className="px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
-                  <h2 className="text-sm font-semibold" style={{color:LIGHT}}>Últimos Pagos</h2>
+              <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,boxShadow:'0 1px 3px rgba(0,0,0,0.04)'}} className="rounded-xl overflow-hidden">
+                <div className="px-5 py-4 flex items-center justify-between" style={{borderBottom:`1px solid ${BORDER}`}}>
+                  <h2 className="text-sm font-semibold uppercase tracking-wider" style={{color:MUTED}}>Últimos Pagos</h2>
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{backgroundColor:CARD2,color:MUTED}}>{payments.length} total</span>
                 </div>
-                <table className="w-full text-sm">
-                  <thead><tr style={{borderBottom:`1px solid ${BORDER}`}}>
-                    {['Cliente','Monto','Estado'].map(h=><th key={h} className="text-left px-5 py-3 text-sm font-semibold uppercase tracking-wider" style={{color:MUTED}}>{h}</th>)}
+                <table className="w-full">
+                  <thead><tr style={{backgroundColor:CARD2,borderBottom:`1px solid ${BORDER}`}}>
+                    {['Cliente','Monto','Estado'].map(h=><th key={h} className="text-left px-5 py-2.5 text-xs font-semibold uppercase tracking-wider" style={{color:MUTED}}>{h}</th>)}
                   </tr></thead>
                   <tbody>
                     {payments.slice(0,6).map(p=>(
-                      <tr key={p.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-white/5">
-                        <td className="px-5 py-2.5 font-medium text-base">{p.client_name}</td>
-                        <td className="px-5 py-2.5 text-green-400 font-semibold">{formatCurrency(p.amount)}</td>
-                        <td className="px-5 py-2.5"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${p.status==='paid'?'bg-green-900/40 text-green-400':'bg-yellow-900/40 text-yellow-400'}`}>{p.status==='paid'?'Pagado':'Pendiente'}</span></td>
+                      <tr key={p.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-black/[0.02] transition-colors">
+                        <td className="px-5 py-3 font-semibold text-sm" style={{color:TEXT}}>{p.client_name}</td>
+                        <td className="px-5 py-3 font-bold text-sm" style={{color:'#16A34A'}}>{formatCurrency(p.amount)}</td>
+                        <td className="px-5 py-3">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{
+                            backgroundColor: p.status==='paid' ? '#F0FDF4' : '#FFFBEB',
+                            color: p.status==='paid' ? '#16A34A' : '#D97706',
+                            border: `1px solid ${p.status==='paid' ? '#BBF7D0' : '#FDE68A'}`
+                          }}>{p.status==='paid'?'Pagado':'Pendiente'}</span>
+                        </td>
                       </tr>
                     ))}
-                    {!payments.length&&<tr><td colSpan={3} className="py-8 text-center text-sm" style={{color:MUTED}}>Sin pagos aún</td></tr>}
+                    {!payments.length&&<tr><td colSpan={3} className="py-10 text-center text-sm" style={{color:MUTED}}>Sin pagos aún</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -555,47 +568,50 @@ export default function Dashboard() {
             </div>
             <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
-                <h2 className="font-semibold text-white">Clientes <span style={{color:MUTED}}>({filteredClients.length})</span></h2>
-                <button onClick={()=>{setEditClient(null);setForm(EMPTY_CLIENT);setShowModal(true)}} style={{backgroundColor:BLUE}} className="flex items-center gap-2 hover:opacity-90 text-base px-4 py-2.5 rounded-lg transition-opacity font-semibold text-white">
+                <div>
+                  <h2 className="font-semibold text-base" style={{color:TEXT}}>Clientes</h2>
+                  <p className="text-xs mt-0.5" style={{color:MUTED}}>{filteredClients.length} registros</p>
+                </div>
+                <button onClick={()=>{setEditClient(null);setForm(EMPTY_CLIENT);setShowModal(true)}} style={{backgroundColor:'#2563EB'}} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity">
                   <Plus className="w-4 h-4"/><span className="hidden sm:inline">Nuevo Cliente</span>
                 </button>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr style={{borderBottom:`1px solid ${BORDER}`,backgroundColor:BG}}>
+                <table className="w-full">
+                  <thead><tr style={{backgroundColor:CARD2,borderBottom:`1px solid ${BORDER}`}}>
                     {['Cliente','Cédula','Celular','Plan','Estado','F. Pago','Acciones'].map(h=>(
-                      <th key={h} className="text-left px-4 py-3 text-sm font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
+                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
                     {filteredClients.map(c=>(
-                      <tr key={c.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-white/5 transition-colors">
+                      <tr key={c.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-black/[0.02] transition-colors">
                         <td className="px-4 py-3 max-w-[200px]">
-                          <p className="font-medium text-white truncate">{c.name}</p>
+                          <p className="font-semibold text-sm truncate" style={{color:TEXT}}>{c.name}</p>
                           {c.address&&<p className="text-xs truncate mt-0.5" style={{color:MUTED}}>{c.address}</p>}
                         </td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>{c.cedula||'—'}</td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap font-medium" style={{color:LIGHT}}>{c.cedula||'—'}</td>
                         <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>
-                          <p>{c.cellphone}</p>
+                          <p className="font-medium">{c.cellphone}</p>
                           {c.telefono_alternativo&&<p className="text-xs mt-0.5" style={{color:MUTED}}>{c.telefono_alternativo}</p>}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="px-2 py-0.5 rounded text-xs text-white font-medium" style={{backgroundColor:getPlanColor(c.plan)}}>{c.plan}</span>
-                          <p className="text-xs mt-1 text-green-400 font-semibold">{formatCurrency(c.plan_value)}</p>
-                          {c.incluye_tv?<p className="text-xs mt-0.5" style={{color:LIGHT}}>📺 MediTV</p>:null}
+                          <span className="px-2 py-0.5 rounded text-xs text-white font-semibold" style={{backgroundColor:getPlanColor(c.plan)}}>{c.plan}</span>
+                          <p className="text-xs mt-1 font-bold" style={{color:'#16A34A'}}>{formatCurrency(c.plan_value)}</p>
+                          {c.incluye_tv?<p className="text-xs mt-0.5" style={{color:MUTED}}>📺 MediTV</p>:null}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap"><ClassBadge cls={c.classification}/></td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>
-                          <p>{c.dia_pago ? `Día ${c.dia_pago}` : <span style={{color:MUTED}}>Sin definir</span>}</p>
-                          {c.fecha_instalacion&&<p className="mt-0.5" style={{color:MUTED}}>Inst: {c.fecha_instalacion}</p>}
+                        <td className="px-4 py-3 text-sm whitespace-nowrap">
+                          <p className="font-medium" style={{color:c.dia_pago?TEXT:MUTED}}>{c.dia_pago ? `Día ${c.dia_pago}` : 'Sin definir'}</p>
+                          {c.fecha_instalacion&&<p className="text-xs mt-0.5" style={{color:MUTED}}>{c.fecha_instalacion}</p>}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex gap-2">
-                            <button onClick={()=>openNewPayment(c.id)} title="Registrar pago" className="text-green-400 hover:text-green-300 transition-colors"><CreditCard className="w-4 h-4"/></button>
-                            <Link href={`/factura/${c.id}`} target="_blank" title="Factura" className="text-blue-400 hover:text-blue-300 transition-colors"><FileText className="w-4 h-4"/></Link>
-                            <button onClick={()=>sendWhatsAppReminder(c)} title="Recordatorio de pago WhatsApp" className="text-emerald-400 hover:text-emerald-300 transition-colors"><MessageCircle className="w-4 h-4"/></button>
-                            <button onClick={()=>openEditClient(c)} className="hover:text-white transition-colors" style={{color:LIGHT}}><Pencil className="w-4 h-4"/></button>
-                            <button onClick={()=>handleDeleteClient(c.id)} className="text-red-400 hover:text-red-300 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                          <div className="flex items-center gap-1.5">
+                            <button onClick={()=>openNewPayment(c.id)} title="Registrar pago" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#F0FDF4',color:'#16A34A'}}><CreditCard className="w-3.5 h-3.5"/></button>
+                            <Link href={`/factura/${c.id}`} target="_blank" title="Factura" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#EFF6FF',color:'#2563EB'}}><FileText className="w-3.5 h-3.5"/></Link>
+                            <button onClick={()=>sendWhatsAppReminder(c)} title="WhatsApp" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#F0FDF4',color:'#16A34A'}}><MessageCircle className="w-3.5 h-3.5"/></button>
+                            <button onClick={()=>openEditClient(c)} title="Editar" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:CARD2,color:LIGHT}}><Pencil className="w-3.5 h-3.5"/></button>
+                            <button onClick={()=>handleDeleteClient(c.id)} title="Eliminar" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#FEF2F2',color:'#DC2626'}}><Trash2 className="w-3.5 h-3.5"/></button>
                           </div>
                         </td>
                       </tr>
@@ -619,32 +635,43 @@ export default function Dashboard() {
             </div>
             <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
-                <h2 className="font-semibold text-white">Pagos <span style={{color:MUTED}}>({payments.length})</span></h2>
-                <button onClick={()=>openNewPayment()} style={{backgroundColor:'#16a34a'}} className="flex items-center gap-2 hover:opacity-90 text-base px-4 py-2.5 rounded-lg transition-opacity font-semibold text-white">
+                <div>
+                  <h2 className="font-semibold text-base" style={{color:TEXT}}>Pagos</h2>
+                  <p className="text-xs mt-0.5" style={{color:MUTED}}>{payments.length} registros</p>
+                </div>
+                <button onClick={()=>openNewPayment()} style={{backgroundColor:'#16A34A'}} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity">
                   <Plus className="w-4 h-4"/><span className="hidden sm:inline">Registrar Pago</span>
                 </button>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr style={{borderBottom:`1px solid ${BORDER}`,backgroundColor:BG}}>
+                <table className="w-full">
+                  <thead><tr style={{backgroundColor:CARD2,borderBottom:`1px solid ${BORDER}`}}>
                     {['Cliente','Celular','Período','Monto','Método','Estado','Fecha','Acciones'].map(h=>(
-                      <th key={h} className="text-left px-4 py-3 text-sm font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
+                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
                     {payments.map(p=>(
-                      <tr key={p.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-white/5 transition-colors">
-                        <td className="px-4 py-3 font-medium text-white whitespace-nowrap">{p.client_name}</td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>{p.cellphone}</td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>{p.period}</td>
-                        <td className="px-4 py-3 text-green-400 font-semibold whitespace-nowrap">{formatCurrency(p.amount)}</td>
-                        <td className="px-4 py-3 text-xs capitalize whitespace-nowrap" style={{color:LIGHT}}>{p.method}</td>
-                        <td className="px-4 py-3 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${p.status==='paid'?'bg-green-900/40 text-green-400':'bg-yellow-900/40 text-yellow-400'}`}>{p.status==='paid'?'Pagado':'Pendiente'}</span></td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:MUTED}}>{p.created_at?.slice(0,10)}</td>
-                        <td className="px-4 py-3 whitespace-nowrap"><div className="flex gap-2">
-                          <button onClick={()=>openEditPayment(p)} className="text-blue-400 hover:text-blue-300 transition-colors"><Pencil className="w-4 h-4"/></button>
-                          <button onClick={()=>handleDeletePayment(p.id)} className="text-red-400 hover:text-red-300 transition-colors"><Trash2 className="w-4 h-4"/></button>
-                        </div></td>
+                      <tr key={p.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-black/[0.02] transition-colors">
+                        <td className="px-4 py-3 font-semibold text-sm whitespace-nowrap" style={{color:TEXT}}>{p.client_name}</td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap font-medium" style={{color:LIGHT}}>{p.cellphone}</td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap font-medium" style={{color:LIGHT}}>{p.period}</td>
+                        <td className="px-4 py-3 font-bold text-sm whitespace-nowrap" style={{color:'#16A34A'}}>{formatCurrency(p.amount)}</td>
+                        <td className="px-4 py-3 text-xs font-medium capitalize whitespace-nowrap" style={{color:LIGHT}}>{p.method}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{
+                            backgroundColor:p.status==='paid'?'#F0FDF4':'#FFFBEB',
+                            color:p.status==='paid'?'#16A34A':'#D97706',
+                            border:`1px solid ${p.status==='paid'?'#BBF7D0':'#FDE68A'}`
+                          }}>{p.status==='paid'?'Pagado':'Pendiente'}</span>
+                        </td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap font-medium" style={{color:MUTED}}>{p.created_at?.slice(0,10)}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5">
+                            <button onClick={()=>openEditPayment(p)} title="Editar" className="p-1.5 rounded-lg hover:opacity-80 transition-opacity" style={{backgroundColor:CARD2,color:LIGHT}}><Pencil className="w-3.5 h-3.5"/></button>
+                            <button onClick={()=>handleDeletePayment(p.id)} title="Eliminar" className="p-1.5 rounded-lg hover:opacity-80 transition-opacity" style={{backgroundColor:'#FEF2F2',color:'#DC2626'}}><Trash2 className="w-3.5 h-3.5"/></button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                     {!payments.length&&<tr><td colSpan={8} className="py-12 text-center text-sm" style={{color:MUTED}}>No hay pagos registrados aún</td></tr>}
@@ -755,16 +782,16 @@ export default function Dashboard() {
       {/* ══ MODAL CLIENTE ══ */}
       {showModal&&(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.85)'}}>
-          <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 sticky top-0 z-10" style={{backgroundColor:CARD,borderBottom:`1px solid ${BORDER}`}}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.6)'}}>
+          <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,boxShadow:'0 20px 60px rgba(0,0,0,0.15)'}} className="rounded-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 sticky top-0 z-10" style={{backgroundColor:CARD,borderBottom:`1px solid ${BORDER}`}}>
               <div>
-                <h3 className="font-semibold text-white">{editClient?'Editar Cliente':'Nuevo Cliente'}</h3>
-                <p className="text-xs mt-0.5" style={{color:MUTED}}>Completa la información del cliente</p>
+                <h3 className="font-bold text-base" style={{color:TEXT}}>{editClient?'Editar Cliente':'Nuevo Cliente'}</h3>
+                <p className="text-xs mt-0.5 font-medium" style={{color:MUTED}}>Completa la información del cliente</p>
               </div>
-              <button onClick={()=>setShowModal(false)} style={{color:MUTED}} className="hover:text-white transition-colors p-1"><X className="w-5 h-5"/></button>
+              <button onClick={()=>setShowModal(false)} className="p-2 rounded-lg hover:opacity-75 transition-opacity" style={{backgroundColor:CARD2,color:MUTED}}><X className="w-4 h-4"/></button>
             </div>
-            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
               {/* ── Identificación ── */}
               <SectionHeader icon={<Users className="w-3.5 h-3.5"/>} title="Identificación"/>
               <F muted={MUTED} label="Nombre Completo *">
@@ -916,23 +943,27 @@ export default function Dashboard() {
 
             </div>
             <div className="flex justify-end gap-3 p-5" style={{borderTop:`1px solid ${BORDER}`}}>
-              <button onClick={()=>setShowModal(false)} style={{border:`1px solid ${BORDER}`,color:LIGHT}} className="px-4 py-2 text-sm rounded-lg hover:text-white transition-colors">Cancelar</button>
-              <button onClick={handleSaveClient} style={{backgroundColor:BLUE}} className="px-6 py-2 text-sm rounded-lg font-medium hover:opacity-90 transition-opacity text-white">{editClient?'Actualizar Cliente':'Guardar Cliente'}</button>
+              <button onClick={()=>setShowModal(false)} className="px-4 py-2 text-sm font-medium rounded-lg hover:opacity-75 transition-opacity" style={{backgroundColor:CARD2,color:LIGHT,border:`1px solid ${BORDER}`}}>Cancelar</button>
+              <button onClick={handleSaveClient} className="px-6 py-2 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity text-white" style={{backgroundColor:'#2563EB'}}>{editClient?'Actualizar Cliente':'Guardar Cliente'}</button>
             </div>
           </div>
         </div>
+      </div>
       )}
 
       {/* ══ MODAL PAGO ══ */}
       {showPayModal&&(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.85)'}}>
-          <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-2xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-5" style={{borderBottom:`1px solid ${BORDER}`}}>
-              <h3 className="font-semibold text-white">{editPayment?'Editar Pago':'Registrar Pago'}</h3>
-              <button onClick={()=>setShowPayModal(false)} style={{color:MUTED}} className="hover:text-white transition-colors"><X className="w-5 h-5"/></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.6)'}}>
+          <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,boxShadow:'0 20px 60px rgba(0,0,0,0.15)'}} className="rounded-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between px-6 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
+              <div>
+                <h3 className="font-bold text-base" style={{color:TEXT}}>{editPayment?'Editar Pago':'Registrar Pago'}</h3>
+                <p className="text-xs mt-0.5 font-medium" style={{color:MUTED}}>Ingresa los datos del pago</p>
+              </div>
+              <button onClick={()=>setShowPayModal(false)} className="p-2 rounded-lg hover:opacity-75 transition-opacity" style={{backgroundColor:CARD2,color:MUTED}}><X className="w-4 h-4"/></button>
             </div>
-            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Cliente *</label>
                 <select value={payForm.client_id} onChange={e=>{const c=clients.find(x=>x.id===Number(e.target.value));setPayForm(p=>({...p,client_id:Number(e.target.value),amount:c?.plan_value??p.amount}))}} style={iStyle} className={iCls}>
                   <option value={0}>Seleccionar cliente...</option>
@@ -966,8 +997,8 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex justify-end gap-3 p-5" style={{borderTop:`1px solid ${BORDER}`}}>
-              <button onClick={()=>setShowPayModal(false)} style={{border:`1px solid ${BORDER}`,color:LIGHT}} className="px-4 py-2 text-sm rounded-lg hover:text-white transition-colors">Cancelar</button>
-              <button onClick={handleSavePayment} style={{backgroundColor:'#16a34a'}} className="px-6 py-2 text-sm rounded-lg font-medium hover:opacity-90 transition-opacity text-white">{editPayment?'Actualizar':'Guardar Pago'}</button>
+              <button onClick={()=>setShowPayModal(false)} className="px-4 py-2 text-sm font-medium rounded-lg hover:opacity-75 transition-opacity" style={{backgroundColor:CARD2,color:LIGHT,border:`1px solid ${BORDER}`}}>Cancelar</button>
+              <button onClick={handleSavePayment} className="px-6 py-2 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity text-white" style={{backgroundColor:'#16A34A'}}>{editPayment?'Actualizar':'Guardar Pago'}</button>
             </div>
           </div>
         </div>
