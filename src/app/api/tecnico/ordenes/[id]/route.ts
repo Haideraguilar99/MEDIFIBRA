@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { verifyTechToken, getTechTokenFromRequest } from '@/lib/tecnico-auth'
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const token = getTechTokenFromRequest(req)
   const tech = token ? await verifyTechToken(token) : null
   if (!tech) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -18,26 +19,27 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
           LEFT JOIN clients c ON wo.client_id = c.id
           LEFT JOIN technicians t ON wo.technician_id = t.id
           WHERE wo.id = ? AND wo.technician_id = ?`,
-    args: [params.id, tech.techId]
+    args: [id, tech.techId]
   })
 
   if (result.rows.length === 0) return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 })
   return NextResponse.json({ order: result.rows[0] })
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const token = getTechTokenFromRequest(req)
   const tech = token ? await verifyTechToken(token) : null
   if (!tech) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
   try {
+    const { id } = await params
     const body = await req.json()
     const db = getDb()
 
     // Verificar que la orden pertenece al técnico
     const check = await db.execute({
       sql: 'SELECT id, status FROM work_orders WHERE id = ? AND technician_id = ?',
-      args: [params.id, tech.techId]
+      args: [id, tech.techId]
     })
     if (check.rows.length === 0) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
 
@@ -73,11 +75,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     fields.push('updated_at = ?')
     args.push(now)
-    args.push(params.id)
+    args.push(id)
 
     await db.execute({ sql: `UPDATE work_orders SET ${fields.join(', ')} WHERE id = ?`, args })
 
-    const updated = await db.execute({ sql: 'SELECT * FROM work_orders WHERE id = ?', args: [params.id] })
+    const updated = await db.execute({ sql: 'SELECT * FROM work_orders WHERE id = ?', args: [id] })
     return NextResponse.json({ order: updated.rows[0] })
   } catch (e) {
     console.error(e)

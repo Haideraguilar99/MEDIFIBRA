@@ -225,8 +225,8 @@ export default function OrdenDetalle() {
           </button>
         )}
         {order.client_cellphone && (
-          
-            href={`https://wa.me/57${order.client_cellphone}`}
+          <a
+            href={'https://wa.me/57' + order.client_cellphone}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-[#1a2d5a] border border-blue-700 text-green-400 font-semibold py-3 px-4 rounded-xl"
@@ -235,8 +235,8 @@ export default function OrdenDetalle() {
           </a>
         )}
         {order.gps_lat !== 0 && order.gps_lng !== 0 && (
-          
-            href={`https://maps.google.com/?q=${order.gps_lat},${order.gps_lng}`}
+          <a
+            href={'https://maps.google.com/?q=' + order.gps_lat + ',' + order.gps_lng}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-[#1a2d5a] border border-blue-700 text-blue-400 font-semibold py-3 px-4 rounded-xl"
