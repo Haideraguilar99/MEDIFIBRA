@@ -39,7 +39,10 @@ export default function TecnicoDashboard() {
   const [filter, setFilter] = useState<'todas' | 'pending' | 'en_progreso' | 'completado'>('todas')
   const [loading, setLoading] = useState(true)
 
-  const getToken = () => typeof window !== 'undefined' ? localStorage.getItem('tech_token') : null
+  const getToken = () => {
+    if (typeof window === 'undefined') return null
+    return localStorage.getItem('tech_token')
+  }
 
   const fetchData = useCallback(async () => {
     const token = getToken()
@@ -60,7 +63,11 @@ export default function TecnicoDashboard() {
     finally { setLoading(false) }
   }, [router])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('tech_token') : null
+    if (!token) { router.push('/tecnico'); return }
+    fetchData()
+  }, [fetchData, router])
 
   function logout() {
     localStorage.removeItem('tech_token'); localStorage.removeItem('tech_data')
