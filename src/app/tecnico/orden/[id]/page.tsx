@@ -30,6 +30,7 @@ export default function OrdenDetalle() {
   const [evidence, setEvidence] = useState<Evidence[]>([])
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [tab, setTab] = useState<'info' | 'fotos' | 'equipos' | 'completar'>('info')
 
@@ -69,7 +70,16 @@ export default function OrdenDetalle() {
     finally { setLoading(false) }
   }, [orderId, router])
 
-  useEffect(() => { fetchAll() }, [fetchAll])
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    const token = localStorage.getItem('tech_token')
+    if (!token) { router.push('/tecnico'); return }
+    fetchAll()
+  }, [mounted, fetchAll, router])
 
   async function updateStatus(newStatus: string) {
     const token = getToken(); if (!token) return
