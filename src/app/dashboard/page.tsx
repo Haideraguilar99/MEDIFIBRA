@@ -309,13 +309,22 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen" style={{backgroundColor:BG, color:TEXT}}>
+      <style>{`
+        @keyframes mfPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        .mf-logo-m, .mf-logo-f { animation: mfPulse 1.6s ease-in-out infinite; }
+      `}</style>
       <Toaster position="top-right" toastOptions={{style:{background:CARD,color:TEXT,border:`1px solid ${BORDER}`}}}/>
 
       <header style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-4 md:px-8 h-16 flex items-center justify-between gap-3">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-0.5">
-            <span className="text-xl font-black tracking-tight" style={{color:'#2563EB'}}>MEDI</span>
-            <span className="text-xl font-black tracking-tight" style={{color:TEXT}}>FIBRA</span>
+          <div className="flex items-baseline gap-0">
+            <span className="text-2xl sm:text-3xl font-black tracking-tight mf-logo-m" style={{color:'#DC2626'}}>M</span>
+            <span className="text-2xl sm:text-3xl font-black tracking-tight" style={{color:TEXT}}>EDI</span>
+            <span className="text-2xl sm:text-3xl font-black tracking-tight mf-logo-f" style={{color:'#DC2626'}}>F</span>
+            <span className="text-2xl sm:text-3xl font-black tracking-tight" style={{color:TEXT}}>IBRA</span>
           </div>
           <div style={{width:1,height:18,backgroundColor:BORDER}} className="hidden sm:block"/>
           <div className="hidden md:flex items-center gap-2 text-xs font-medium" style={{color:MUTED}}>
@@ -685,7 +694,7 @@ export default function Dashboard() {
         {/* ── REPORTES ── */}
         {tab==='tecnicos'&&(
           <div style={{padding:'0'}}>
-            <TecnicosTab />
+            <TecnicosTab dark={dark} BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
           </div>
         )}
         {tab==='reports'&&(
