@@ -4,9 +4,7 @@ import { useEffect, useState, useCallback, useMemo, memo } from 'react'
 import { PLANS, TV_PLAN, formatCurrency } from '@/lib/plans'
 import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv,
          CreditCard, CheckCircle, Clock, BarChart2, AlertCircle, FileText, LogOut,
-         Phone, MapPin, Calendar, UserPlus, Image, Sun, Moon, MessageCircle,
-         LayoutDashboard, Menu, ChevronLeft } from 'lucide-react'
-import NextImage from 'next/image'
+         Phone, MapPin, Calendar, UserPlus, Image, Sun, Moon, MessageCircle } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -97,24 +95,13 @@ const EMPTY_CLIENT = {
 const EMPTY_PAYMENT = { client_id:0, amount:0, period:'', method:'efectivo', status:'paid', notes:'' }
 const METHODS = ['efectivo','transferencia','nequi','daviplata','bancolombia']
 
-
-const NAV_ITEMS = [
-  { key:'dashboard', label:'Dashboard',  icon: LayoutDashboard },
-  { key:'plans',     label:'Planes',     icon: Wifi            },
-  { key:'clients',   label:'Clientes',   icon: Users           },
-  { key:'payments',  label:'Pagos',      icon: CreditCard      },
-  { key:'reports',   label:'Reportes',   icon: BarChart2       },
-  { key:'tecnicos',  label:'Técnicos',   icon: UserCheck       },
-] as const
-
 export default function Dashboard() {
   const router = useRouter()
   const [dark, setDark] = useState(true)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const BG    = dark ? '#0F1117' : '#F1F5F9'
-  const BG2   = dark ? '#13171F' : '#FFFFFF'
-  const CARD  = dark ? '#1A1F2E' : '#FFFFFF'
+  const BG    = dark ? '#0F1117' : '#F8FAFC'
+  const BG2   = dark ? '#161B27' : '#FFFFFF'
+  const CARD  = dark ? '#1C2333' : '#FFFFFF'
   const CARD2 = dark ? '#232D3F' : '#F1F5F9'
   const BORDER= dark ? '#2A3547' : '#E2E8F0'
   const MUTED = dark ? '#64748B' : '#64748B'
@@ -301,6 +288,11 @@ export default function Dashboard() {
     return null
   }
 
+  const TABS = [
+    {key:'dashboard',label:'Dashboard'},{key:'plans',label:'Planes'},
+    {key:'clients',label:'Clientes'},{key:'payments',label:'Pagos'},{key:'reports',label:'Reportes'},{key:'tecnicos',label:'Técnicos'},
+  ] as const
+
   const MetricCard = ({ label, value, icon, sub }:{ label:string; value:string|number; icon:React.ReactNode; sub?:string }) => (
     <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,boxShadow:'0 1px 3px rgba(0,0,0,0.04)'}} className="rounded-xl overflow-hidden">
       <div style={{height:3,backgroundColor:'#2563EB'}}/>
@@ -315,127 +307,66 @@ export default function Dashboard() {
     </div>
   )
 
-  const navTabLabel: Record<string,string> = {
-    dashboard:'Dashboard', plans:'Planes', clients:'Clientes',
-    payments:'Pagos', reports:'Reportes', tecnicos:'Técnicos',
-  }
-
   return (
-    <div className="flex min-h-screen" style={{backgroundColor:BG, color:TEXT}}>
+    <div className="min-h-screen" style={{backgroundColor:BG, color:TEXT}}>
       <style>{`
-        @keyframes mfPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        .mf-logo-m,.mf-logo-f{animation:mfPulse 1.6s ease-in-out infinite}
-        .sb-link{transition:all 0.15s;border-left:3px solid transparent}
-        .sb-link:hover{background:rgba(37,99,235,0.10)}
-        .sb-link.active{background:rgba(37,99,235,0.18);border-left:3px solid #2563eb}
+        @keyframes mfPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        .mf-logo-m, .mf-logo-f { animation: mfPulse 1.6s ease-in-out infinite; }
       `}</style>
       <Toaster position="top-right" toastOptions={{style:{background:CARD,color:TEXT,border:`1px solid ${BORDER}`}}}/>
 
-      {/* OVERLAY MOBILE */}
-      {sidebarOpen&&<div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={()=>setSidebarOpen(false)}/>}
-
-      {/* ══ SIDEBAR ══ */}
-      <aside className={`fixed top-0 left-0 h-full z-50 flex flex-col lg:translate-x-0 lg:static lg:z-auto transition-transform duration-300 ${sidebarOpen?'translate-x-0':'-translate-x-full'}`}
-        style={{width:256,minWidth:256,backgroundColor:BG2,borderRight:`1px solid ${BORDER}`}}>
-
-        {/* Logo */}
-        <div className="flex items-center justify-between px-4 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
-          <div className="flex items-center gap-3">
-            <div style={{borderRadius:10,overflow:'hidden',border:`2px solid ${BORDER}`,width:40,height:40,flexShrink:0,position:'relative'}}>
-              <NextImage src="/logo.png" alt="Medifibra" fill style={{objectFit:'cover'}}/>
-            </div>
-            <div>
-              <div className="flex items-baseline leading-none">
-                <span className="text-lg font-black mf-logo-m" style={{color:'#DC2626'}}>M</span>
-                <span className="text-lg font-black" style={{color:TEXT}}>EDI</span>
-                <span className="text-lg font-black mf-logo-f" style={{color:'#DC2626'}}>F</span>
-                <span className="text-lg font-black" style={{color:TEXT}}>IBRA</span>
-              </div>
-              <p className="text-xs font-medium" style={{color:MUTED}}>Panel de Control</p>
-            </div>
+      <header style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-4 md:px-8 h-16 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-4">
+          <div className="flex items-baseline gap-0">
+            <span className="text-2xl sm:text-3xl font-black tracking-tight mf-logo-m" style={{color:'#DC2626'}}>M</span>
+            <span className="text-2xl sm:text-3xl font-black tracking-tight" style={{color:TEXT}}>EDI</span>
+            <span className="text-2xl sm:text-3xl font-black tracking-tight mf-logo-f" style={{color:'#DC2626'}}>F</span>
+            <span className="text-2xl sm:text-3xl font-black tracking-tight" style={{color:TEXT}}>IBRA</span>
           </div>
-          <button className="lg:hidden p-1 rounded" style={{color:MUTED}} onClick={()=>setSidebarOpen(false)}><ChevronLeft className="w-4 h-4"/></button>
+          <div style={{width:1,height:18,backgroundColor:BORDER}} className="hidden sm:block"/>
+          <div className="hidden md:flex items-center gap-2 text-xs font-medium" style={{color:MUTED}}>
+            <span>NIT 902060057-8</span>
+            <span style={{color:BORDER}}>·</span>
+            <span>Mariana Lujan</span>
+            <span style={{color:BORDER}}>·</span>
+            <span>Blanquizal, Medellín</span>
+          </div>
         </div>
-
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
-          <p className="px-3 mb-2 text-xs font-bold uppercase tracking-widest" style={{color:MUTED}}>Principal</p>
-          {NAV_ITEMS.slice(0,1).map(item=>{
-            const Icon=item.icon; const active=tab===item.key
-            return <button key={item.key} onClick={()=>{setTab(item.key as typeof tab);setSidebarOpen(false)}}
-              className={`sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-left ${active?'active':''}`}
-              style={{color:active?'#2563eb':LIGHT}}><Icon className="w-4 h-4 flex-shrink-0"/><span>{item.label}</span></button>
-          })}
-          <p className="px-3 pt-4 mb-2 text-xs font-bold uppercase tracking-widest" style={{color:MUTED}}>Gestión</p>
-          {NAV_ITEMS.slice(1,4).map(item=>{
-            const Icon=item.icon; const active=tab===item.key
-            return <button key={item.key} onClick={()=>{setTab(item.key as typeof tab);setSidebarOpen(false)}}
-              className={`sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-left ${active?'active':''}`}
-              style={{color:active?'#2563eb':LIGHT}}>
-              <Icon className="w-4 h-4 flex-shrink-0"/><span>{item.label}</span>
-              {item.key==='clients'&&clients.length>0&&<span className="ml-auto text-xs font-bold px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#2563eb22',color:'#2563eb'}}>{clients.length}</span>}
-            </button>
-          })}
-          <p className="px-3 pt-4 mb-2 text-xs font-bold uppercase tracking-widest" style={{color:MUTED}}>Herramientas</p>
-          {NAV_ITEMS.slice(4).map(item=>{
-            const Icon=item.icon; const active=tab===item.key
-            return <button key={item.key} onClick={()=>{setTab(item.key as typeof tab);setSidebarOpen(false)}}
-              className={`sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-left ${active?'active':''}`}
-              style={{color:active?'#2563eb':LIGHT}}><Icon className="w-4 h-4 flex-shrink-0"/><span>{item.label}</span></button>
-          })}
-          <Link href="/import" className="sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold" style={{color:LIGHT}}>
-            <span className="w-4 h-4 text-center flex-shrink-0">📥</span><span>Importar</span>
+        <div className="flex items-center gap-2">
+          <div style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`}} className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-medium">
+            <StatusDot status={dbStatus} label="DB"/>
+            <div style={{width:1,height:12,backgroundColor:BORDER}}/>
+            <StatusDot status={sseStatus} label="Live"/>
+          </div>
+          <Link href="/import" style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`,color:LIGHT}} className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-75 transition-opacity">
+            <span>📥</span><span>Importar</span>
           </Link>
-        </nav>
-
-        {/* Status */}
-        <div className="px-4 py-3 space-y-2" style={{borderTop:`1px solid ${BORDER}`}}>
-          <StatusDot status={dbStatus} label="API Turso · Online"/>
-          <StatusDot status={sseStatus} label="SSE · En vivo"/>
-        </div>
-
-        {/* Tema */}
-        <div className="px-4 py-3" style={{borderTop:`1px solid ${BORDER}`}}>
-          <button onClick={()=>setDark(d=>!d)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold"
-            style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`,color:LIGHT}}>
-            {dark?<Sun className="w-4 h-4"/>:<Moon className="w-4 h-4"/>}
-            <span>{dark?'Modo Claro':'Modo Oscuro'}</span>
+          <NotificationBell dark={dark} BG={BG} BG2={BG2} CARD={CARD} BORDER={BORDER} MUTED={MUTED} TEXT={TEXT} LIGHT={LIGHT}/>
+          <button onClick={()=>setDark(d=>!d)} style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`,color:LIGHT}} className="flex items-center justify-center w-8 h-8 rounded-lg hover:opacity-75 transition-opacity">
+            {dark ? <Sun className="w-4 h-4"/> : <Moon className="w-4 h-4"/>}
+          </button>
+          <button onClick={handleLogout} style={{backgroundColor:'#FEF2F2',border:`1px solid #FECACA`,color:'#DC2626'}} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-80 transition-opacity">
+            <LogOut className="w-3.5 h-3.5"/><span className="hidden sm:inline">Salir</span>
           </button>
         </div>
-      </aside>
+      </header>
 
-      {/* ══ CONTENIDO PRINCIPAL ══ */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <nav style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}} className="px-4 md:px-8 flex gap-0 overflow-x-auto">
+        {TABS.map(t=>(
+          <button key={t.key} onClick={()=>setTab(t.key)}
+            className="px-4 md:px-5 py-4 text-sm font-semibold whitespace-nowrap transition-all relative"
+            style={{
+              color: tab===t.key ? '#2563EB' : MUTED,
+              borderBottom: tab===t.key ? '2px solid #2563EB' : '2px solid transparent',
+            }}>{t.label}
+          </button>
+        ))}
+      </nav>
 
-        {/* Header */}
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 md:px-6 h-16"
-          style={{backgroundColor:BG2,borderBottom:`1px solid ${BORDER}`}}>
-          <div className="flex items-center gap-3">
-            <button className="lg:hidden p-2 rounded-lg" style={{color:LIGHT,backgroundColor:CARD2,border:`1px solid ${BORDER}`}} onClick={()=>setSidebarOpen(true)}>
-              <Menu className="w-4 h-4"/>
-            </button>
-            <div className="hidden sm:flex items-center gap-2 text-sm">
-              <span className="font-semibold" style={{color:'#2563eb'}}>MEDIFIBRA</span>
-              <span style={{color:BORDER}}>›</span>
-              <span className="font-semibold" style={{color:TEXT}}>{navTabLabel[tab]}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden lg:flex items-center gap-2 text-xs" style={{color:MUTED}}>
-              <span>NIT 902060057-8</span><span style={{color:BORDER}}>·</span>
-              <span>Mariana Lujan</span><span style={{color:BORDER}}>·</span>
-              <span>Blanquizal, Medellín</span>
-            </div>
-            <div style={{width:1,height:16,backgroundColor:BORDER}} className="hidden lg:block"/>
-            <NotificationBell dark={dark} BG={BG} BG2={BG2} CARD={CARD} BORDER={BORDER} MUTED={MUTED} TEXT={TEXT} LIGHT={LIGHT}/>
-            <button onClick={handleLogout} style={{backgroundColor:'#FEF2F2',border:'1px solid #FECACA',color:'#DC2626'}}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-80 transition-opacity">
-              <LogOut className="w-3.5 h-3.5"/><span className="hidden sm:inline">Salir</span>
-            </button>
-          </div>
-        </header>
-
-      <main className="flex-1 p-4 sm:p-5 md:p-8 max-w-7xl w-full mx-auto space-y-5 md:space-y-6">
+      <main className="p-4 sm:p-5 md:p-8 max-w-7xl mx-auto space-y-5 md:space-y-6">
 
         {/* ── DASHBOARD ── */}
         {tab==='dashboard'&&(
@@ -856,7 +787,6 @@ export default function Dashboard() {
           </div>
         )}
       </main>
-      </div>{/* fin contenido principal */}
 
       {/* ══ MODAL CLIENTE ══ */}
       {showModal&&(

@@ -321,7 +321,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex min-h-screen" style={{backgroundColor:BG, color:TEXT}}>
+    <div className="flex min-h-screen" style={{backgroundColor:BG, color:TEXT}} style={{backgroundColor:BG, color:TEXT}}>
       <style>{`
         @keyframes mfPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
         .mf-logo-m,.mf-logo-f{animation:mfPulse 1.6s ease-in-out infinite}
