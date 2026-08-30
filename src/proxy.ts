@@ -13,7 +13,7 @@ const PUBLIC = [
   '/api/webhook',
   '/api/notifications',
   '/tecnico',
-  '/api/tecnico/auth',
+  '/api/tecnico/',
 ]
 
 export async function proxy(req: NextRequest) {

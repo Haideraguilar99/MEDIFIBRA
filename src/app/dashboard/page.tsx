@@ -1,5 +1,6 @@
 'use client'
 import TecnicosTab from '@/components/TecnicosTab';
+import ResultadosTab from '@/components/ResultadosTab';
 import { useEffect, useState, useCallback, useMemo, memo } from 'react'
 import { PLANS, TV_PLAN, formatCurrency } from '@/lib/plans'
 import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv,
@@ -79,7 +80,7 @@ const F = ({ label, children, span2=false, muted }:{ label:string; children:Reac
   </div>
 )
 
-const SectionHeader = ({ icon, title }:{ icon:React.ReactNode; title:string }) => (
+const SectionHeader = ({ icon, title }:{ icon?:React.ReactNode; title:string }) => (
   <div className="md:col-span-2 flex items-center gap-2 mt-2 mb-1 pb-2" style={{borderBottom:'1px solid #1e2533'}}>
     <span style={{color:BLUE}}>{icon}</span>
     <span className="text-sm font-semibold uppercase tracking-wider" style={{color:'#9ca3af'}}>{title}</span>
@@ -112,11 +113,11 @@ export default function Dashboard() {
   const [dark, setDark] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const BG    = dark ? '#0F1117' : '#F1F5F9'
-  const BG2   = dark ? '#13171F' : '#FFFFFF'
-  const CARD  = dark ? '#1A1F2E' : '#FFFFFF'
-  const CARD2 = dark ? '#232D3F' : '#F1F5F9'
-  const BORDER= dark ? '#2A3547' : '#E2E8F0'
+  const BG    = dark ? '#0b0e17' : '#f1f5f9'
+  const BG2   = dark ? '#111420' : '#ffffff'
+  const CARD  = dark ? '#141720' : '#ffffff'
+  const CARD2 = dark ? '#1c2035' : '#f8fafc'
+  const BORDER= dark ? '#252d45' : '#e2e8f0'
   const MUTED = dark ? '#64748B' : '#64748B'
   const LIGHT = dark ? '#94A3B8' : '#475569'
   const TEXT  = dark ? '#F1F5F9' : '#0F172A'
@@ -134,7 +135,7 @@ export default function Dashboard() {
   const [payForm,      setPayForm]      = useState(EMPTY_PAYMENT)
   const [sseStatus,    setSseStatus]    = useState<'connecting'|'connected'|'error'>('connecting')
   const [dbStatus,     setDbStatus]     = useState<'checking'|'ok'|'error'>('checking')
-  const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'|'tecnicos'>('dashboard')
+  const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'|'tecnicos'|'resultados'>('dashboard')
   const [search,       setSearch]       = useState('')
   const [filterPlan,   setFilterPlan]   = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -301,17 +302,11 @@ export default function Dashboard() {
     return null
   }
 
-  const MetricCard = ({ label, value, icon, sub }:{ label:string; value:string|number; icon:React.ReactNode; sub?:string }) => (
-    <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,boxShadow:'0 1px 3px rgba(0,0,0,0.04)'}} className="rounded-xl overflow-hidden">
-      <div style={{height:3,backgroundColor:'#2563EB'}}/>
-      <div className="p-4 sm:p-5 flex items-center gap-3 sm:gap-4 min-w-0">
-        <div style={{backgroundColor:'#2563EB15',color:'#2563EB'}} className="p-2.5 rounded-lg flex-shrink-0">{icon}</div>
-        <div className="min-w-0 flex-1">
-          <p className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight break-all" style={{color:TEXT}}>{value}</p>
-          <p className="text-xs sm:text-sm mt-0.5 font-medium" style={{color:MUTED}}>{label}</p>
-          {sub&&<p className="text-xs mt-0.5 font-semibold" style={{color:'#2563EB'}}>{sub}</p>}
-        </div>
-      </div>
+  const MetricCard = ({ label, value }:{ label:string; value:string|number }) => (
+    <div style={{backgroundColor:CARD, border:`1px solid ${BORDER}`}} className="rounded-xl p-6 flex flex-col justify-between min-h-[120px]">
+      <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{color:MUTED}}>{label}</p>
+      <p className="text-4xl font-bold leading-none tracking-tight truncate" style={{color:'#4f6ef7'}}>{value}</p>
+      <div className="mt-4 h-[2px] rounded-full w-10" style={{backgroundColor:'#4f6ef760'}}/>
     </div>
   )
 
@@ -335,8 +330,8 @@ export default function Dashboard() {
       {sidebarOpen&&<div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={()=>setSidebarOpen(false)}/>}
 
       {/* ══ SIDEBAR ══ */}
-      <aside className={`fixed top-0 left-0 h-full z-50 flex flex-col lg:translate-x-0 lg:static lg:z-auto transition-transform duration-300 ${sidebarOpen?'translate-x-0':'-translate-x-full'}`}
-        style={{width:256,minWidth:256,backgroundColor:BG2,borderRight:`1px solid ${BORDER}`}}>
+      <aside className={`fixed top-0 left-0 h-full z-50 flex flex-col lg:translate-x-0 transition-transform duration-300 ${sidebarOpen?'translate-x-0':'-translate-x-full'}`}
+        style={{width:256,minWidth:256,backgroundColor:dark?'#0d1018':'#1a1d27',borderRight:`1px solid ${dark?'#1a1f30':'#2a3147'}`}}>
 
         {/* Logo */}
         <div className="flex items-center justify-between px-4 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
@@ -364,16 +359,16 @@ export default function Dashboard() {
             const Icon=item.icon; const active=tab===item.key
             return <button key={item.key} onClick={()=>{setTab(item.key as typeof tab);setSidebarOpen(false)}}
               className={`sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-left ${active?'active':''}`}
-              style={{color:active?'#2563eb':LIGHT}}><Icon className="w-4 h-4 flex-shrink-0"/><span>{item.label}</span></button>
+              style={{color:active?'#4f6ef7':LIGHT}}><Icon className="w-4 h-4 flex-shrink-0"/><span>{item.label}</span></button>
           })}
           <p className="px-3 pt-4 mb-2 text-xs font-bold uppercase tracking-widest" style={{color:MUTED}}>Gestión</p>
           {NAV_ITEMS.slice(1,4).map(item=>{
             const Icon=item.icon; const active=tab===item.key
             return <button key={item.key} onClick={()=>{setTab(item.key as typeof tab);setSidebarOpen(false)}}
               className={`sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-left ${active?'active':''}`}
-              style={{color:active?'#2563eb':LIGHT}}>
+              style={{color:active?'#4f6ef7':LIGHT}}>
               <Icon className="w-4 h-4 flex-shrink-0"/><span>{item.label}</span>
-              {item.key==='clients'&&clients.length>0&&<span className="ml-auto text-xs font-bold px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#2563eb22',color:'#2563eb'}}>{clients.length}</span>}
+              {item.key==='clients'&&clients.length>0&&<span className="ml-auto text-xs font-bold px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#2563eb22',color:'#4f6ef7'}}>{clients.length}</span>}
             </button>
           })}
           <p className="px-3 pt-4 mb-2 text-xs font-bold uppercase tracking-widest" style={{color:MUTED}}>Herramientas</p>
@@ -381,7 +376,7 @@ export default function Dashboard() {
             const Icon=item.icon; const active=tab===item.key
             return <button key={item.key} onClick={()=>{setTab(item.key as typeof tab);setSidebarOpen(false)}}
               className={`sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-left ${active?'active':''}`}
-              style={{color:active?'#2563eb':LIGHT}}><Icon className="w-4 h-4 flex-shrink-0"/><span>{item.label}</span></button>
+              style={{color:active?'#4f6ef7':LIGHT}}><Icon className="w-4 h-4 flex-shrink-0"/><span>{item.label}</span></button>
           })}
           <Link href="/import" className="sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold" style={{color:LIGHT}}>
             <span className="w-4 h-4 text-center flex-shrink-0">📥</span><span>Importar</span>
@@ -389,15 +384,15 @@ export default function Dashboard() {
         </nav>
 
         {/* Status */}
-        <div className="px-4 py-3 space-y-2" style={{borderTop:`1px solid ${BORDER}`}}>
+        <div className="px-4 py-3 space-y-2" style={{borderTop:`1px solid ${dark?'#1a1f30':'#2a3147'}`}}>
           <StatusDot status={dbStatus} label="API Turso · Online"/>
           <StatusDot status={sseStatus} label="SSE · En vivo"/>
         </div>
 
         {/* Tema */}
-        <div className="px-4 py-3" style={{borderTop:`1px solid ${BORDER}`}}>
+        <div className="px-4 py-3" style={{borderTop:`1px solid ${dark?'#1a1f30':'#2a3147'}`}}>
           <button onClick={()=>setDark(d=>!d)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold"
-            style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`,color:LIGHT}}>
+            style={{backgroundColor:dark?'#1c2035':'#334155',border:`1px solid ${dark?'#1a1f30':'#2a3147'}`,color:'#f1f5f9'}}>
             {dark?<Sun className="w-4 h-4"/>:<Moon className="w-4 h-4"/>}
             <span>{dark?'Modo Claro':'Modo Oscuro'}</span>
           </button>
@@ -405,7 +400,7 @@ export default function Dashboard() {
       </aside>
 
       {/* ══ CONTENIDO PRINCIPAL ══ */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-[256px]">
 
         {/* Header */}
         <header className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 md:px-6 h-16"
@@ -415,7 +410,7 @@ export default function Dashboard() {
               <Menu className="w-4 h-4"/>
             </button>
             <div className="hidden sm:flex items-center gap-2 text-sm">
-              <span className="font-semibold" style={{color:'#2563eb'}}>MEDIFIBRA</span>
+              <span className="font-semibold" style={{color:'#4f6ef7'}}>MEDIFIBRA</span>
               <span style={{color:BORDER}}>›</span>
               <span className="font-semibold" style={{color:TEXT}}>{navTabLabel[tab]}</span>
             </div>
@@ -441,15 +436,15 @@ export default function Dashboard() {
         {tab==='dashboard'&&(
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
-              <MetricCard label="Total Clientes" value={stats.total}                             icon={<Users className="w-5 h-5"/>}/>
-              <MetricCard label="Activos"         value={stats.active}                            icon={<UserCheck className="w-5 h-5"/>}/>
-              <MetricCard label="Suspendidos"     value={stats.suspended}                         icon={<UserX className="w-5 h-5"/>}/>
-              <MetricCard label="Ingresos / Mes"  value={formatCurrency(stats.monthly_income??0)} icon={<DollarSign className="w-5 h-5"/>}/>
+              <MetricCard label="Total Clientes" value={stats.total}/>
+              <MetricCard label="Activos"         value={stats.active}/>
+              <MetricCard label="Suspendidos"     value={stats.suspended}/>
+              <MetricCard label="Ingresos / Mes"  value={formatCurrency(stats.monthly_income??0)}/>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-              <MetricCard label="Total Cobrado"    value={formatCurrency(payStats.paid_amount??0)}    icon={<CheckCircle className="w-5 h-5"/>}/>
-              <MetricCard label="Pendiente"         value={formatCurrency(payStats.pending_amount??0)} icon={<Clock className="w-5 h-5"/>}/>
-              <MetricCard label="Pagos Registrados" value={payStats.total??0}                          icon={<CreditCard className="w-5 h-5"/>}/>
+              <MetricCard label="Total Cobrado"    value={formatCurrency(payStats.paid_amount??0)}/>
+              <MetricCard label="Pendiente"         value={formatCurrency(payStats.pending_amount??0)}/>
+              <MetricCard label="Pagos Registrados" value={payStats.total??0}/>
             </div>
 
             {classStats.length>0&&(
@@ -706,10 +701,10 @@ export default function Dashboard() {
         {tab==='payments'&&(
           <div className="space-y-5">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
-              <MetricCard label="Total Pagos"     value={payStats.total??0}                         icon={<CreditCard className="w-5 h-5"/>}/>
-              <MetricCard label="Total Recaudado" value={formatCurrency(payStats.total_amount??0)}   icon={<DollarSign className="w-5 h-5"/>}/>
-              <MetricCard label="Cobrado"          value={formatCurrency(payStats.paid_amount??0)}    icon={<CheckCircle className="w-5 h-5"/>}/>
-              <MetricCard label="Pendiente"        value={formatCurrency(payStats.pending_amount??0)} icon={<Clock className="w-5 h-5"/>}/>
+              <MetricCard label="Total Pagos"     value={payStats.total??0}/>
+              <MetricCard label="Total Recaudado" value={formatCurrency(payStats.total_amount??0)}/>
+              <MetricCard label="Cobrado"          value={formatCurrency(payStats.paid_amount??0)}/>
+              <MetricCard label="Pendiente"        value={formatCurrency(payStats.pending_amount??0)}/>
             </div>
             <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
@@ -765,6 +760,9 @@ export default function Dashboard() {
           <div style={{padding:'0'}}>
             <TecnicosTab dark={dark} BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
           </div>
+        )}
+        {tab==='resultados'&&(
+          <ResultadosTab dark={dark} BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
         )}
         {tab==='reports'&&(
           <div className="space-y-5">
@@ -872,7 +870,7 @@ export default function Dashboard() {
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
               {/* ── Identificación ── */}
-              <SectionHeader icon={<Users className="w-3.5 h-3.5"/>} title="Identificación"/>
+              <SectionHeader title="Identificación"/>
               <F muted={MUTED} label="Nombre Completo *">
                 <input type="text" value={form.name} onChange={e=>{const v=e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,"");setForm(p=>({...p,name:v}))}} style={iStyle} className={iCls} placeholder="Nombre y apellidos"/>
               </F>
@@ -881,7 +879,7 @@ export default function Dashboard() {
               </F>
 
               {/* ── Contacto ── */}
-              <SectionHeader icon={<Phone className="w-3.5 h-3.5"/>} title="Contacto"/>
+              <SectionHeader title="Contacto"/>
               <F muted={MUTED} label="Celular Principal *">
                 <input type="text" value={form.cellphone} onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,10);setForm(p=>({...p,cellphone:v}))}} style={iStyle} className={iCls} placeholder="3XX XXX XXXX"/>
               </F>
@@ -896,7 +894,7 @@ export default function Dashboard() {
               </F>
 
               {/* ── Ubicación ── */}
-              <SectionHeader icon={<MapPin className="w-3.5 h-3.5"/>} title="Ubicación"/>
+              <SectionHeader title="Ubicación"/>
               <F muted={MUTED} label="Dirección de Instalación" span2>
                 <input type="text" value={form.address} onChange={e=>setForm(p=>({...p,address:e.target.value}))} style={iStyle} className={iCls} placeholder="Calle, carrera, número..."/>
               </F>
@@ -914,7 +912,7 @@ export default function Dashboard() {
               </F>
 
               {/* ── Foto de ubicación ── */}
-              <SectionHeader icon={<Image className="w-3.5 h-3.5"/>} title="Foto de Ubicación"/>
+              <SectionHeader title="Foto de Ubicación"/>
               <F muted={MUTED} label="URL Foto Fachada / Cuadra" span2>
                 <input type="text" value={form.foto_fachada} onChange={e=>setForm(p=>({...p,foto_fachada:e.target.value}))} style={iStyle} className={iCls} placeholder="https://... (link de Google Photos, Drive, etc.)"/>
               </F>
@@ -922,14 +920,14 @@ export default function Dashboard() {
                 <div className="md:col-span-2">
                   <a href={form.foto_fachada} target="_blank" rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors"
-                    style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`,color:LIGHT}}>
+                    style={{backgroundColor:dark?'#1c2035':'#334155',border:`1px solid ${dark?'#1a1f30':'#2a3147'}`,color:'#f1f5f9'}}>
                     <Image className="w-3.5 h-3.5"/> Ver foto
                   </a>
                 </div>
               )}
 
               {/* ── Servicio ── */}
-              <SectionHeader icon={<Wifi className="w-3.5 h-3.5"/>} title="Plan y Servicio"/>
+              <SectionHeader title="Plan y Servicio"/>
               <F muted={MUTED} label="Plan de Internet *">
                 <select value={form.plan} onChange={e=>{const p=PLANS.find(x=>x.name===e.target.value);setForm(prev=>({...prev,plan:e.target.value,plan_value:p?.value??0}))}} style={iStyle} className={iCls}>
                   <option value="">Seleccionar plan...</option>
@@ -955,7 +953,7 @@ export default function Dashboard() {
               </F>
 
               {/* ── Facturación ── */}
-              <SectionHeader icon={<Calendar className="w-3.5 h-3.5"/>} title="Facturación"/>
+              <SectionHeader title="Facturación"/>
               <F muted={MUTED} label="Día Preferido de Pago">
                 <select value={form.dia_pago} onChange={e=>setForm(p=>({...p,dia_pago:e.target.value}))} style={iStyle} className={iCls}>
                   <option value="">Sin definir</option>
@@ -979,7 +977,7 @@ export default function Dashboard() {
               </F>
 
               {/* ── Clasificación ── */}
-              <SectionHeader icon={<CheckCircle className="w-3.5 h-3.5"/>} title="Estado y Clasificación"/>
+              <SectionHeader title="Estado y Clasificación"/>
               <F muted={MUTED} label="Estado del sistema">
                 <select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))} style={iStyle} className={iCls}>
                   <option value="active">Activo</option>
@@ -998,7 +996,7 @@ export default function Dashboard() {
               )}
 
               {/* ── Referido ── */}
-              <SectionHeader icon={<UserPlus className="w-3.5 h-3.5"/>} title="Programa de Referidos"/>
+              <SectionHeader title="Programa de Referidos"/>
               <F muted={MUTED} label="¿Deseas referir a alguien? — Nombre">
                 <input type="text" value={form.referido_nombre} onChange={e=>{const v=e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,"");setForm(p=>({...p,referido_nombre:v}))}} style={iStyle} className={iCls} placeholder="Nombre del referido"/>
               </F>

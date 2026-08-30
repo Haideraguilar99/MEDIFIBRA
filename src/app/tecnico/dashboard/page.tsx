@@ -10,7 +10,7 @@ interface Order {
   followup_required: number; tech_rating: number
 }
 interface Stats {
-  total: number; completadas: number; pendientes: number; en_progreso: number
+  total: number; completadas: number; pendientes: number; in_progress: number
   avg_duracion: number; promedio: number; total_ratings: number
 }
 interface TechData { id: number; name: string; cedula: string; role: string; photo_url: string }
@@ -23,12 +23,12 @@ const PRIORITY_COLORS: Record<string, string> = {
 }
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-900 text-yellow-300 border-yellow-700',
-  en_progreso: 'bg-green-900 text-green-300 border-green-700',
-  completado: 'bg-gray-800 text-gray-400 border-gray-600',
-  cancelado: 'bg-red-900 text-red-400 border-red-700'
+  in_progress: 'bg-green-900 text-green-300 border-green-700',
+  completed:   'bg-blue-900 text-blue-300 border-blue-700',
+  cancelled:   'bg-red-900 text-red-400 border-red-700'
 }
 const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pendiente', en_progreso: 'En progreso', completado: 'Completado', cancelado: 'Cancelado'
+  pending: 'Pendiente', in_progress: 'En progreso', completed: 'Completado', cancelled: 'Cancelado'
 }
 
 export default function TecnicoDashboard() {
@@ -36,7 +36,7 @@ export default function TecnicoDashboard() {
   const [tech, setTech] = useState<TechData | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
-  const [filter, setFilter] = useState<'todas' | 'pending' | 'en_progreso' | 'completado'>('todas')
+  const [filter, setFilter] = useState<'todas' | 'pending' | 'in_progress' | 'completed'>('todas')
   const [loading, setLoading] = useState(true)
 
   const getToken = () => {
@@ -101,7 +101,7 @@ export default function TecnicoDashboard() {
           {[
             { label: 'Total', value: stats.total, color: 'text-white' },
             { label: 'Pendientes', value: stats.pendientes, color: 'text-yellow-400' },
-            { label: 'En curso', value: stats.en_progreso, color: 'text-green-400' },
+            { label: 'En curso', value: stats.in_progress, color: 'text-green-400' },
             { label: '★ Prom.', value: stats.promedio ? Number(stats.promedio).toFixed(1) : '—', color: 'text-amber-400' }
           ].map(s => (
             <div key={s.label} className="bg-[#1a2d5a] rounded-xl p-3 text-center border border-blue-800">
@@ -114,7 +114,7 @@ export default function TecnicoDashboard() {
 
       {/* Filtros */}
       <div className="flex gap-2 px-4 pb-3 overflow-x-auto">
-        {(['todas', 'pending', 'en_progreso', 'completado'] as const).map(f => (
+        {(['todas', 'pending', 'in_progress', 'completed'] as const).map(f => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -159,7 +159,7 @@ export default function TecnicoDashboard() {
             {order.followup_required === 1 && (
               <div className="mt-2 text-xs text-amber-400">⚠️ Requiere seguimiento</div>
             )}
-            {order.status === 'completado' && order.tech_rating > 0 && (
+            {order.status === 'completed' && order.tech_rating > 0 && (
               <div className="mt-2 text-xs text-amber-400">{'★'.repeat(order.tech_rating)} Calificado</div>
             )}
           </div>
