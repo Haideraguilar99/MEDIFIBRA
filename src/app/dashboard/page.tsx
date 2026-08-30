@@ -334,10 +334,10 @@ export default function Dashboard() {
         style={{width:256,minWidth:256,backgroundColor:dark?'#0d1018':'#1a1d27',borderRight:`1px solid ${dark?'#1a1f30':'#2a3147'}`}}>
 
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
+        <div className="flex items-center justify-between px-4 py-5" style={{borderBottom:`1px solid ${dark?'#1a1f30':'#2a3147'}`}}>
           <div className="flex items-center gap-3">
-            <div style={{borderRadius:10,overflow:'hidden',border:`2px solid ${BORDER}`,width:40,height:40,flexShrink:0,position:'relative'}}>
-              <NextImage src="/logo.png" alt="Medifibra" fill style={{objectFit:'cover'}}/>
+            <div style={{borderRadius:12,overflow:'hidden',border:`2px solid ${dark?'#252d45':'#e2e8f0'}`,width:56,height:56,flexShrink:0,position:'relative',backgroundColor:'#ffffff'}}>
+              <NextImage src="/logo.png" alt="Medifibra" fill style={{objectFit:'contain',padding:'3px'}}/>
             </div>
             <div>
               <div className="flex items-baseline leading-none">
@@ -384,9 +384,21 @@ export default function Dashboard() {
         </nav>
 
         {/* Status */}
-        <div className="px-4 py-3 space-y-2" style={{borderTop:`1px solid ${dark?'#1a1f30':'#2a3147'}`}}>
-          <StatusDot status={dbStatus} label="API Turso · Online"/>
-          <StatusDot status={sseStatus} label="SSE · En vivo"/>
+        <div className="px-3 py-3 space-y-1.5" style={{borderTop:`1px solid ${dark?'#1a1f30':'#2a3147'}`}}>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{backgroundColor:dark?'#0b0e17':'#0f172a',border:`1px solid ${dark?'#1e2535':'#2a3147'}`}}>
+            <span className="relative flex h-2 w-2 flex-shrink-0">
+              {dbStatus==='ok'&&<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"/>}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${dbStatus==='ok'?'bg-green-400':dbStatus==='error'?'bg-red-500':'bg-yellow-400'}`}/>
+            </span>
+            <span className="text-xs font-semibold text-green-400">API Turso · Online</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{backgroundColor:dark?'#0b0e17':'#0f172a',border:`1px solid ${dark?'#1e2535':'#2a3147'}`}}>
+            <span className="relative flex h-2 w-2 flex-shrink-0">
+              {sseStatus==='connected'&&<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"/>}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${sseStatus==='connected'?'bg-green-400':sseStatus==='error'?'bg-red-500':'bg-yellow-400'}`}/>
+            </span>
+            <span className={`text-xs font-semibold ${sseStatus==='connected'?'text-green-400':sseStatus==='error'?'text-red-400':'text-yellow-400'}`}>SSE · En vivo</span>
+          </div>
         </div>
 
         {/* Tema */}
