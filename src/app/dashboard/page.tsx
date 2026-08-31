@@ -331,22 +331,13 @@ export default function Dashboard() {
 
       {/* ══ SIDEBAR ══ */}
       <aside className={`fixed top-0 left-0 h-full z-50 flex flex-col lg:translate-x-0 transition-transform duration-300 ${sidebarOpen?'translate-x-0':'-translate-x-full'}`}
-        style={{width:256,minWidth:256,backgroundColor:dark?'#0a0a0a':'#ffffff',borderRight:`1px solid ${dark?'#222222':'#e2e8f0'}`}}>
+        style={{width:280,minWidth:280,backgroundColor:dark?'#161616':'#ffffff',borderRight:`1px solid ${dark?'#2a2a2a':'#e2e8f0'}`}}>
 
         {/* Logo */}
         <div className="flex items-center justify-between px-4 py-5" style={{borderBottom:`1px solid ${dark?'#222222':'#e2e8f0'}`}}>
           <div className="flex items-center gap-3">
-            <div style={{borderRadius:12,overflow:'hidden',border:`2px solid ${dark?'#2a2a2a':'#e2e8f0'}`,width:56,height:56,flexShrink:0,position:'relative',backgroundColor:'#ffffff'}}>
-              <NextImage src="/logo.png" alt="Medifibra" fill style={{objectFit:'contain',padding:'3px'}}/>
-            </div>
-            <div>
-              <div className="flex items-baseline leading-none">
-                <span className="text-lg font-black mf-logo-m" style={{color:'#DC2626'}}>M</span>
-                <span className="text-lg font-black" style={{color:TEXT}}>EDI</span>
-                <span className="text-lg font-black mf-logo-f" style={{color:'#DC2626'}}>F</span>
-                <span className="text-lg font-black" style={{color:TEXT}}>IBRA</span>
-              </div>
-              <p className="text-xs font-medium" style={{color:MUTED}}>Panel de Control</p>
+            <div style={{borderRadius:14,overflow:'hidden',border:`2px solid ${dark?'#2a2a2a':'#e2e8f0'}`,width:72,height:72,flexShrink:0,position:'relative',backgroundColor:'#ffffff'}}>
+              <NextImage src="/logo.png" alt="Medifibra" fill style={{objectFit:'contain',padding:'4px'}}/>
             </div>
           </div>
           <button className="lg:hidden p-1 rounded" style={{color:MUTED}} onClick={()=>setSidebarOpen(false)}><ChevronLeft className="w-4 h-4"/></button>
@@ -412,7 +403,7 @@ export default function Dashboard() {
       </aside>
 
       {/* ══ CONTENIDO PRINCIPAL ══ */}
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-[256px]">
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-[280px]">
 
         {/* Header */}
         <header className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 md:px-6 h-16"
