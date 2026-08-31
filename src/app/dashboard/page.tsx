@@ -303,9 +303,10 @@ export default function Dashboard() {
   }
 
   const MetricCard = ({ label, value }:{ label:string; value:string|number }) => (
-    <div style={{backgroundColor:CARD, border:`1px solid ${BORDER}`}} className="rounded-xl p-5 flex flex-col justify-between min-h-[120px]">
+    <div style={{backgroundColor:CARD, border:`1px solid ${BORDER}`}} className="rounded-xl p-5 flex flex-col justify-between min-h-[140px]">
       <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{color:MUTED}}>{label}</p>
-      <p className="text-2xl font-bold leading-tight tracking-tight break-all" style={{color:'#4f6ef7'}}>{value}</p>
+      <p className="font-bold leading-tight tracking-tight"
+         style={{color:'#4f6ef7', fontSize:'clamp(1.4rem, 2.8vw, 2.6rem)', wordBreak:'break-word', lineHeight:1.15}}>{value}</p>
       <div className="mt-4 h-[2px] rounded-full w-10" style={{backgroundColor:'#4f6ef760'}}/>
     </div>
   )
@@ -439,15 +440,15 @@ export default function Dashboard() {
         {tab==='dashboard'&&(
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
-              <MetricCard label="Total Clientes" value={stats.total}/>
-              <MetricCard label="Activos"         value={stats.active}/>
-              <MetricCard label="Suspendidos"     value={stats.suspended}/>
-              <MetricCard label="Ingresos / Mes"  value={formatCurrency(stats.monthly_income??0)}/>
+              <MetricCard label="Total Clientes"    value={stats.total}/>
+              <MetricCard label="Activos"           value={stats.active}/>
+              <MetricCard label="Suspendidos"       value={stats.suspended}/>
+              <MetricCard label="Pagos Registrados" value={payStats.total??0}/>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-              <MetricCard label="Total Cobrado"    value={formatCurrency(payStats.paid_amount??0)}/>
-              <MetricCard label="Pendiente"         value={formatCurrency(payStats.pending_amount??0)}/>
-              <MetricCard label="Pagos Registrados" value={payStats.total??0}/>
+              <MetricCard label="Total Cobrado"  value={formatCurrency(payStats.paid_amount??0)}/>
+              <MetricCard label="Pendiente"      value={formatCurrency(payStats.pending_amount??0)}/>
+              <MetricCard label="Ingresos / Mes" value={formatCurrency(stats.monthly_income??0)}/>
             </div>
 
             {classStats.length>0&&(
