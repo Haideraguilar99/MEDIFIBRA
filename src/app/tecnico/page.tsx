@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function TecnicoLogin() {
@@ -8,62 +8,93 @@ export default function TecnicoLogin() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('tech_token'))
+      router.replace('/tecnico/dashboard')
+  }, [router])
+
   async function handleLogin() {
-    if (!cedula.trim()) { setError('Ingresa tu cédula'); return }
+    const val = cedula.trim()
+    if (!val) { setError('Ingresa tu número de cédula'); return }
     setLoading(true); setError('')
     try {
       const res = await fetch('/api/tecnico/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cedula: cedula.trim() })
+        body: JSON.stringify({ cedula: val })
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Error al ingresar'); return }
+      if (!res.ok) { setError(data.error ?? 'Acceso no autorizado'); return }
       localStorage.setItem('tech_token', data.token)
       localStorage.setItem('tech_data', JSON.stringify(data.tech))
       router.push('/tecnico/dashboard')
     } catch {
-      setError('Error de conexión')
+      setError('Error de conexión. Intenta nuevamente.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#0d1b3e] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+    <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div style={{ width: '100%', maxWidth: '360px' }}>
+
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#e2e8f0', letterSpacing: '-0.5px', marginBottom: '0.375rem' }}>
+            <span style={{ color: '#ef4444' }}>M</span>EDI<span style={{ color: '#ef4444' }}>F</span>IBRA
           </div>
-          <h1 className="text-2xl font-bold text-white">Portal Técnico</h1>
-          <p className="text-blue-300 text-sm mt-1">Medifibra S.A.S</p>
+          <div style={{ color: '#374151', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+            Portal de Técnicos
+          </div>
         </div>
 
-        <div className="bg-[#1a2d5a] rounded-2xl p-6 shadow-xl border border-blue-800">
-          <label className="block text-blue-300 text-sm font-medium mb-2">Cédula</label>
+        <div style={{ background: '#0f1117', border: '1px solid #1c1f27', borderRadius: '12px', padding: '1.5rem' }}>
+          <label style={{ display: 'block', color: '#374151', fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+            Número de cédula
+          </label>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             value={cedula}
             onChange={e => setCedula(e.target.value.replace(/\D/g, '').slice(0, 12))}
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
-            placeholder="Número de cédula"
-            className="w-full bg-[#0d1b3e] text-white border border-blue-700 rounded-xl px-4 py-3 text-lg tracking-widest focus:outline-none focus:border-blue-400 mb-4 placeholder:text-blue-900"
+            placeholder="_ _ _ _ _ _ _ _ _ _"
+            style={{
+              width: '100%', background: '#0a0a0f', color: '#f1f5f9',
+              border: `1px solid ${error ? '#450a0a' : '#1c1f27'}`,
+              borderRadius: '8px', padding: '0.875rem 1rem',
+              fontSize: '1.25rem', letterSpacing: '0.25em',
+              outline: 'none', boxSizing: 'border-box', marginBottom: '1rem',
+              fontVariantNumeric: 'tabular-nums'
+            }}
           />
-          {error && <p className="text-red-400 text-sm mb-4 text-center">{error}</p>}
+
+          {error && (
+            <div style={{ background: '#1c0a0a', border: '1px solid #450a0a', borderRadius: '6px', padding: '0.5rem 0.75rem', color: '#f87171', fontSize: '0.8rem', marginBottom: '0.875rem', lineHeight: 1.4 }}>
+              {error}
+            </div>
+          )}
+
           <button
             onClick={handleLogin}
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors"
+            disabled={loading || !cedula}
+            style={{
+              width: '100%',
+              background: loading || !cedula ? '#0f1117' : '#0f2040',
+              color: loading || !cedula ? '#374151' : '#93c5fd',
+              border: `1px solid ${loading || !cedula ? '#1c1f27' : '#1d4ed8'}`,
+              borderRadius: '8px', padding: '0.875rem',
+              fontSize: '0.9rem', fontWeight: 700,
+              cursor: loading || !cedula ? 'not-allowed' : 'pointer',
+              transition: 'all 0.15s'
+            }}
           >
             {loading ? 'Verificando...' : 'Ingresar'}
           </button>
         </div>
 
-        <p className="text-center text-blue-800 text-xs mt-6">
-          Solo para técnicos autorizados · Medifibra © 2026
+        <p style={{ textAlign: 'center', color: '#1c1f27', fontSize: '0.68rem', marginTop: '1.5rem' }}>
+          Medifibra S.A.S · Solo personal autorizado
         </p>
       </div>
     </div>

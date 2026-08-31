@@ -81,7 +81,7 @@ const F = ({ label, children, span2=false, muted }:{ label:string; children:Reac
 )
 
 const SectionHeader = ({ icon, title }:{ icon?:React.ReactNode; title:string }) => (
-  <div className="md:col-span-2 flex items-center gap-2 mt-2 mb-1 pb-2" style={{borderBottom:'1px solid #1e2533'}}>
+  <div className="md:col-span-2 flex items-center gap-2 mt-2 mb-1 pb-2" style={{borderBottom:'1px solid #262626'}}>
     <span style={{color:BLUE}}>{icon}</span>
     <span className="text-sm font-semibold uppercase tracking-wider" style={{color:'#9ca3af'}}>{title}</span>
   </div>
@@ -113,11 +113,11 @@ export default function Dashboard() {
   const [dark, setDark] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const BG    = dark ? '#0b0e17' : '#f1f5f9'
-  const BG2   = dark ? '#111420' : '#ffffff'
-  const CARD  = dark ? '#141720' : '#ffffff'
-  const CARD2 = dark ? '#1c2035' : '#f8fafc'
-  const BORDER= dark ? '#252d45' : '#e2e8f0'
+  const BG    = dark ? '#0a0a0a' : '#f1f5f9'
+  const BG2   = dark ? '#111111' : '#ffffff'
+  const CARD  = dark ? '#181818' : '#ffffff'
+  const CARD2 = dark ? '#1f1f1f' : '#f8fafc'
+  const BORDER= dark ? '#2a2a2a' : '#e2e8f0'
   const MUTED = dark ? '#64748B' : '#64748B'
   const LIGHT = dark ? '#94A3B8' : '#475569'
   const TEXT  = dark ? '#F1F5F9' : '#0F172A'
@@ -303,9 +303,9 @@ export default function Dashboard() {
   }
 
   const MetricCard = ({ label, value }:{ label:string; value:string|number }) => (
-    <div style={{backgroundColor:CARD, border:`1px solid ${BORDER}`}} className="rounded-xl p-6 flex flex-col justify-between min-h-[120px]">
+    <div style={{backgroundColor:CARD, border:`1px solid ${BORDER}`}} className="rounded-xl p-5 flex flex-col justify-between min-h-[120px]">
       <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{color:MUTED}}>{label}</p>
-      <p className="text-4xl font-bold leading-none tracking-tight truncate" style={{color:'#4f6ef7'}}>{value}</p>
+      <p className="text-2xl font-bold leading-tight tracking-tight break-all" style={{color:'#4f6ef7'}}>{value}</p>
       <div className="mt-4 h-[2px] rounded-full w-10" style={{backgroundColor:'#4f6ef760'}}/>
     </div>
   )
@@ -331,12 +331,12 @@ export default function Dashboard() {
 
       {/* ══ SIDEBAR ══ */}
       <aside className={`fixed top-0 left-0 h-full z-50 flex flex-col lg:translate-x-0 transition-transform duration-300 ${sidebarOpen?'translate-x-0':'-translate-x-full'}`}
-        style={{width:256,minWidth:256,backgroundColor:dark?'#0d1018':'#1a1d27',borderRight:`1px solid ${dark?'#1a1f30':'#2a3147'}`}}>
+        style={{width:256,minWidth:256,backgroundColor:dark?'#0a0a0a':'#ffffff',borderRight:`1px solid ${dark?'#222222':'#e2e8f0'}`}}>
 
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 py-5" style={{borderBottom:`1px solid ${dark?'#1a1f30':'#2a3147'}`}}>
+        <div className="flex items-center justify-between px-4 py-5" style={{borderBottom:`1px solid ${dark?'#222222':'#e2e8f0'}`}}>
           <div className="flex items-center gap-3">
-            <div style={{borderRadius:12,overflow:'hidden',border:`2px solid ${dark?'#252d45':'#e2e8f0'}`,width:56,height:56,flexShrink:0,position:'relative',backgroundColor:'#ffffff'}}>
+            <div style={{borderRadius:12,overflow:'hidden',border:`2px solid ${dark?'#2a2a2a':'#e2e8f0'}`,width:56,height:56,flexShrink:0,position:'relative',backgroundColor:'#ffffff'}}>
               <NextImage src="/logo.png" alt="Medifibra" fill style={{objectFit:'contain',padding:'3px'}}/>
             </div>
             <div>
@@ -384,15 +384,15 @@ export default function Dashboard() {
         </nav>
 
         {/* Status */}
-        <div className="px-3 py-3 space-y-1.5" style={{borderTop:`1px solid ${dark?'#1a1f30':'#2a3147'}`}}>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{backgroundColor:dark?'#0b0e17':'#0f172a',border:`1px solid ${dark?'#1e2535':'#2a3147'}`}}>
+        <div className="px-3 py-3 space-y-1.5" style={{borderTop:`1px solid ${dark?'#222222':'#e2e8f0'}`}}>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{backgroundColor:dark?'#0a0a0a':'#f1f5f9',border:`1px solid ${dark?'#1a1a1a':'#e2e8f0'}`}}>
             <span className="relative flex h-2 w-2 flex-shrink-0">
               {dbStatus==='ok'&&<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"/>}
               <span className={`relative inline-flex rounded-full h-2 w-2 ${dbStatus==='ok'?'bg-green-400':dbStatus==='error'?'bg-red-500':'bg-yellow-400'}`}/>
             </span>
             <span className="text-xs font-semibold text-green-400">API Turso · Online</span>
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{backgroundColor:dark?'#0b0e17':'#0f172a',border:`1px solid ${dark?'#1e2535':'#2a3147'}`}}>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{backgroundColor:dark?'#0a0a0a':'#f1f5f9',border:`1px solid ${dark?'#1a1a1a':'#e2e8f0'}`}}>
             <span className="relative flex h-2 w-2 flex-shrink-0">
               {sseStatus==='connected'&&<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"/>}
               <span className={`relative inline-flex rounded-full h-2 w-2 ${sseStatus==='connected'?'bg-green-400':sseStatus==='error'?'bg-red-500':'bg-yellow-400'}`}/>
@@ -402,9 +402,9 @@ export default function Dashboard() {
         </div>
 
         {/* Tema */}
-        <div className="px-4 py-3" style={{borderTop:`1px solid ${dark?'#1a1f30':'#2a3147'}`}}>
+        <div className="px-4 py-3" style={{borderTop:`1px solid ${dark?'#222222':'#e2e8f0'}`}}>
           <button onClick={()=>setDark(d=>!d)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold"
-            style={{backgroundColor:dark?'#1c2035':'#334155',border:`1px solid ${dark?'#1a1f30':'#2a3147'}`,color:'#f1f5f9'}}>
+            style={{backgroundColor:dark?'#1f1f1f':'#f1f5f9',border:`1px solid ${dark?'#222222':'#e2e8f0'}`,color:dark?'#f1f5f9':'#0f172a'}}>
             {dark?<Sun className="w-4 h-4"/>:<Moon className="w-4 h-4"/>}
             <span>{dark?'Modo Claro':'Modo Oscuro'}</span>
           </button>
@@ -932,7 +932,7 @@ export default function Dashboard() {
                 <div className="md:col-span-2">
                   <a href={form.foto_fachada} target="_blank" rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors"
-                    style={{backgroundColor:dark?'#1c2035':'#334155',border:`1px solid ${dark?'#1a1f30':'#2a3147'}`,color:'#f1f5f9'}}>
+                    style={{backgroundColor:dark?'#1f1f1f':'#f1f5f9',border:`1px solid ${dark?'#222222':'#e2e8f0'}`,color:dark?'#f1f5f9':'#0f172a'}}>
                     <Image className="w-3.5 h-3.5"/> Ver foto
                   </a>
                 </div>

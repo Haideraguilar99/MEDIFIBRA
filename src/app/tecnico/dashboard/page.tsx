@@ -1,34 +1,29 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Order {
-  id: number; order_number: string; task_type: string; task_description: string
-  priority: string; status: string; scheduled_date: string; scheduled_time: string
-  client_name: string; client_cellphone: string; client_address: string
-  client_neighborhood: string; gps_lat: number; gps_lng: number
+  id: number; order_number: string; task_type: string; priority: string
+  status: string; scheduled_date: string; scheduled_time: string
+  client_name: string; client_address: string; client_neighborhood: string
   followup_required: number; tech_rating: number
 }
 interface Stats {
-  total: number; completadas: number; pendientes: number; in_progress: number
-  avg_duracion: number; promedio: number; total_ratings: number
+  total: number; completadas: number; pendientes: number
+  in_progress: number; promedio: number | null
 }
-interface TechData { id: number; name: string; cedula: string; role: string; photo_url: string }
+interface TechData { id: number; name: string; cedula: string; role: string }
 
-const PRIORITY_COLORS: Record<string, string> = {
-  urgente: 'bg-red-900 text-red-300 border-red-700',
-  alta: 'bg-orange-900 text-orange-300 border-orange-700',
-  normal: 'bg-blue-900 text-blue-300 border-blue-700',
-  baja: 'bg-gray-800 text-gray-400 border-gray-600'
+const S_LABEL: Record<string, string> = {
+  pending: 'Pendiente', in_progress: 'En progreso',
+  completed: 'Completado', cancelled: 'Cancelado'
 }
-const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-900 text-yellow-300 border-yellow-700',
-  in_progress: 'bg-green-900 text-green-300 border-green-700',
-  completed:   'bg-blue-900 text-blue-300 border-blue-700',
-  cancelled:   'bg-red-900 text-red-400 border-red-700'
+const S_COLOR: Record<string, string> = {
+  pending: '#f59e0b', in_progress: '#22c55e',
+  completed: '#374151', cancelled: '#ef4444'
 }
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pendiente', in_progress: 'En progreso', completed: 'Completado', cancelled: 'Cancelado'
+const P_COLOR: Record<string, string> = {
+  urgente: '#ef4444', alta: '#f59e0b', normal: '#4b5563', baja: '#1c1f27'
 }
 
 export default function TecnicoDashboard() {
@@ -38,129 +33,147 @@ export default function TecnicoDashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [filter, setFilter] = useState<'todas' | 'pending' | 'in_progress' | 'completed'>('todas')
   const [loading, setLoading] = useState(true)
+  const fetchRef = useRef<() => void>(() => {})
 
-  const getToken = () => {
-    if (typeof window === 'undefined') return null
-    return localStorage.getItem('tech_token')
-  }
+  const getToken = () => typeof window !== 'undefined' ? localStorage.getItem('tech_token') : null
 
   const fetchData = useCallback(async () => {
     const token = getToken()
-    if (!token) { router.push('/tecnico'); return }
+    if (!token) { router.replace('/tecnico'); return }
     try {
       const techData = JSON.parse(localStorage.getItem('tech_data') ?? '{}')
       setTech(techData)
-      const [ordersRes, statsRes] = await Promise.all([
+      const [oRes, sRes] = await Promise.all([
         fetch('/api/tecnico/ordenes', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/tecnico/stats', { headers: { Authorization: `Bearer ${token}` } })
+        fetch('/api/tecnico/stats',   { headers: { Authorization: `Bearer ${token}` } })
       ])
-      if (ordersRes.status === 401) { router.push('/tecnico'); return }
-      const ordersData = await ordersRes.json()
-      const statsData = await statsRes.json()
-      setOrders(ordersData.orders ?? [])
-      setStats(statsData.stats ?? null)
-    } catch (e) { console.error(e) }
+      if (oRes.status === 401) { router.replace('/tecnico'); return }
+      const [oData, sData] = await Promise.all([oRes.json(), sRes.json()])
+      setOrders(oData.orders ?? [])
+      setStats(sData.stats ?? null)
+    } catch (e) { console.error('[dashboard]', e) }
     finally { setLoading(false) }
   }, [router])
 
+  fetchRef.current = fetchData
+
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('tech_token') : null
-    if (!token) { router.push('/tecnico'); return }
+    if (!getToken()) { router.replace('/tecnico'); return }
     fetchData()
   }, [fetchData, router])
 
+  // SSE — actualización en tiempo real
+  useEffect(() => {
+    const es = new EventSource('/api/sse')
+    es.onmessage = () => { fetchRef.current() }
+    es.onerror = () => {}
+    return () => es.close()
+  }, [])
+
   function logout() {
-    localStorage.removeItem('tech_token'); localStorage.removeItem('tech_data')
-    router.push('/tecnico')
+    localStorage.removeItem('tech_token')
+    localStorage.removeItem('tech_data')
+    router.replace('/tecnico')
   }
 
   const filtered = filter === 'todas' ? orders : orders.filter(o => o.status === filter)
 
   if (loading) return (
-    <div className="min-h-screen bg-[#0d1b3e] flex items-center justify-center">
-      <div className="text-blue-300 text-lg">Cargando órdenes...</div>
+    <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', fontFamily: 'system-ui,sans-serif' }}>
+      Cargando...
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-[#0d1b3e] text-white">
+    <div style={{ minHeight: '100vh', background: '#0a0a0f', color: '#e2e8f0', fontFamily: 'system-ui,-apple-system,sans-serif', fontSize: '0.9rem' }}>
+
       {/* Header */}
-      <div className="bg-[#1a2d5a] border-b border-blue-800 px-4 py-3 flex items-center justify-between">
+      <div style={{ background: '#0f1117', borderBottom: '1px solid #1c1f27', padding: '0.875rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 className="font-bold text-white">{tech?.name ?? 'Técnico'}</h1>
-          <p className="text-blue-400 text-xs">{tech?.role} · CC {tech?.cedula}</p>
+          <div style={{ fontWeight: 700, color: '#f1f5f9', fontSize: '0.95rem' }}>{tech?.name ?? 'Técnico'}</div>
+          <div style={{ color: '#374151', fontSize: '0.7rem', marginTop: '0.1rem' }}>{tech?.role} · CC {tech?.cedula}</div>
         </div>
-        <button onClick={logout} className="text-blue-400 hover:text-white text-sm px-3 py-1 rounded-lg border border-blue-700 hover:border-blue-500 transition-colors">
+        <button onClick={logout} style={{ color: '#374151', background: 'none', border: '1px solid #1c1f27', borderRadius: '6px', padding: '0.375rem 0.75rem', fontSize: '0.75rem', cursor: 'pointer' }}>
           Salir
         </button>
       </div>
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-4 gap-2 p-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.5rem', padding: '0.75rem' }}>
           {[
-            { label: 'Total', value: stats.total, color: 'text-white' },
-            { label: 'Pendientes', value: stats.pendientes, color: 'text-yellow-400' },
-            { label: 'En curso', value: stats.in_progress, color: 'text-green-400' },
-            { label: '★ Prom.', value: stats.promedio ? Number(stats.promedio).toFixed(1) : '—', color: 'text-amber-400' }
+            { label: 'Total',      value: stats.total,                                               color: '#94a3b8' },
+            { label: 'Pendientes', value: stats.pendientes,                                          color: '#f59e0b' },
+            { label: 'En curso',   value: stats.in_progress ?? 0,                                   color: '#22c55e' },
+            { label: '★ Prom.',    value: stats.promedio ? Number(stats.promedio).toFixed(1) : '—', color: '#f59e0b' }
           ].map(s => (
-            <div key={s.label} className="bg-[#1a2d5a] rounded-xl p-3 text-center border border-blue-800">
-              <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>
-              <div className="text-blue-400 text-xs mt-0.5">{s.label}</div>
+            <div key={s.label} style={{ background: '#0f1117', border: '1px solid #1c1f27', borderRadius: '8px', padding: '0.6rem 0.25rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: '0.6rem', color: '#374151', marginTop: '0.15rem' }}>{s.label}</div>
             </div>
           ))}
         </div>
       )}
 
       {/* Filtros */}
-      <div className="flex gap-2 px-4 pb-3 overflow-x-auto">
+      <div style={{ display: 'flex', gap: '0.4rem', padding: '0 0.75rem 0.75rem', overflowX: 'auto' }}>
         {(['todas', 'pending', 'in_progress', 'completed'] as const).map(f => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-              filter === f ? 'bg-blue-600 border-blue-500 text-white' : 'bg-[#1a2d5a] border-blue-800 text-blue-300'
-            }`}
+            style={{
+              flexShrink: 0, padding: '0.35rem 0.8rem', borderRadius: '20px',
+              fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer',
+              background: filter === f ? '#0f2040' : '#0f1117',
+              color:      filter === f ? '#93c5fd' : '#374151',
+              border: `1px solid ${filter === f ? '#1d4ed8' : '#1c1f27'}`,
+              transition: 'all 0.15s'
+            }}
           >
-            {f === 'todas' ? 'Todas' : STATUS_LABEL[f]}
+            {f === 'todas' ? 'Todas' : S_LABEL[f]}
           </button>
         ))}
       </div>
 
       {/* Órdenes */}
-      <div className="px-4 pb-6 space-y-3">
+      <div style={{ padding: '0 0.75rem 5rem' }}>
         {filtered.length === 0 && (
-          <div className="text-center text-blue-600 py-12">No hay órdenes en este filtro</div>
+          <div style={{ textAlign: 'center', color: '#1c1f27', padding: '3rem 1rem', fontSize: '0.85rem' }}>
+            Sin órdenes en este filtro
+          </div>
         )}
         {filtered.map(order => (
           <div
             key={order.id}
             onClick={() => router.push(`/tecnico/orden/${order.id}`)}
-            className="bg-[#1a2d5a] rounded-2xl p-4 border border-blue-800 active:border-blue-500 cursor-pointer transition-colors"
+            style={{ background: '#0f1117', border: '1px solid #1c1f27', borderRadius: '8px', padding: '0.875rem', marginBottom: '0.5rem', cursor: 'pointer' }}
           >
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold truncate">{order.client_name}</p>
-                <p className="text-blue-400 text-sm truncate">{order.task_type}</p>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.375rem' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {order.client_name}
+                </div>
+                <div style={{ color: '#4b5563', fontSize: '0.75rem', marginTop: '0.1rem' }}>{order.task_type}</div>
               </div>
-              <div className="flex flex-col items-end gap-1 shrink-0">
-                <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_COLORS[order.status] ?? STATUS_COLORS.pending}`}>
-                  {STATUS_LABEL[order.status] ?? order.status}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.3rem', flexShrink: 0 }}>
+                <span style={{ fontSize: '0.67rem', padding: '0.15rem 0.5rem', borderRadius: '4px', color: S_COLOR[order.status] ?? '#6b7280', background: '#0a0a0f', border: `1px solid ${S_COLOR[order.status] ?? '#1c1f27'}30` }}>
+                  {S_LABEL[order.status] ?? order.status}
                 </span>
-                <span className={`text-xs px-2 py-0.5 rounded-full border ${PRIORITY_COLORS[order.priority] ?? PRIORITY_COLORS.normal}`}>
-                  {order.priority}
-                </span>
+                {order.priority !== 'normal' && (
+                  <span style={{ fontSize: '0.65rem', color: P_COLOR[order.priority] ?? '#4b5563' }}>● {order.priority}</span>
+                )}
               </div>
             </div>
-            <div className="flex items-center gap-4 text-xs text-blue-400">
-              {order.scheduled_date && <span>📅 {order.scheduled_date} {order.scheduled_time}</span>}
-              {order.client_address && <span className="truncate">📍 {order.client_neighborhood || order.client_address}</span>}
+            <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.7rem', color: '#374151', flexWrap: 'wrap' }}>
+              {order.scheduled_date && <span>📅 {order.scheduled_date}{order.scheduled_time ? ` ${order.scheduled_time}` : ''}</span>}
+              {(order.client_neighborhood || order.client_address) && (
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '65%' }}>
+                  📍 {order.client_neighborhood || order.client_address}
+                </span>
+              )}
             </div>
-            {order.followup_required === 1 && (
-              <div className="mt-2 text-xs text-amber-400">⚠️ Requiere seguimiento</div>
-            )}
-            {order.status === 'completed' && order.tech_rating > 0 && (
-              <div className="mt-2 text-xs text-amber-400">{'★'.repeat(order.tech_rating)} Calificado</div>
+            {Number(order.followup_required) === 1 && (
+              <div style={{ marginTop: '0.375rem', fontSize: '0.68rem', color: '#f59e0b' }}>⚠ Seguimiento requerido</div>
             )}
           </div>
         ))}
@@ -168,12 +181,10 @@ export default function TecnicoDashboard() {
 
       {/* FAB refresh */}
       <button
-        onClick={fetchData}
-        className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-500 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-xl"
+        onClick={() => fetchData()}
+        style={{ position: 'fixed', bottom: '1.25rem', right: '1.25rem', width: '44px', height: '44px', borderRadius: '50%', background: '#0f1117', border: '1px solid #1c1f27', color: '#4b5563', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }}
         title="Actualizar"
-      >
-        ↻
-      </button>
+      >↻</button>
     </div>
   )
 }

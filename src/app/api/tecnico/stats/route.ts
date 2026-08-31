@@ -15,7 +15,7 @@ export async function GET(req: Request) {
                 COUNT(*) as total,
                 SUM(CASE WHEN status = 'completed'   THEN 1 ELSE 0 END) as completadas,
                 SUM(CASE WHEN status = 'pending'     THEN 1 ELSE 0 END) as pendientes,
-                SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as en_progreso,
+                SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
                 AVG(CASE WHEN duration_minutes > 0 THEN duration_minutes END) as avg_duracion
               FROM work_orders WHERE technician_id = ?`,
         args: [tech.techId]

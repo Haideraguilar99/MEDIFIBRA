@@ -1,524 +1,390 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 
 interface Order {
   id: number; order_number: string; task_type: string; task_description: string
   priority: string; status: string; scheduled_date: string; scheduled_time: string
-  notes: string; completion_notes: string; completion_photos: string
-  client_name: string; client_cellphone: string; client_address: string
-  client_neighborhood: string; client_commune: string; client_plan: string
-  client_id: number; technician_id: number; gps_lat: number; gps_lng: number
-  gps_address: string; started_at: string; completed_at: string
-  duration_minutes: number; tech_rating: number; rating_comment: string; rated_at: string
-  followup_required: number; followup_notes: string; followup_date: string
+  client_name: string; client_address: string; client_neighborhood: string
+  completion_notes: string; completion_photos: string
+  tech_rating: number; followup_required: number; started_at: string
 }
-interface Evidence { id: number; phase: string; photo_url: string; caption: string; uploaded_at: string }
-interface Equipment { id: number; action: string; equipment_type: string; brand: string; model: string; serial: string; condition: string }
 
-const PHASES = ['antes', 'durante', 'despues']
-const PHASE_LABEL: Record<string, string> = { antes: 'Antes', durante: 'Durante', despues: 'Después' }
-const EQUIPMENT_TYPES = ['Router', 'ONT', 'Cable coaxial', 'Splitter', 'Roseta', 'Switch', 'Patch cord', 'Otro']
-const TASK_TYPES = ['Instalación', 'Mantenimiento', 'Soporte técnico', 'Retiro de equipo', 'Cambio de equipo', 'Revisión señal', 'Traslado', 'Otro']
+const RESULTADOS = [
+  { id: 'ok',       label: 'Completado sin problemas', icon: '✓', followup: false },
+  { id: 'obs',      label: 'Con observaciones',        icon: '◎', followup: false },
+  { id: 'followup', label: 'Requiere segunda visita',  icon: '↻', followup: true  },
+  { id: 'failed',   label: 'No se pudo realizar',      icon: '✕', followup: true  },
+]
 
-export default function OrdenDetalle() {
+const S_LABEL: Record<string, string> = {
+  pending: 'Pendiente', in_progress: 'En progreso',
+  completed: 'Completado', cancelled: 'Cancelado'
+}
+const S_COLOR: Record<string, string> = {
+  pending: '#f59e0b', in_progress: '#22c55e',
+  completed: '#475569', cancelled: '#ef4444'
+}
+
+const LABEL = (title: string) => (
+  <div style={{ color: '#374151', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+    {title}
+  </div>
+)
+
+export default function OrdenPage() {
   const router = useRouter()
-  const params = useParams()
-  const orderId = params.id as string
+  const params = useParams<{ id: string }>()
+  const id = params?.id ?? ''
 
-  const [order, setOrder] = useState<Order | null>(null)
-  const [evidence, setEvidence] = useState<Evidence[]>([])
-  const [equipment, setEquipment] = useState<Equipment[]>([])
-  const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [tab, setTab] = useState<'info' | 'fotos' | 'equipos' | 'completar'>('info')
+  const [order, setOrder]       = useState<Order | null>(null)
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState('')
+  const [saving, setSaving]     = useState(false)
 
-  // Foto nueva
-  const [newPhoto, setNewPhoto] = useState({ phase: 'antes', photo_url: '', caption: '' })
-  // Equipo nuevo
-  const [newEquip, setNewEquip] = useState({ action: 'instalado', equipment_type: 'Router', brand: '', model: '', serial: '', condition: 'bueno', notes: '' })
-  // Completar
-  const [completionNotes, setCompletionNotes] = useState('')
-  const [followupRequired, setFollowupRequired] = useState(false)
-  const [followupNotes, setFollowupNotes] = useState('')
-  const [followupDate, setFollowupDate] = useState('')
-  // Rating
-  const [stars, setStars] = useState(0)
-  const [ratingComment, setRatingComment] = useState('')
+  const [resultado, setResultado] = useState('')
+  const [notas, setNotas]         = useState('')
+  const [fotos, setFotos]         = useState<string[]>([])
+  const [estrellas, setEstrellas] = useState(0)
 
-  const getToken = () => typeof window !== 'undefined' ? localStorage.getItem('tech_token') : null
+  const fileRef = useRef<HTMLInputElement>(null)
+  const token = () => typeof window !== 'undefined' ? localStorage.getItem('tech_token') : null
 
-  const fetchAll = useCallback(async () => {
-    const token = getToken()
-    if (!token) { router.push('/tecnico'); return }
+  const fetchOrder = useCallback(async () => {
+    const t = token()
+    if (!t) { router.replace('/tecnico'); return }
     try {
-      const [orderRes, evidenceRes, equipRes] = await Promise.all([
-        fetch(`/api/tecnico/ordenes/${orderId}`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`/api/tecnico/evidence?work_order_id=${orderId}`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`/api/tecnico/equipment?work_order_id=${orderId}`, { headers: { Authorization: `Bearer ${token}` } })
-      ])
-      if (orderRes.status === 401) { router.push('/tecnico'); return }
-      const od = await orderRes.json(); setOrder(od.order ?? null)
-      const ev = await evidenceRes.json(); setEvidence(ev.evidence ?? [])
-      const eq = await equipRes.json(); setEquipment(eq.equipment ?? [])
-      if (od.order?.completion_notes) setCompletionNotes(od.order.completion_notes)
-      if (od.order?.followup_required) setFollowupRequired(!!od.order.followup_required)
-      if (od.order?.followup_notes) setFollowupNotes(od.order.followup_notes)
-      if (od.order?.followup_date) setFollowupDate(od.order.followup_date)
-    } catch (e) { console.error(e) }
+      const res = await fetch(`/api/tecnico/ordenes/${id}`, {
+        headers: { Authorization: `Bearer ${t}` }
+      })
+      if (res.status === 401) { router.replace('/tecnico'); return }
+      if (!res.ok) { setError('Orden no encontrada'); setLoading(false); return }
+      const { order: o } = await res.json()
+      setOrder(o)
+      if (o.completion_notes) setNotas(o.completion_notes)
+      if (o.tech_rating)      setEstrellas(Number(o.tech_rating))
+      if (o.completion_photos) {
+        try {
+          const p = JSON.parse(o.completion_photos)
+          if (Array.isArray(p)) setFotos(p)
+        } catch {}
+      }
+      if (Number(o.followup_required) === 1) setResultado('followup')
+    } catch { setError('Error de conexión') }
     finally { setLoading(false) }
-  }, [orderId, router])
+  }, [id, router])
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  useEffect(() => { fetchOrder() }, [fetchOrder])
 
-  useEffect(() => {
-    if (!mounted) return
-    const token = localStorage.getItem('tech_token')
-    if (!token) { router.push('/tecnico'); return }
-    fetchAll()
-  }, [mounted, fetchAll, router])
-
-  async function updateStatus(newStatus: string) {
-    const token = getToken(); if (!token) return
-    setSaving(true)
-    try {
-      const body: Record<string, unknown> = { status: newStatus }
-      if (newStatus === 'en_progreso' && navigator.geolocation) {
-        await new Promise<void>(resolve => {
-          navigator.geolocation.getCurrentPosition(pos => {
-            body.gps_lat = pos.coords.latitude
-            body.gps_lng = pos.coords.longitude
-            resolve()
-          }, () => resolve(), { timeout: 5000 })
-        })
+  async function compressPhoto(file: File): Promise<string> {
+    return new Promise(resolve => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        const max = 900
+        let w = img.width, h = img.height
+        if (w > max) { h = Math.round(h * max / w); w = max }
+        if (h > max) { w = Math.round(w * max / h); h = max }
+        const canvas = document.createElement('canvas')
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        URL.revokeObjectURL(url)
+        resolve(canvas.toDataURL('image/jpeg', 0.72))
       }
-      const res = await fetch(`/api/tecnico/ordenes/${orderId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(body)
-      })
-      if (res.ok) { await fetchAll() }
-    } finally { setSaving(false) }
+      img.src = url
+    })
   }
 
-  async function addPhoto() {
-    if (!newPhoto.photo_url.trim()) { alert('Pega la URL de la foto'); return }
-    const token = getToken(); if (!token) return
-    setSaving(true)
+  async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || fotos.length >= 4) return
     try {
-      const res = await fetch('/api/tecnico/evidence', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ work_order_id: orderId, ...newPhoto })
-      })
-      if (res.ok) {
-        setNewPhoto({ phase: 'antes', photo_url: '', caption: '' })
-        await fetchAll()
-      }
-    } finally { setSaving(false) }
+      const compressed = await compressPhoto(file)
+      setFotos(p => [...p, compressed])
+    } catch { setError('Error al procesar la foto') }
+    e.target.value = ''
   }
 
-  async function addEquipment() {
-    if (!newEquip.equipment_type) return
-    const token = getToken(); if (!token) return
-    setSaving(true)
+  async function callPut(body: Record<string, unknown>) {
+    const t = token()
+    if (!t) throw new Error('Sin sesión')
+    const res = await fetch(`/api/tecnico/ordenes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      body: JSON.stringify(body)
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error ?? 'Error')
+    return data.order as Order
+  }
+
+  async function iniciar() {
+    setSaving(true); setError('')
     try {
-      const res = await fetch('/api/tecnico/equipment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ work_order_id: orderId, client_id: order?.client_id, ...newEquip })
-      })
-      if (res.ok) {
-        setNewEquip({ action: 'instalado', equipment_type: 'Router', brand: '', model: '', serial: '', condition: 'bueno', notes: '' })
-        await fetchAll()
-      }
-    } finally { setSaving(false) }
+      const updated = await callPut({ status: 'in_progress' })
+      setOrder(updated)
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error') }
+    finally { setSaving(false) }
   }
 
-  async function completeOrder() {
-    const token = getToken(); if (!token) return
-    if (!completionNotes.trim()) { alert('Escribe las observaciones de cierre'); return }
-    setSaving(true)
+  async function completar() {
+    if (!resultado) { setError('Selecciona el resultado del trabajo'); return }
+    setSaving(true); setError('')
     try {
-      await fetch(`/api/tecnico/ordenes/${orderId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          status: 'completado', completion_notes: completionNotes,
-          followup_required: followupRequired ? 1 : 0,
-          followup_notes: followupRequired ? followupNotes : '',
-          followup_date: followupRequired ? followupDate : ''
-        })
+      const needsFollowup = resultado === 'followup' || resultado === 'failed'
+      const updated = await callPut({
+        status:            'completed',
+        completion_notes:  notas,
+        completion_photos: fotos,
+        tech_rating:       estrellas,
+        rating_comment:    '',
+        followup_required: needsFollowup ? 1 : 0,
+        followup_notes:    needsFollowup ? notas : '',
       })
-      if (followupRequired && followupNotes) {
-        await fetch('/api/tecnico/followup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ work_order_id: orderId, client_id: order?.client_id, reason: followupNotes, scheduled_date: followupDate })
-        })
-      }
-      await fetchAll()
-      setTab('info')
-    } finally { setSaving(false) }
+      setOrder(updated)
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error') }
+    finally { setSaving(false) }
   }
 
-  async function submitRating() {
-    if (stars === 0) { alert('Selecciona una calificación'); return }
-    const token = getToken(); if (!token) return
-    setSaving(true)
-    try {
-      const res = await fetch('/api/tecnico/rating', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ work_order_id: orderId, client_id: order?.client_id, stars, comment: ratingComment })
-      })
-      if (res.ok) await fetchAll()
-      else { const d = await res.json(); alert(d.error) }
-    } finally { setSaving(false) }
-  }
-
+  /* ── Loading / Error ── */
   if (loading) return (
-    <div className="min-h-screen bg-[#0d1b3e] flex items-center justify-center">
-      <div className="text-blue-300">Cargando orden...</div>
-    </div>
-  )
-  if (!order) return (
-    <div className="min-h-screen bg-[#0d1b3e] flex items-center justify-center">
-      <div className="text-red-400">Orden no encontrada</div>
+    <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#374151', fontFamily: 'system-ui,sans-serif' }}>
+      Cargando...
     </div>
   )
 
-  const statusColors: Record<string, string> = {
-    pending: 'text-yellow-400', en_progreso: 'text-green-400',
-    completado: 'text-gray-400', cancelado: 'text-red-400'
-  }
-  const statusLabel: Record<string, string> = {
-    pending: 'Pendiente', en_progreso: 'En progreso', completado: 'Completado', cancelado: 'Cancelado'
-  }
+  if (!order) return (
+    <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', fontFamily: 'system-ui,sans-serif' }}>
+      <div style={{ color: '#ef4444' }}>{error || 'Orden no encontrada'}</div>
+      <button onClick={() => router.back()} style={{ color: '#374151', background: '#0f1117', border: '1px solid #1c1f27', borderRadius: '6px', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+        ← Volver
+      </button>
+    </div>
+  )
+
+  const isPending  = order.status === 'pending'
+  const isActive   = order.status === 'in_progress'
+  const isDone     = order.status === 'completed'
+
+  /* ── Fotos existentes en modo completado ── */
+  const existingPhotos = (() => {
+    try {
+      const p: string[] = JSON.parse(order.completion_photos || '[]')
+      return Array.isArray(p) ? p : []
+    } catch { return [] }
+  })()
 
   return (
-    <div className="min-h-screen bg-[#0d1b3e] text-white pb-6">
-      {/* Header */}
-      <div className="bg-[#1a2d5a] border-b border-blue-800 px-4 py-3">
-        <div className="flex items-center gap-3 mb-1">
-          <button onClick={() => router.push('/tecnico/dashboard')} className="text-blue-400 hover:text-white text-xl">←</button>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-white truncate">{order.client_name}</h1>
-            <p className="text-blue-400 text-xs">{order.order_number} · {order.task_type}</p>
+    <div style={{ minHeight: '100vh', background: '#0a0a0f', color: '#e2e8f0', fontFamily: 'system-ui,-apple-system,sans-serif', fontSize: '0.9rem' }}>
+
+      {/* Header fijo */}
+      <div style={{ background: '#0f1117', borderBottom: '1px solid #1c1f27', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', position: 'sticky', top: 0, zIndex: 10 }}>
+        <button onClick={() => router.back()} style={{ color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.25rem', padding: '0.125rem 0.375rem', lineHeight: 1, borderRadius: '4px' }}>←</button>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {order.order_number || `Orden #${order.id}`}
           </div>
-          <span className={`text-sm font-semibold ${statusColors[order.status] ?? 'text-white'}`}>
-            {statusLabel[order.status] ?? order.status}
-          </span>
+          <div style={{ fontSize: '0.7rem', color: S_COLOR[order.status] ?? '#64748b' }}>
+            {S_LABEL[order.status] ?? order.status}
+          </div>
         </div>
       </div>
 
-      {/* Acciones rápidas */}
-      <div className="px-4 pt-4 pb-2 flex gap-2">
-        {order.status === 'pending' && (
-          <button
-            onClick={() => updateStatus('en_progreso')}
-            disabled={saving}
-            className="flex-1 bg-green-700 hover:bg-green-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
-          >
-            ▶ Iniciar orden
-          </button>
+      {/* Tarjeta cliente */}
+      <div style={{ margin: '0.75rem', background: '#0f1117', border: '1px solid #1c1f27', borderRadius: '8px', padding: '0.875rem' }}>
+        <div style={{ fontWeight: 600, color: '#f1f5f9', marginBottom: '0.2rem' }}>{order.client_name}</div>
+        {order.client_address && (
+          <div style={{ color: '#4b5563', fontSize: '0.78rem', marginBottom: '0.5rem' }}>
+            📍 {order.client_address}{order.client_neighborhood ? ` · ${order.client_neighborhood}` : ''}
+          </div>
         )}
-        {order.status === 'en_progreso' && (
-          <button
-            onClick={() => setTab('completar')}
-            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors"
-          >
-            ✓ Completar
-          </button>
-        )}
-        {order.client_cellphone && (
-          <a
-            href={'https://wa.me/57' + order.client_cellphone}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-[#1a2d5a] border border-blue-700 text-green-400 font-semibold py-3 px-4 rounded-xl"
-          >
-            WA
-          </a>
-        )}
-        {order.gps_lat !== 0 && order.gps_lng !== 0 && (
-          <a
-            href={'https://maps.google.com/?q=' + order.gps_lat + ',' + order.gps_lng}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-[#1a2d5a] border border-blue-700 text-blue-400 font-semibold py-3 px-4 rounded-xl"
-          >
-            GPS
-          </a>
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+          <span style={{ background: '#1c1f27', color: '#6b7280', padding: '0.175rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem' }}>
+            {order.task_type}
+          </span>
+          {order.scheduled_date && (
+            <span style={{ background: '#1c1f27', color: '#4b5563', padding: '0.175rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem' }}>
+              📅 {order.scheduled_date}{order.scheduled_time ? ` ${order.scheduled_time}` : ''}
+            </span>
+          )}
+        </div>
+        {order.task_description && (
+          <div style={{ marginTop: '0.5rem', color: '#374151', fontSize: '0.77rem', lineHeight: 1.5 }}>{order.task_description}</div>
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-blue-800 px-4">
-        {(['info', 'fotos', 'equipos', 'completar'] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex-1 py-2.5 text-sm font-medium capitalize transition-colors border-b-2 ${
-              tab === t ? 'border-blue-400 text-white' : 'border-transparent text-blue-500 hover:text-blue-300'
-            }`}
-          >
-            {t === 'completar' ? 'Cerrar' : t.charAt(0).toUpperCase() + t.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      <div className="px-4 pt-4">
-
-        {/* TAB INFO */}
-        {tab === 'info' && (
-          <div className="space-y-3">
-            <Section title="Cliente">
-              <Row label="Nombre" value={order.client_name} />
-              <Row label="Celular" value={order.client_cellphone} />
-              <Row label="Dirección" value={order.client_address} />
-              <Row label="Barrio" value={order.client_neighborhood} />
-              <Row label="Plan" value={order.client_plan} />
-            </Section>
-            <Section title="Orden">
-              <Row label="Tipo" value={order.task_type} />
-              <Row label="Prioridad" value={order.priority} />
-              <Row label="Fecha" value={`${order.scheduled_date} ${order.scheduled_time}`} />
-              {order.task_description && <Row label="Descripción" value={order.task_description} />}
-              {order.notes && <Row label="Notas admin" value={order.notes} />}
-            </Section>
-            {order.status === 'completado' && order.completion_notes && (
-              <Section title="Cierre">
-                <Row label="Observaciones" value={order.completion_notes} />
-                {order.duration_minutes > 0 && <Row label="Duración" value={`${order.duration_minutes} min`} />}
-                {order.followup_required === 1 && <Row label="Seguimiento" value={order.followup_notes} />}
-              </Section>
-            )}
-            {order.status === 'completado' && (
-              <Section title="Calificación del cliente">
-                {order.rated_at ? (
-                  <div>
-                    <div className="text-amber-400 text-2xl">{'★'.repeat(order.tech_rating)}{'☆'.repeat(5 - order.tech_rating)}</div>
-                    {order.rating_comment && <p className="text-blue-300 text-sm mt-1">{order.rating_comment}</p>}
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-blue-400 text-sm mb-3">¿Cómo quedó el cliente?</p>
-                    <div className="flex gap-2 mb-3">
-                      {[1,2,3,4,5].map(s => (
-                        <button key={s} onClick={() => setStars(s)} className={`text-3xl ${s <= stars ? 'text-amber-400' : 'text-blue-800'}`}>★</button>
-                      ))}
-                    </div>
-                    <textarea
-                      value={ratingComment}
-                      onChange={e => setRatingComment(e.target.value)}
-                      placeholder="Comentario opcional..."
-                      rows={2}
-                      className="w-full bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm resize-none focus:outline-none focus:border-blue-400 mb-2"
-                    />
-                    <button
-                      onClick={submitRating}
-                      disabled={saving || stars === 0}
-                      className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-semibold py-2 px-4 rounded-xl text-sm"
-                    >
-                      Guardar calificación
-                    </button>
-                  </div>
-                )}
-              </Section>
-            )}
+      {/* ── PENDING ── */}
+      {isPending && (
+        <div style={{ margin: '0.75rem' }}>
+          <div style={{ background: '#0f1117', border: '1px solid #1c1f27', borderRadius: '8px', padding: '1.25rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.8rem', color: '#374151', marginBottom: '1.25rem', lineHeight: 1.6 }}>
+              Al iniciar la orden se registrará la hora de comienzo y el estado pasará a <strong style={{ color: '#22c55e' }}>En progreso</strong>.
+            </div>
+            <button
+              onClick={iniciar}
+              disabled={saving}
+              style={{ width: '100%', background: saving ? '#1c1f27' : '#0f2040', color: saving ? '#374151' : '#60a5fa', border: `1px solid ${saving ? '#1c1f27' : '#1d4ed8'}`, borderRadius: '8px', padding: '0.875rem', fontSize: '0.95rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', transition: 'all 0.15s' }}
+            >
+              {saving ? 'Iniciando...' : '▶  Iniciar orden'}
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* TAB FOTOS */}
-        {tab === 'fotos' && (
-          <div className="space-y-4">
-            {PHASES.map(phase => {
-              const phaseEvidence = evidence.filter(e => e.phase === phase)
-              return (
-                <Section key={phase} title={PHASE_LABEL[phase]}>
-                  {phaseEvidence.length === 0 && <p className="text-blue-600 text-sm">Sin fotos</p>}
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {phaseEvidence.map(e => (
-                      <div key={e.id} className="rounded-xl overflow-hidden border border-blue-800">
-                        <img src={e.photo_url} alt={e.caption || phase} className="w-full h-28 object-cover" onError={ev => (ev.currentTarget.src = '')} />
-                        {e.caption && <p className="text-blue-400 text-xs p-1 truncate">{e.caption}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </Section>
-              )
-            })}
+      {/* ── IN_PROGRESS — Formulario ── */}
+      {isActive && (
+        <div style={{ padding: '0 0.75rem 5.5rem' }}>
 
-            {order.status !== 'completado' && (
-              <Section title="Agregar foto">
-                <select
-                  value={newPhoto.phase}
-                  onChange={e => setNewPhoto(p => ({ ...p, phase: e.target.value }))}
-                  className="w-full bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm mb-2 focus:outline-none"
-                >
-                  {PHASES.map(p => <option key={p} value={p}>{PHASE_LABEL[p]}</option>)}
-                </select>
-                <input
-                  type="url"
-                  value={newPhoto.photo_url}
-                  onChange={e => setNewPhoto(p => ({ ...p, photo_url: e.target.value }))}
-                  placeholder="URL de la foto (Google Photos, Drive...)"
-                  className="w-full bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm mb-2 focus:outline-none focus:border-blue-400"
-                />
-                <input
-                  type="text"
-                  value={newPhoto.caption}
-                  onChange={e => setNewPhoto(p => ({ ...p, caption: e.target.value }))}
-                  placeholder="Descripción (opcional)"
-                  className="w-full bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm mb-3 focus:outline-none focus:border-blue-400"
-                />
-                <button
-                  onClick={addPhoto}
-                  disabled={saving}
-                  className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm"
-                >
-                  {saving ? 'Guardando...' : 'Agregar foto'}
-                </button>
-              </Section>
-            )}
+          {/* Resultado */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            {LABEL('Resultado del trabajo *')}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
+              {RESULTADOS.map(r => {
+                const sel = resultado === r.id
+                const borderColor = sel
+                  ? (r.id === 'ok' ? '#15803d' : r.id === 'obs' ? '#92400e' : r.id === 'followup' ? '#1d4ed8' : '#991b1b')
+                  : '#1c1f27'
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => setResultado(r.id)}
+                    style={{ background: sel ? '#0f1117' : '#0a0a0f', border: `1px solid ${borderColor}`, borderRadius: '8px', padding: '0.75rem 0.6rem', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s' }}
+                  >
+                    <div style={{ fontSize: '1rem', marginBottom: '0.3rem', color: sel ? '#e2e8f0' : '#1c1f27' }}>{r.icon}</div>
+                    <div style={{ fontSize: '0.72rem', color: sel ? '#c4cdd8' : '#374151', lineHeight: 1.35 }}>{r.label}</div>
+                  </button>
+                )
+              })}
+            </div>
           </div>
-        )}
 
-        {/* TAB EQUIPOS */}
-        {tab === 'equipos' && (
-          <div className="space-y-4">
-            <Section title="Equipos registrados">
-              {equipment.length === 0 && <p className="text-blue-600 text-sm">Sin equipos registrados</p>}
-              {equipment.map(eq => (
-                <div key={eq.id} className="bg-[#0d1b3e] rounded-xl p-3 border border-blue-900 mb-2">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${eq.action === 'instalado' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
-                      {eq.action}
-                    </span>
-                    <span className="text-white text-sm font-medium">{eq.equipment_type}</span>
-                  </div>
-                  {eq.brand && <p className="text-blue-400 text-xs">{eq.brand} {eq.model}</p>}
-                  {eq.serial && <p className="text-blue-500 text-xs font-mono">S/N: {eq.serial}</p>}
+          {/* Observaciones */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            {LABEL('Observaciones')}
+            <textarea
+              value={notas}
+              onChange={e => setNotas(e.target.value)}
+              placeholder="Describe brevemente lo realizado o el inconveniente encontrado..."
+              rows={3}
+              style={{ width: '100%', background: '#0a0a0f', color: '#e2e8f0', border: '1px solid #1c1f27', borderRadius: '8px', padding: '0.75rem', fontSize: '0.875rem', resize: 'none', outline: 'none', boxSizing: 'border-box', lineHeight: 1.5, fontFamily: 'system-ui,sans-serif' }}
+            />
+          </div>
+
+          {/* Fotos */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            {LABEL(`Fotos de evidencia (${fotos.length}/4)`)}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              {fotos.map((f, i) => (
+                <div key={i} style={{ position: 'relative' }}>
+                  <img src={f} alt="" style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #1c1f27', display: 'block' }} />
+                  <button
+                    onClick={() => setFotos(p => p.filter((_, j) => j !== i))}
+                    style={{ position: 'absolute', top: '-6px', right: '-6px', width: '18px', height: '18px', borderRadius: '50%', background: '#450a0a', color: '#fca5a5', border: 'none', cursor: 'pointer', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                  >✕</button>
                 </div>
               ))}
-            </Section>
-
-            {order.status !== 'completado' && (
-              <Section title="Registrar equipo">
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <select value={newEquip.action} onChange={e => setNewEquip(p => ({ ...p, action: e.target.value }))}
-                    className="bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none">
-                    <option value="instalado">Instalado</option>
-                    <option value="retirado">Retirado</option>
-                    <option value="revisado">Revisado</option>
-                  </select>
-                  <select value={newEquip.equipment_type} onChange={e => setNewEquip(p => ({ ...p, equipment_type: e.target.value }))}
-                    className="bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none">
-                    {EQUIPMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <input type="text" value={newEquip.brand} onChange={e => setNewEquip(p => ({ ...p, brand: e.target.value }))}
-                    placeholder="Marca" className="bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400" />
-                  <input type="text" value={newEquip.model} onChange={e => setNewEquip(p => ({ ...p, model: e.target.value }))}
-                    placeholder="Modelo" className="bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400" />
-                </div>
-                <input type="text" value={newEquip.serial} onChange={e => setNewEquip(p => ({ ...p, serial: e.target.value }))}
-                  placeholder="Número de serie (S/N)"
-                  className="w-full bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm font-mono mb-2 focus:outline-none focus:border-blue-400" />
-                <button onClick={addEquipment} disabled={saving}
-                  className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm">
-                  {saving ? 'Guardando...' : 'Registrar equipo'}
-                </button>
-              </Section>
-            )}
+              {fotos.length < 4 && (
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  style={{ width: '72px', height: '72px', background: '#0a0a0f', border: '1px dashed #1c1f27', borderRadius: '6px', cursor: 'pointer', color: '#374151', fontSize: '1.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  title="Agregar foto"
+                >+</button>
+              )}
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhoto}
+              style={{ display: 'none' }}
+            />
+            <div style={{ color: '#1c1f27', fontSize: '0.68rem', marginTop: '0.375rem' }}>
+              Toca + para tomar foto con la cámara
+            </div>
           </div>
-        )}
 
-        {/* TAB COMPLETAR */}
-        {tab === 'completar' && (
-          <div className="space-y-4">
-            {order.status === 'completado' ? (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-3">✅</div>
-                <p className="text-white font-semibold">Orden completada</p>
-                <p className="text-blue-400 text-sm mt-1">
-                  {order.completed_at ? new Date(order.completed_at).toLocaleString('es-CO') : ''}
-                </p>
-                {order.duration_minutes > 0 && (
-                  <p className="text-blue-500 text-sm">Duración: {order.duration_minutes} min</p>
-                )}
+          {/* Calificación */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            {LABEL('Calificación del servicio')}
+            <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+              {[1, 2, 3, 4, 5].map(s => (
+                <button
+                  key={s}
+                  onClick={() => setEstrellas(s === estrellas ? 0 : s)}
+                  style={{ fontSize: '2rem', color: s <= estrellas ? '#f59e0b' : '#1c1f27', background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 1, transition: 'color 0.1s' }}
+                >★</button>
+              ))}
+              {estrellas > 0 && (
+                <span style={{ color: '#374151', fontSize: '0.75rem', marginLeft: '0.5rem' }}>
+                  {['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'][estrellas]}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Error inline */}
+          {error && (
+            <div style={{ background: '#1c0a0a', border: '1px solid #450a0a', borderRadius: '6px', padding: '0.5rem 0.75rem', color: '#f87171', fontSize: '0.8rem', marginBottom: '0.75rem', lineHeight: 1.4 }}>
+              {error}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── COMPLETED — resumen ── */}
+      {isDone && (
+        <div style={{ margin: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ background: '#051a0a', border: '1px solid #14532d', borderRadius: '8px', padding: '1rem' }}>
+            <div style={{ color: '#22c55e', fontWeight: 700, marginBottom: '0.5rem' }}>✓ Orden completada</div>
+            {order.completion_notes && (
+              <div style={{ color: '#4b5563', fontSize: '0.82rem', lineHeight: 1.5 }}>{order.completion_notes}</div>
+            )}
+            {Number(order.tech_rating) > 0 && (
+              <div style={{ marginTop: '0.5rem', color: '#f59e0b', fontSize: '1.1rem', letterSpacing: '2px' }}>
+                {'★'.repeat(Number(order.tech_rating))}
+                <span style={{ color: '#1c1f27' }}>{'★'.repeat(5 - Number(order.tech_rating))}</span>
               </div>
-            ) : (
-              <>
-                <Section title="Observaciones de cierre">
-                  <textarea
-                    value={completionNotes}
-                    onChange={e => setCompletionNotes(e.target.value)}
-                    placeholder="Describe lo que se realizó, cómo quedó el servicio..."
-                    rows={4}
-                    className="w-full bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm resize-none focus:outline-none focus:border-blue-400"
-                  />
-                </Section>
-
-                <Section title="¿Requiere segunda visita?">
-                  <div className="flex gap-3 mb-3">
-                    {[false, true].map(v => (
-                      <button key={String(v)} onClick={() => setFollowupRequired(v)}
-                        className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-colors ${
-                          followupRequired === v ? 'bg-blue-700 border-blue-500 text-white' : 'bg-[#0d1b3e] border-blue-800 text-blue-400'
-                        }`}>
-                        {v ? 'Sí' : 'No'}
-                      </button>
-                    ))}
-                  </div>
-                  {followupRequired && (
-                    <>
-                      <textarea
-                        value={followupNotes}
-                        onChange={e => setFollowupNotes(e.target.value)}
-                        placeholder="¿Qué quedó pendiente?"
-                        rows={2}
-                        className="w-full bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm resize-none focus:outline-none focus:border-blue-400 mb-2"
-                      />
-                      <input type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)}
-                        className="w-full bg-[#0d1b3e] border border-blue-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400" />
-                    </>
-                  )}
-                </Section>
-
-                <button onClick={completeOrder} disabled={saving}
-                  className="w-full bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-bold py-4 rounded-xl text-lg transition-colors">
-                  {saving ? 'Guardando...' : '✓ Marcar como completado'}
-                </button>
-              </>
+            )}
+            {Number(order.followup_required) === 1 && (
+              <div style={{ marginTop: '0.5rem', color: '#f59e0b', fontSize: '0.78rem' }}>⚠ Requiere seguimiento</div>
             )}
           </div>
-        )}
-      </div>
-    </div>
-  )
-}
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-[#1a2d5a] rounded-2xl p-4 border border-blue-800">
-      <h3 className="text-blue-300 text-xs font-semibold uppercase tracking-wider mb-3">{title}</h3>
-      {children}
-    </div>
-  )
-}
+          {existingPhotos.length > 0 && (
+            <div style={{ background: '#0f1117', border: '1px solid #1c1f27', borderRadius: '8px', padding: '0.875rem' }}>
+              {LABEL('Evidencia fotográfica')}
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {existingPhotos.map((p, i) => (
+                  <img key={i} src={p} alt="" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #1c1f27' }} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
-function Row({ label, value }: { label: string; value: string }) {
-  if (!value?.trim()) return null
-  return (
-    <div className="flex justify-between gap-2 py-1 border-b border-blue-900 last:border-0">
-      <span className="text-blue-400 text-sm shrink-0">{label}</span>
-      <span className="text-white text-sm text-right">{value}</span>
+      {/* Botón fijo — Completar */}
+      {isActive && (
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#0a0a0f', borderTop: '1px solid #1c1f27', padding: '0.875rem 1rem' }}>
+          <button
+            onClick={completar}
+            disabled={saving || !resultado}
+            style={{
+              width: '100%',
+              background:   saving || !resultado ? '#0f1117' : '#052e16',
+              color:        saving || !resultado ? '#374151' : '#4ade80',
+              border:       `1px solid ${saving || !resultado ? '#1c1f27' : '#15803d'}`,
+              borderRadius: '8px', padding: '0.9rem',
+              fontSize:     '0.95rem', fontWeight: 700,
+              cursor:       saving || !resultado ? 'not-allowed' : 'pointer',
+              transition:   'all 0.15s'
+            }}
+          >
+            {saving ? 'Guardando...' : '✓  Completar orden'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
