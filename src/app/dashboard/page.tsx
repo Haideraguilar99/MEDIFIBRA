@@ -6,7 +6,7 @@ import { PLANS, TV_PLAN, formatCurrency } from '@/lib/plans'
 import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv,
          CreditCard, CheckCircle, Clock, BarChart2, AlertCircle, FileText, LogOut,
          Phone, MapPin, Calendar, UserPlus, Image, Sun, Moon, MessageCircle,
-         LayoutDashboard, Menu, ChevronLeft } from 'lucide-react'
+         LayoutDashboard, Menu, ChevronLeft, Upload } from 'lucide-react'
 import NextImage from 'next/image'
 import toast, { Toaster } from 'react-hot-toast'
 import Link from 'next/link'
@@ -319,8 +319,7 @@ export default function Dashboard() {
   return (
     <div className="flex min-h-screen" style={{backgroundColor:BG, color:TEXT}}>
       <style>{`
-        @keyframes mfPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        .mf-logo-m,.mf-logo-f{animation:mfPulse 1.6s ease-in-out infinite}
+
         .sb-link{transition:all 0.15s;border-left:3px solid transparent}
         .sb-link:hover{background:rgba(37,99,235,0.10)}
         .sb-link.active{background:rgba(37,99,235,0.18);border-left:3px solid #2563eb}
@@ -337,14 +336,14 @@ export default function Dashboard() {
         {/* Logo */}
         <div className="flex items-center justify-between px-4 py-5" style={{borderBottom:`1px solid ${dark?'#222222':'#e2e8f0'}`}}>
           <div className="flex items-center gap-3">
-            <div style={{borderRadius:14,overflow:'hidden',border:`2px solid ${dark?'#2a2a2a':'#e2e8f0'}`,width:80,height:80,flexShrink:0,position:'relative',backgroundColor:'#ffffff'}}>
+            <div style={{borderRadius:14,overflow:'hidden',border:`2px solid ${dark?'#2a2a2a':'#e2e8f0'}`,width:96,height:96,flexShrink:0,position:'relative',backgroundColor:'#ffffff'}}>
               <NextImage src="/medifibrasas.png" alt="Medifibra" fill style={{objectFit:'contain',padding:'4px'}}/>
             </div>
             <div>
               <div className="flex items-baseline leading-none">
-                <span className="text-xl font-black mf-logo-m" style={{color:'#DC2626'}}>M</span>
+                <span className="text-xl font-black" style={{color:'#DC2626'}}>M</span>
                 <span className="text-xl font-black" style={{color:TEXT}}>EDI</span>
-                <span className="text-xl font-black mf-logo-f" style={{color:'#DC2626'}}>F</span>
+                <span className="text-xl font-black" style={{color:'#DC2626'}}>F</span>
                 <span className="text-xl font-black" style={{color:TEXT}}>IBRA</span>
               </div>
               <p className="text-xs font-medium mt-0.5" style={{color:MUTED}}>Panel de Control</p>
@@ -380,7 +379,7 @@ export default function Dashboard() {
               style={{color:active?'#4f6ef7':LIGHT}}><Icon className="w-4 h-4 flex-shrink-0"/><span>{item.label}</span></button>
           })}
           <Link href="/import" className="sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold" style={{color:LIGHT}}>
-            <span>Importar</span>
+            <Upload className="w-4 h-4 flex-shrink-0"/><span>Importar</span>
           </Link>
         </nav>
 
