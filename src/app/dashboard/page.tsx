@@ -337,8 +337,17 @@ export default function Dashboard() {
         {/* Logo */}
         <div className="flex items-center justify-between px-4 py-5" style={{borderBottom:`1px solid ${dark?'#222222':'#e2e8f0'}`}}>
           <div className="flex items-center gap-3">
-            <div style={{borderRadius:14,overflow:'hidden',border:`2px solid ${dark?'#2a2a2a':'#e2e8f0'}`,width:72,height:72,flexShrink:0,position:'relative',backgroundColor:'#ffffff'}}>
-              <NextImage src="/logo.png" alt="Medifibra" fill style={{objectFit:'contain',padding:'4px'}}/>
+            <div style={{borderRadius:14,overflow:'hidden',border:`2px solid ${dark?'#2a2a2a':'#e2e8f0'}`,width:80,height:80,flexShrink:0,position:'relative',backgroundColor:'#ffffff'}}>
+              <NextImage src="/medifibrasas.png" alt="Medifibra" fill style={{objectFit:'contain',padding:'4px'}}/>
+            </div>
+            <div>
+              <div className="flex items-baseline leading-none">
+                <span className="text-xl font-black mf-logo-m" style={{color:'#DC2626'}}>M</span>
+                <span className="text-xl font-black" style={{color:TEXT}}>EDI</span>
+                <span className="text-xl font-black mf-logo-f" style={{color:'#DC2626'}}>F</span>
+                <span className="text-xl font-black" style={{color:TEXT}}>IBRA</span>
+              </div>
+              <p className="text-xs font-medium mt-0.5" style={{color:MUTED}}>Panel de Control</p>
             </div>
           </div>
           <button className="lg:hidden p-1 rounded" style={{color:MUTED}} onClick={()=>setSidebarOpen(false)}><ChevronLeft className="w-4 h-4"/></button>
@@ -371,7 +380,7 @@ export default function Dashboard() {
               style={{color:active?'#4f6ef7':LIGHT}}><Icon className="w-4 h-4 flex-shrink-0"/><span>{item.label}</span></button>
           })}
           <Link href="/import" className="sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold" style={{color:LIGHT}}>
-            <span className="w-4 h-4 text-center flex-shrink-0">📥</span><span>Importar</span>
+            <span>Importar</span>
           </Link>
         </nav>
 
@@ -580,8 +589,8 @@ export default function Dashboard() {
                         <div className="h-full rounded-full transition-all duration-500" style={{width:`${pct}%`,backgroundColor:plan.color}}/>
                       </div>
                       <div className="flex gap-4 text-xs">
-                        <span style={{color:'#4ade80'}}>💰 {formatCurrency(ingresos)}/mes</span>
-                        {conTv>0&&<span style={{color:LIGHT}}>📺 {conTv} con MediTV</span>}
+                        <span style={{color:'#4ade80'}}>{formatCurrency(ingresos)}/mes</span>
+                        {conTv>0&&<span style={{color:LIGHT}}>{conTv} con MediTV</span>}
                       </div>
                     </div>
                   )
@@ -675,7 +684,7 @@ export default function Dashboard() {
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span className="px-2 py-0.5 rounded text-xs text-white font-semibold" style={{backgroundColor:getPlanColor(c.plan)}}>{c.plan}</span>
                           <p className="text-xs mt-1 font-bold" style={{color:'#16A34A'}}>{formatCurrency(c.plan_value)}</p>
-                          {c.incluye_tv?<p className="text-xs mt-0.5" style={{color:MUTED}}>📺 MediTV</p>:null}
+                          {c.incluye_tv?<p className="text-xs mt-0.5" style={{color:MUTED}}>MediTV</p>:null}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap"><ClassBadge cls={c.classification}/></td>
                         <td className="px-4 py-3 text-sm whitespace-nowrap">
