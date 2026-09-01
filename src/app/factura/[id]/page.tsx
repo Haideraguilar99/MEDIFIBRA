@@ -88,14 +88,25 @@ export default function FacturaPage() {
       const pdf         = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       const pdfW        = pdf.internal.pageSize.getWidth()
       const pdfH        = pdf.internal.pageSize.getHeight()
-      // Fondo blanco — sin bordes laterales
       pdf.setFillColor(255, 255, 255)
       pdf.rect(0, 0, pdfW, pdfH, 'F')
       const canvasAspect = canvas.height / canvas.width
-      const imgW  = pdfW
-      const imgH  = pdfW * canvasAspect
-      const posY  = imgH < pdfH ? (pdfH - imgH) / 2 : 0
-      pdf.addImage(imgData, 'JPEG', 0, posY, imgW, imgH)
+      const imgW_natural = pdfW
+      const imgH_natural = pdfW * canvasAspect
+      let imgW: number, imgH: number, posX: number, posY: number
+      if (imgH_natural <= pdfH) {
+        imgW = imgW_natural
+        imgH = imgH_natural
+        posX = 0
+        posY = (pdfH - imgH) / 2
+      } else {
+        const scale = pdfH / imgH_natural
+        imgW = pdfW * scale
+        imgH = pdfH
+        posX = (pdfW - imgW) / 2
+        posY = 0
+      }
+      pdf.addImage(imgData, 'JPEG', posX, posY, imgW, imgH)
       const safeName = client.name
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-zA-Z0-9\s]/g, '').trim()
@@ -303,7 +314,7 @@ export default function FacturaPage() {
                   <div style={{ fontSize: 13, color: '#999', marginBottom: 3 }}>Numero de cuenta</div>
                   <div style={{ fontSize: 21, fontWeight: 900, color: '#0d1b3e', letterSpacing: 1, marginBottom: 12 }}>{CUENTA}</div>
                   <div style={{ fontSize: 13, color: '#999', marginBottom: 3 }}>A nombre de</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Medifibra S.A.S</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Jose Medardo Mosquera</div>
                 </div>
 
                 {/* Bre-B */}
@@ -318,7 +329,7 @@ export default function FacturaPage() {
                   <div style={{ fontSize: 13, color: '#999', marginBottom: 3 }}>Llave / Referencia de pago</div>
                   <div style={{ fontSize: 21, fontWeight: 900, color: '#1b5e20', letterSpacing: 1, marginBottom: 12 }}>{CUENTA}</div>
                   <div style={{ fontSize: 13, color: '#999', marginBottom: 3 }}>A nombre de</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#333', marginBottom: 8 }}>Medifibra S.A.S</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#333', marginBottom: 8 }}>Jose Medardo Mosquera</div>
                   <div style={{ fontSize: 13, color: '#888', fontStyle: 'italic' }}>Pago disponible 24/7</div>
                 </div>
 
@@ -326,8 +337,8 @@ export default function FacturaPage() {
                 <div style={{ backgroundColor: 'white', borderRadius: 10, padding: 14, border: '2px solid #1565c0', boxShadow: '0 2px 8px rgba(21,101,192,0.15)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#1565c0', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>Paga Aqui</div>
                   <div style={{ fontSize: 11, color: '#888', marginBottom: 8 }}>Escanea con la app de tu banco</div>
-                  <img src="/qr-pago.jpg" alt="QR Bancolombia" crossOrigin="anonymous"
-                    style={{ width: 138, height: 138, objectFit: 'contain', borderRadius: 6, border: '1px solid #e0e0e0' }} />
+                  <img src="/QR.jpg" alt="QR Bancolombia" crossOrigin="anonymous"
+                    style={{ width: 155, height: 155, objectFit: 'cover', borderRadius: 6, border: '1px solid #e0e0e0' }} />
                   <div style={{ fontSize: 15, fontWeight: 900, color: '#0d1b3e', marginTop: 10, letterSpacing: 1 }}>{CUENTA}</div>
                   <div style={{ fontSize: 11, color: '#888', marginTop: 3 }}>Bancolombia · Bre-B</div>
                 </div>
