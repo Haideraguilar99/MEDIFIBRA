@@ -163,8 +163,8 @@ export default function FacturaPage() {
                   <img src="/logofact.jpeg" alt="Medifibra" crossOrigin="anonymous"
                     style={{ width: 110, height: 110, objectFit: 'contain', borderRadius: 10, background: 'white', padding: 4 }} />
                   <div>
-                    <div style={{ color: 'white', fontSize: 36, fontWeight: 900, letterSpacing: 3, lineHeight: 1, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA</div>
-                    <div style={{ color: '#90caf9', fontSize: 14, marginTop: 5 }}>S.A.S — NIT: 902060057-8</div>
+                    <div style={{ color: 'white', fontSize: 30, fontWeight: 900, letterSpacing: 2, lineHeight: 1, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: 1, verticalAlign: 'middle', color: '#90caf9' }}>S.A.S</span></div>
+                    <div style={{ color: '#90caf9', fontSize: 13, marginTop: 4 }}>NIT: 902060057-8</div>
                     <div style={{ color: '#90caf9', fontSize: 14, marginTop: 2 }}>Proveedor de Internet Fibra Optica</div>
                     <div style={{ color: '#90caf9', fontSize: 14, marginTop: 2 }}>Medellin, Antioquia, Colombia</div>
                   </div>
@@ -178,7 +178,7 @@ export default function FacturaPage() {
                   </div>
                   <div style={{ color: '#90caf9', fontSize: 13, marginTop: 2 }}>Emision: {dateStr}</div>
                   <div style={{ color: '#90caf9', fontSize: 13, marginTop: 1 }}>Periodo facturado: {periodLabel}</div>
-                  <div style={{ marginTop: 8, display: 'inline-block', backgroundColor: client.status === 'active' ? '#2e7d32' : '#b71c1c', color: 'white', borderRadius: 4, padding: '4px 14px', fontSize: 11, fontWeight: 700, letterSpacing: 1.5 }}>
+                  <div style={{ marginTop: 8, display: 'block', textAlign: 'center', backgroundColor: client.status === 'active' ? '#2e7d32' : '#b71c1c', color: 'white', borderRadius: 4, padding: '5px 14px', fontSize: 11, fontWeight: 700, letterSpacing: 1.5 }}>
                     {client.status === 'active' ? 'SERVICIO ACTIVO' : 'SERVICIO SUSPENDIDO'}
                   </div>
                 </div>
@@ -190,22 +190,22 @@ export default function FacturaPage() {
               {/* Cliente */}
               <div style={{ padding: '14px 20px', borderRight: '1px solid #e8eaf6' }}>
                 <div style={lbl}>Informacion del Cliente</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: '#0d1b3e', marginBottom: 8, lineHeight: 1.25 }}>{client.name}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#0d1b3e', marginBottom: 8, lineHeight: 1.25 }}>{client.name}</div>
                 {client.address && (
-                  <div style={{ fontSize: 14, color: '#444', marginBottom: 5, display: 'flex', gap: 6 }}>
+                  <div style={{ fontSize: 15, color: '#444', marginBottom: 5, display: 'flex', gap: 6 }}>
                     <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 40 }}>Dir:</span>
                     <span>{client.address}{client.neighborhood ? `, ${client.neighborhood}` : ''}</span>
                   </div>
                 )}
                 {client.city && (
-                  <div style={{ fontSize: 14, color: '#444', marginBottom: 5, display: 'flex', gap: 6 }}>
+                  <div style={{ fontSize: 15, color: '#444', marginBottom: 5, display: 'flex', gap: 6 }}>
                     <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 40 }}>Ciudad:</span>
                     <span>{client.city}{client.commune ? ` — Comuna ${client.commune}` : ''}</span>
                   </div>
                 )}
-                <div style={{ fontSize: 14, color: '#444', marginBottom: 5, display: 'flex', gap: 6 }}>
+                <div style={{ fontSize: 15, color: '#444', marginBottom: 5, display: 'flex', gap: 6 }}>
                   <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 40 }}>Cel:</span>
-                  <span style={{ fontWeight: 800, fontSize: 16 }}>{client.cellphone}</span>
+                  <span style={{ fontWeight: 800, fontSize: 17 }}>{client.cellphone}</span>
                 </div>
                 {client.phone && (
                   <div style={{ fontSize: 14, color: '#444', marginBottom: 5, display: 'flex', gap: 6 }}>
@@ -214,7 +214,7 @@ export default function FacturaPage() {
                   </div>
                 )}
                 {client.email && (
-                  <div style={{ fontSize: 13, color: '#444', display: 'flex', gap: 6 }}>
+                  <div style={{ fontSize: 14, color: '#444', display: 'flex', gap: 6 }}>
                     <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 40 }}>Email:</span>
                     <span>{client.email}</span>
                   </div>
@@ -232,8 +232,8 @@ export default function FacturaPage() {
                   { label: 'Llave / Referencia',     value: CUENTA,    color: '#1b5e20', bold: true  },
                 ].map((row, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 7, paddingBottom: 7, borderBottom: '1px solid #f0f0f0' }}>
-                    <span style={{ fontSize: 13, color: '#666', flexShrink: 0, marginRight: 6 }}>{row.label}</span>
-                    <span style={{ fontSize: 13, fontWeight: row.bold ? 800 : 700, color: row.color, textAlign: 'right' }}>{row.value}</span>
+                    <span style={{ fontSize: 15, color: '#666', flexShrink: 0, marginRight: 6 }}>{row.label}</span>
+                    <span style={{ fontSize: 15, fontWeight: row.bold ? 800 : 700, color: row.color, textAlign: 'right' }}>{row.value}</span>
                   </div>
                 ))}
               </div>
