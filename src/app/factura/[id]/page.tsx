@@ -24,6 +24,7 @@ function addBusinessDays(date: Date, days: number): Date {
 }
 
 const CUENTA = '0093014896'
+const W = 860
 
 export default function FacturaPage() {
   const { id } = useParams()
@@ -46,7 +47,7 @@ export default function FacturaPage() {
   useEffect(() => {
     const calc = () => {
       const vw = window.innerWidth
-      setMobileScale(vw < 826 ? (vw - 16) / 794 : 1)
+      setMobileScale(vw < W + 32 ? (vw - 16) / W : 1)
     }
     calc()
     window.addEventListener('resize', calc)
@@ -64,7 +65,7 @@ export default function FacturaPage() {
     if (!client || !barcodeRef.current) return
     import('jsbarcode').then(({ default: JsBarcode }) => {
       JsBarcode(barcodeRef.current!, invoiceNum, {
-        format: 'CODE128', width: 1.8, height: 44,
+        format: 'CODE128', width: 2, height: 48,
         displayValue: false, background: 'transparent',
         lineColor: '#ffffff', margin: 0,
       })
@@ -82,12 +83,12 @@ export default function FacturaPage() {
       const canvas = await html2canvas(invoiceRef.current, {
         scale: 2, useCORS: true, allowTaint: true,
         backgroundColor: '#ffffff', logging: false,
-        imageTimeout: 15000, windowWidth: 794,
+        imageTimeout: 15000, windowWidth: W,
       })
       const imgData      = canvas.toDataURL('image/jpeg', 0.95)
-      const PAGE_W_MM    = 210
+      const PAGE_W_MM    = 297
       const PAGE_H_MM    = PAGE_W_MM * (canvas.height / canvas.width)
-      const pdf          = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [PAGE_W_MM, PAGE_H_MM] })
+      const pdf          = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [PAGE_W_MM, PAGE_H_MM] })
       pdf.addImage(imgData, 'JPEG', 0, 0, PAGE_W_MM, PAGE_H_MM)
       const safeName = client.name
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -112,12 +113,12 @@ export default function FacturaPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6' }}>
-      <p style={{ fontSize: 20, color: '#6b7280', fontFamily: 'Arial' }}>Cargando factura...</p>
+      <p style={{ fontSize: 22, color: '#6b7280', fontFamily: 'Arial' }}>Cargando factura...</p>
     </div>
   )
   if (!client) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6' }}>
-      <p style={{ color: '#ef4444', fontFamily: 'Arial', fontSize: 20 }}>Cliente no encontrado</p>
+      <p style={{ color: '#ef4444', fontFamily: 'Arial', fontSize: 22 }}>Cliente no encontrado</p>
     </div>
   )
 
@@ -125,13 +126,16 @@ export default function FacturaPage() {
   const speedMbps  = speedMatch ? `${speedMatch[0]} Mbps` : '—'
   const viewZoom   = isCapturing ? 1 : mobileScale
 
+  const labelStyle  = { fontSize: 12, fontWeight: 700, color: '#1565c0', letterSpacing: 2.5, textTransform: 'uppercase' as const, marginBottom: 10 }
+  const cardStyle   = { backgroundColor: 'white', borderRadius: 10, padding: '14px 16px', border: '1px solid #e0e0e0', boxShadow: '0 2px 6px rgba(0,0,0,0.06)' }
+
   return (
     <>
       <div style={{ backgroundColor: '#0b0f19', padding: '12px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
-        <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9ca3af', textDecoration: 'none', fontSize: 14, fontFamily: 'Arial' }}>
+        <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#9ca3af', textDecoration: 'none', fontSize: 15, fontFamily: 'Arial' }}>
           <ArrowLeft size={16} /> Volver al Dashboard
         </Link>
-        <button onClick={handleDownload} disabled={downloading} style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: downloading ? '#374151' : '#2563eb', color: 'white', border: 'none', borderRadius: 8, padding: '9px 22px', fontSize: 14, fontWeight: 700, cursor: downloading ? 'not-allowed' : 'pointer', fontFamily: 'Arial' }}>
+        <button onClick={handleDownload} disabled={downloading} style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: downloading ? '#374151' : '#2563eb', color: 'white', border: 'none', borderRadius: 8, padding: '9px 22px', fontSize: 15, fontWeight: 700, cursor: downloading ? 'not-allowed' : 'pointer', fontFamily: 'Arial' }}>
           {downloading ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Generando...</> : <><Download size={16} /> Descargar PDF</>}
         </button>
       </div>
@@ -142,237 +146,233 @@ export default function FacturaPage() {
       `}</style>
 
       <div style={{ minHeight: '100vh', backgroundColor: '#e8eef4', padding: '20px 0', overflow: 'hidden' }}>
-        <div style={{ width: 794, margin: '0 auto', transformOrigin: 'top center', transform: `scale(${viewZoom})`, marginBottom: viewZoom < 1 ? `${-794 * (1 - viewZoom) * 1.4}px` : 0 }}>
+        <div style={{ width: W, margin: '0 auto', transformOrigin: 'top center', transform: `scale(${viewZoom})`, marginBottom: viewZoom < 1 ? `${-W * (1 - viewZoom) * 1.4}px` : 0 }}>
 
-          <div ref={invoiceRef} style={{ width: 794, backgroundColor: '#ffffff', overflow: 'hidden', fontFamily: 'Arial, sans-serif' }}>
+          <div ref={invoiceRef} style={{ width: W, backgroundColor: '#ffffff', overflow: 'hidden', fontFamily: 'Arial, sans-serif' }}>
 
-            {/* === CABECERA === */}
-            <div style={{ background: 'linear-gradient(135deg,#0d1b3e 0%,#1a237e 55%,#0d47a1 100%)', padding: '24px 36px' }}>
+            {/* ═══ HEADER ═══ */}
+            <div style={{ background: 'linear-gradient(135deg,#0d1b3e 0%,#1a237e 55%,#0d47a1 100%)', padding: '22px 36px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                {/* Logo + empresa */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                   <img src="/logofact.jpeg" alt="Medifibra" crossOrigin="anonymous"
-                    style={{ width: 100, height: 100, objectFit: 'contain', borderRadius: 10, background: 'white', padding: 4 }} />
+                    style={{ width: 130, height: 130, objectFit: 'contain', borderRadius: 12, background: 'white', padding: 5 }} />
                   <div>
-                    <div style={{ color: 'white', fontSize: 36, fontWeight: 900, letterSpacing: 3, lineHeight: 1, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA</div>
-                    <div style={{ color: '#90caf9', fontSize: 14, marginTop: 5 }}>S.A.S — NIT: 902060057-8</div>
-                    <div style={{ color: '#90caf9', fontSize: 14, marginTop: 3 }}>Proveedor de Internet Fibra Optica</div>
-                    <div style={{ color: '#90caf9', fontSize: 14, marginTop: 3 }}>Medellin, Antioquia, Colombia</div>
+                    <div style={{ color: 'white', fontSize: 40, fontWeight: 900, letterSpacing: 4, lineHeight: 1, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA</div>
+                    <div style={{ color: '#90caf9', fontSize: 16, marginTop: 6 }}>S.A.S — NIT: 902060057-8</div>
+                    <div style={{ color: '#90caf9', fontSize: 16, marginTop: 3 }}>Proveedor de Internet Fibra Optica</div>
+                    <div style={{ color: '#90caf9', fontSize: 16, marginTop: 3 }}>Medellin, Antioquia, Colombia</div>
                   </div>
                 </div>
+                {/* Numero + barcode */}
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ color: '#bbdefb', fontSize: 12, letterSpacing: 2.5, textTransform: 'uppercase', marginBottom: 4 }}>Factura de Servicio</div>
-                  <div style={{ color: 'white', fontSize: 28, fontWeight: 900, letterSpacing: 1, fontFamily: 'Arial Black, Arial' }}>{invoiceNum}</div>
+                  <div style={{ color: '#bbdefb', fontSize: 13, letterSpacing: 2.5, textTransform: 'uppercase', marginBottom: 4 }}>Factura de Servicio</div>
+                  <div style={{ color: 'white', fontSize: 30, fontWeight: 900, letterSpacing: 1, fontFamily: 'Arial Black, Arial' }}>{invoiceNum}</div>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '6px 0' }}>
                     <svg ref={barcodeRef} style={{ display: 'block' }} />
                   </div>
-                  <div style={{ color: '#90caf9', fontSize: 14, marginTop: 4 }}>Fecha: {dateStr}</div>
-                  <div style={{ color: '#90caf9', fontSize: 14, marginTop: 3 }}>Periodo: {period}</div>
-                  <div style={{ marginTop: 10, display: 'inline-block', backgroundColor: client.status === 'active' ? '#2e7d32' : '#b71c1c', color: 'white', borderRadius: 5, padding: '5px 16px', fontSize: 12, fontWeight: 700, letterSpacing: 1.5 }}>
+                  <div style={{ color: '#90caf9', fontSize: 15, marginTop: 4 }}>Fecha: {dateStr}</div>
+                  <div style={{ color: '#90caf9', fontSize: 15, marginTop: 3 }}>Periodo: {period}</div>
+                  <div style={{ marginTop: 10, display: 'inline-block', backgroundColor: client.status === 'active' ? '#2e7d32' : '#b71c1c', color: 'white', borderRadius: 5, padding: '5px 18px', fontSize: 13, fontWeight: 700, letterSpacing: 1.5 }}>
                     {client.status === 'active' ? 'SERVICIO ACTIVO' : 'SERVICIO SUSPENDIDO'}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* === CLIENTE + COBRO === */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '2px solid #e8eaf6' }}>
-              <div style={{ padding: '22px 36px', borderRight: '1px solid #e8eaf6' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#1565c0', letterSpacing: 2.5, textTransform: 'uppercase', marginBottom: 12 }}>Informacion del Cliente</div>
-                <div style={{ fontSize: 25, fontWeight: 800, color: '#0d1b3e', marginBottom: 12, lineHeight: 1.2, textTransform: 'capitalize' }}>{client.name}</div>
+            {/* ═══ FILA 2: CLIENTE | COBRO | QR ═══ */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 220px', borderBottom: '2px solid #e8eaf6' }}>
+
+              {/* Cliente */}
+              <div style={{ padding: '18px 24px', borderRight: '1px solid #e8eaf6' }}>
+                <div style={labelStyle}>Informacion del Cliente</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#0d1b3e', marginBottom: 10, lineHeight: 1.2 }}>{client.name}</div>
                 {client.address && (
-                  <div style={{ fontSize: 16, color: '#444', marginBottom: 8, display: 'flex', gap: 8 }}>
-                    <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 44 }}>Dir:</span>
+                  <div style={{ fontSize: 15, color: '#444', marginBottom: 7, display: 'flex', gap: 8 }}>
+                    <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 50 }}>Dir:</span>
                     <span>{client.address}{client.neighborhood ? `, Barrio ${client.neighborhood}` : ''}</span>
                   </div>
                 )}
                 {client.city && (
-                  <div style={{ fontSize: 15, color: '#444', marginBottom: 8, display: 'flex', gap: 8 }}>
-                    <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 44 }}>Ciudad:</span>
+                  <div style={{ fontSize: 15, color: '#444', marginBottom: 7, display: 'flex', gap: 8 }}>
+                    <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 50 }}>Ciudad:</span>
                     <span>{client.city}{client.commune ? ` — Comuna ${client.commune}` : ''}</span>
                   </div>
                 )}
-                <div style={{ fontSize: 15, color: '#444', marginBottom: 8, display: 'flex', gap: 8 }}>
-                  <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 44 }}>Cel:</span>
-                  <span style={{ fontWeight: 800, fontSize: 18 }}>{client.cellphone}</span>
+                <div style={{ fontSize: 15, color: '#444', marginBottom: 7, display: 'flex', gap: 8 }}>
+                  <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 50 }}>Cel:</span>
+                  <span style={{ fontWeight: 800, fontSize: 17 }}>{client.cellphone}</span>
                 </div>
                 {client.phone && (
-                  <div style={{ fontSize: 15, color: '#444', marginBottom: 8, display: 'flex', gap: 8 }}>
-                    <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 44 }}>Tel:</span>
+                  <div style={{ fontSize: 15, color: '#444', marginBottom: 7, display: 'flex', gap: 8 }}>
+                    <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 50 }}>Tel:</span>
                     <span>{client.phone}</span>
                   </div>
                 )}
                 {client.email && (
                   <div style={{ fontSize: 15, color: '#444', display: 'flex', gap: 8 }}>
-                    <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 44 }}>Email:</span>
+                    <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 50 }}>Email:</span>
                     <span>{client.email}</span>
                   </div>
                 )}
               </div>
-              <div style={{ padding: '22px 36px' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#1565c0', letterSpacing: 2.5, textTransform: 'uppercase', marginBottom: 12 }}>Detalles de Cobro</div>
+
+              {/* Detalles cobro */}
+              <div style={{ padding: '18px 24px', borderRight: '1px solid #e8eaf6' }}>
+                <div style={labelStyle}>Detalles de Cobro</div>
                 {[
-                  { label: 'N de Factura',           value: invoiceNum,  color: '#1565c0', bold: false },
-                  { label: 'Periodo facturado',       value: period,      color: '#222',    bold: true  },
-                  { label: 'Fecha de emision',        value: dateStr,     color: '#222',    bold: true  },
-                  { label: 'Vence (3 dias habiles)',  value: dueDate,     color: '#c62828', bold: true  },
-                  { label: 'Llave / Referencia pago', value: CUENTA,      color: '#1b5e20', bold: true  },
+                  { label: 'N de Factura',           value: invoiceNum, color: '#1565c0', bold: false },
+                  { label: 'Periodo facturado',       value: period,     color: '#222',    bold: true  },
+                  { label: 'Fecha de emision',        value: dateStr,    color: '#222',    bold: true  },
+                  { label: 'Vence (3 dias habiles)',  value: dueDate,    color: '#c62828', bold: true  },
+                  { label: 'Llave / Referencia pago', value: CUENTA,     color: '#1b5e20', bold: true  },
                 ].map((row, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #f0f0f0' }}>
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 9, paddingBottom: 9, borderBottom: '1px solid #f0f0f0' }}>
                     <span style={{ fontSize: 15, color: '#666' }}>{row.label}</span>
                     <span style={{ fontSize: 15, fontWeight: row.bold ? 800 : 700, color: row.color }}>{row.value}</span>
                   </div>
                 ))}
               </div>
+
+              {/* QR grande */}
+              <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8faff', borderLeft: '2px solid #1565c0' }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#1565c0', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6, textAlign: 'center' }}>Paga Aqui</div>
+                <div style={{ fontSize: 12, color: '#888', marginBottom: 8, textAlign: 'center' }}>Escanea con tu banco</div>
+                <img src="/QR.jpg" alt="QR Bancolombia" crossOrigin="anonymous"
+                  style={{ width: 175, height: 175, objectFit: 'cover', borderRadius: 8, border: '2px solid #1565c0' }} />
+                <div style={{ fontSize: 16, fontWeight: 900, color: '#0d1b3e', marginTop: 8, letterSpacing: 1, textAlign: 'center' }}>{CUENTA}</div>
+                <div style={{ fontSize: 12, color: '#888', marginTop: 3, textAlign: 'center' }}>Bancolombia · Bre-B</div>
+              </div>
             </div>
 
-            {/* === DETALLE DE SERVICIOS === */}
-            <div style={{ padding: '20px 36px 16px' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#1565c0', letterSpacing: 2.5, textTransform: 'uppercase', marginBottom: 14 }}>Detalle de Servicios</div>
+            {/* ═══ SERVICIOS ═══ */}
+            <div style={{ padding: '16px 28px 10px' }}>
+              <div style={labelStyle}>Detalle de Servicios</div>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#0d1b3e' }}>
-                    <th style={{ padding: '13px 16px', textAlign: 'left',   color: 'white', fontWeight: 700, fontSize: 15 }}>Descripcion del Servicio</th>
-                    <th style={{ padding: '13px 16px', textAlign: 'center', color: 'white', fontWeight: 700, fontSize: 15 }}>Velocidad</th>
-                    <th style={{ padding: '13px 16px', textAlign: 'center', color: 'white', fontWeight: 700, fontSize: 15 }}>Periodo</th>
-                    <th style={{ padding: '13px 16px', textAlign: 'right',  color: 'white', fontWeight: 700, fontSize: 15 }}>Valor</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left',   color: 'white', fontWeight: 700, fontSize: 15 }}>Descripcion del Servicio</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center', color: 'white', fontWeight: 700, fontSize: 15 }}>Velocidad</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center', color: 'white', fontWeight: 700, fontSize: 15 }}>Periodo</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right',  color: 'white', fontWeight: 700, fontSize: 15 }}>Valor</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr style={{ backgroundColor: '#f8f9ff', borderBottom: '1px solid #e8eaf6' }}>
-                    <td style={{ padding: '16px 16px', verticalAlign: 'top' }}>
-                      <div style={{ fontWeight: 800, color: '#0d1b3e', fontSize: 18, marginBottom: 5 }}>Internet Fibra Optica — {client.plan}</div>
-                      <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>Servicio residencial de alta velocidad — Conectate con velocidad real</div>
+                    <td style={{ padding: '14px 16px', verticalAlign: 'top' }}>
+                      <div style={{ fontWeight: 800, color: '#0d1b3e', fontSize: 17, marginBottom: 4 }}>Internet Fibra Optica — {client.plan}</div>
+                      <div style={{ fontSize: 14, color: '#666', marginBottom: 3 }}>Servicio residencial de alta velocidad — Conectate con velocidad real</div>
                       <div style={{ fontSize: 14, color: '#2e7d32', fontStyle: 'italic' }}>Exento de IVA (Art. 481, literal h, E.T.)</div>
                     </td>
-                    <td style={{ padding: '16px 16px', textAlign: 'center', color: '#333', fontWeight: 700, fontSize: 17, verticalAlign: 'top' }}>{speedMbps}</td>
-                    <td style={{ padding: '16px 16px', textAlign: 'center', color: '#555', fontSize: 16, verticalAlign: 'top' }}>{period}</td>
-                    <td style={{ padding: '16px 16px', textAlign: 'right', fontSize: 24, fontWeight: 900, color: '#0d1b3e', verticalAlign: 'top' }}>{formatCurrency(client.plan_value)}</td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center', color: '#333', fontWeight: 700, fontSize: 17, verticalAlign: 'middle' }}>{speedMbps}</td>
+                    <td style={{ padding: '14px 16px', textAlign: 'center', color: '#555', fontSize: 16, verticalAlign: 'middle' }}>{period}</td>
+                    <td style={{ padding: '14px 16px', textAlign: 'right', fontSize: 24, fontWeight: 900, color: '#0d1b3e', verticalAlign: 'middle' }}>{formatCurrency(client.plan_value)}</td>
                   </tr>
                   <tr style={{ backgroundColor: '#f0fdf4', borderBottom: '1px solid #d1fae5' }}>
-                    <td colSpan={3} style={{ padding: '9px 16px', fontSize: 15, color: '#166534', fontStyle: 'italic' }}>
+                    <td colSpan={3} style={{ padding: '8px 16px', fontSize: 14, color: '#166534', fontStyle: 'italic' }}>
                       IVA — Exento (Art. 481, literal h, E.T.) — Internet residencial estrato 1 y 2
                     </td>
-                    <td style={{ padding: '9px 16px', textAlign: 'right', fontSize: 15, fontWeight: 700, color: '#166534' }}>$ 0</td>
+                    <td style={{ padding: '8px 16px', textAlign: 'right', fontSize: 15, fontWeight: 700, color: '#166534' }}>$ 0</td>
                   </tr>
                 </tbody>
                 <tfoot>
                   <tr>
                     <td colSpan={2} />
-                    <td style={{ padding: '10px 16px 4px', textAlign: 'right', fontSize: 16, color: '#666', fontWeight: 600 }}>Subtotal</td>
-                    <td style={{ padding: '10px 16px 4px', textAlign: 'right', fontSize: 18, fontWeight: 700, color: '#333' }}>{formatCurrency(client.plan_value)}</td>
+                    <td style={{ padding: '8px 16px 3px', textAlign: 'right', fontSize: 15, color: '#666', fontWeight: 600 }}>Subtotal</td>
+                    <td style={{ padding: '8px 16px 3px', textAlign: 'right', fontSize: 17, fontWeight: 700, color: '#333' }}>{formatCurrency(client.plan_value)}</td>
                   </tr>
                   <tr>
                     <td colSpan={2} />
-                    <td style={{ padding: '3px 16px', textAlign: 'right', fontSize: 15, color: '#166534', fontWeight: 600 }}>IVA (Art. 481, literal h)</td>
-                    <td style={{ padding: '3px 16px', textAlign: 'right', fontSize: 15, fontWeight: 700, color: '#166534' }}>$ 0</td>
+                    <td style={{ padding: '2px 16px', textAlign: 'right', fontSize: 14, color: '#166534', fontWeight: 600 }}>IVA (Art. 481, literal h)</td>
+                    <td style={{ padding: '2px 16px', textAlign: 'right', fontSize: 14, fontWeight: 700, color: '#166534' }}>$ 0</td>
                   </tr>
                   <tr style={{ borderTop: '3px solid #0d1b3e', backgroundColor: '#eef2ff' }}>
-                    <td colSpan={2} style={{ padding: '14px 16px' }}>
-                      <span style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic', letterSpacing: 0.5 }}>────────── TOTAL A PAGAR</span>
+                    <td colSpan={2} style={{ padding: '12px 16px' }}>
+                      <span style={{ fontSize: 13, color: '#9ca3af', fontStyle: 'italic' }}>────────── TOTAL A PAGAR</span>
                     </td>
-                    <td style={{ padding: '14px 16px', textAlign: 'right', fontSize: 17, fontWeight: 800, color: '#0d1b3e' }}>TOTAL A PAGAR</td>
-                    <td style={{ padding: '14px 16px', textAlign: 'right', fontSize: 32, fontWeight: 900, color: '#0d1b3e' }}>{formatCurrency(client.plan_value)}</td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 17, fontWeight: 800, color: '#0d1b3e' }}>TOTAL A PAGAR</td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 30, fontWeight: 900, color: '#0d1b3e' }}>{formatCurrency(client.plan_value)}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
 
-            {/* === REFERENCIAS DE PAGO === */}
-            <div style={{ margin: '0 36px 16px', padding: '18px 20px', backgroundColor: '#f0f4ff', borderRadius: 10, border: '1px solid #c5cae9' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#1565c0', letterSpacing: 2.5, textTransform: 'uppercase', marginBottom: 16 }}>Referencias de Pago</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 190px', gap: 14, alignItems: 'stretch' }}>
+            {/* ═══ FILA 3: BANCOLOMBIA | BRE-B | POLITICA ═══ */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, padding: '10px 28px 14px' }}>
 
-                {/* Bancolombia */}
-                <div style={{ backgroundColor: 'white', borderRadius: 10, padding: 16, border: '1px solid #e0e0e0', boxShadow: '0 2px 6px rgba(0,0,0,0.06)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid #f0f0f0' }}>
-                    <img src="/bancolombia.png" alt="Bancolombia" crossOrigin="anonymous" style={{ width: 42, height: 42, objectFit: 'contain', borderRadius: 8 }} />
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: 17, color: '#333' }}>Bancolombia</div>
-                      <div style={{ fontSize: 13, color: '#888' }}>Transferencia / PSE</div>
-                    </div>
+              {/* Bancolombia */}
+              <div style={{ ...cardStyle, borderTop: '3px solid #fdda24' }}>
+                <div style={labelStyle}>Bancolombia</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <img src="/bancolombia.png" alt="Bancolombia" crossOrigin="anonymous" style={{ width: 44, height: 44, objectFit: 'contain', borderRadius: 8 }} />
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#333' }}>Transferencia / PSE</div>
+                    <div style={{ fontSize: 13, color: '#888' }}>Cuenta de Ahorros</div>
                   </div>
-                  <div style={{ fontSize: 13, color: '#999', marginBottom: 3 }}>Tipo de cuenta</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 12 }}>Cuenta de Ahorros</div>
-                  <div style={{ fontSize: 13, color: '#999', marginBottom: 3 }}>Numero de cuenta</div>
-                  <div style={{ fontSize: 23, fontWeight: 900, color: '#0d1b3e', letterSpacing: 1, marginBottom: 12 }}>{CUENTA}</div>
-                  <div style={{ fontSize: 13, color: '#999', marginBottom: 3 }}>A nombre de</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#333' }}>Jose Medardo Mosquera</div>
                 </div>
-
-                {/* Bre-B */}
-                <div style={{ backgroundColor: 'white', borderRadius: 10, padding: 16, border: '1px solid #e0e0e0', boxShadow: '0 2px 6px rgba(0,0,0,0.06)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid #f0f0f0' }}>
-                    <img src="/bre-b.png" alt="Bre-B" crossOrigin="anonymous" style={{ width: 42, height: 42, objectFit: 'contain', borderRadius: 8 }} />
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: 17, color: '#333' }}>Bre-B</div>
-                      <div style={{ fontSize: 13, color: '#888' }}>Transferencia inmediata</div>
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 13, color: '#999', marginBottom: 3 }}>Llave / Referencia de pago</div>
-                  <div style={{ fontSize: 23, fontWeight: 900, color: '#1b5e20', letterSpacing: 1, marginBottom: 12 }}>{CUENTA}</div>
-                  <div style={{ fontSize: 13, color: '#999', marginBottom: 3 }}>A nombre de</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 8 }}>Jose Medardo Mosquera</div>
-                  <div style={{ fontSize: 13, color: '#888', fontStyle: 'italic' }}>Pago disponible 24/7</div>
-                </div>
-
-                {/* QR */}
-                <div style={{ backgroundColor: 'white', borderRadius: 10, padding: 14, border: '2px solid #1565c0', boxShadow: '0 2px 8px rgba(21,101,192,0.15)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#1565c0', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>Paga Aqui</div>
-                  <div style={{ fontSize: 11, color: '#888', marginBottom: 8 }}>Escanea con la app de tu banco</div>
-                  <img src="/QR.jpg" alt="QR Bancolombia" crossOrigin="anonymous"
-                    style={{ width: 155, height: 155, objectFit: 'cover', borderRadius: 6, border: '1px solid #e0e0e0' }} />
-                  <div style={{ fontSize: 17, fontWeight: 900, color: '#0d1b3e', marginTop: 10, letterSpacing: 1 }}>{CUENTA}</div>
-                  <div style={{ fontSize: 11, color: '#888', marginTop: 3 }}>Bancolombia · Bre-B</div>
-                </div>
-
+                <div style={{ fontSize: 13, color: '#999', marginBottom: 2 }}>Numero de cuenta</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#0d1b3e', letterSpacing: 1, marginBottom: 8 }}>{CUENTA}</div>
+                <div style={{ fontSize: 13, color: '#999', marginBottom: 2 }}>A nombre de</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#333' }}>Jose Medardo Mosquera</div>
               </div>
-            </div>
 
-            {/* === POLITICA DE COBRO === */}
-            <div style={{ margin: '0 36px 16px', padding: '16px 20px', backgroundColor: '#fffbeb', borderRadius: 10, border: '1px solid #fbbf24', borderLeft: '5px solid #d97706' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 14 }}>Politica de Cobro y Condiciones del Servicio</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                <div style={{ backgroundColor: 'white', borderRadius: 8, padding: '12px 10px', border: '1px solid #fde68a', textAlign: 'center' }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#92400e", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>PLAZO</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#92400e', marginBottom: 6 }}>3 Dias Habiles de Pago</div>
-                  <div style={{ fontSize: 14, color: '#555', lineHeight: 1.6 }}>El plazo maximo para pagar es <strong style={{ color: '#c62828' }}>{dueDate}</strong>. Envie comprobante al WhatsApp 333 728 8745.</div>
+              {/* Bre-B */}
+              <div style={{ ...cardStyle, borderTop: '3px solid #00c853' }}>
+                <div style={labelStyle}>Bre-B</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <img src="/bre-b.png" alt="Bre-B" crossOrigin="anonymous" style={{ width: 44, height: 44, objectFit: 'contain', borderRadius: 8 }} />
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#333' }}>Transferencia inmediata</div>
+                    <div style={{ fontSize: 13, color: '#888' }}>Pago disponible 24/7</div>
+                  </div>
                 </div>
-                <div style={{ backgroundColor: 'white', borderRadius: 8, padding: '12px 10px', border: '1px solid #fde68a', textAlign: 'center' }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#92400e", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>AVISO</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#92400e', marginBottom: 6 }}>Suspension del Servicio</div>
-                  <div style={{ fontSize: 14, color: '#555', lineHeight: 1.6 }}>Vencido el plazo sin pago, el servicio sera suspendido hasta la regularizacion total de la deuda.</div>
+                <div style={{ fontSize: 13, color: '#999', marginBottom: 2 }}>Llave / Referencia de pago</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#1b5e20', letterSpacing: 1, marginBottom: 8 }}>{CUENTA}</div>
+                <div style={{ fontSize: 13, color: '#999', marginBottom: 2 }}>A nombre de</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#333' }}>Jose Medardo Mosquera</div>
+              </div>
+
+              {/* Politica */}
+              <div style={{ backgroundColor: '#fffbeb', borderRadius: 10, padding: '14px 16px', border: '1px solid #fbbf24', borderTop: '3px solid #d97706' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#92400e', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>Politica de Cobro</div>
+                <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid #fde68a' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#92400e', marginBottom: 3 }}>PLAZO — 3 Dias Habiles</div>
+                  <div style={{ fontSize: 13, color: '#555', lineHeight: 1.5 }}>Fecha limite: <strong style={{ color: '#c62828' }}>{dueDate}</strong>. Envie comprobante al WhatsApp 333 728 8745.</div>
                 </div>
-                <div style={{ backgroundColor: 'white', borderRadius: 8, padding: '12px 10px', border: '1px solid #fde68a', textAlign: 'center' }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#92400e", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>IMPORTANTE</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#92400e', marginBottom: 6 }}>60 Dias — Retiro y Multas</div>
-                  <div style={{ fontSize: 14, color: '#555', lineHeight: 1.6 }}>Pasados 60 dias sin pago se retiran los equipos. La no entrega genera multas y sobrecargos adicionales.</div>
+                <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid #fde68a' }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#92400e', marginBottom: 3 }}>AVISO — Suspension</div>
+                  <div style={{ fontSize: 13, color: '#555', lineHeight: 1.5 }}>Sin pago en el plazo, el servicio sera suspendido hasta regularizar la deuda.</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#92400e', marginBottom: 3 }}>IMPORTANTE — 60 Dias</div>
+                  <div style={{ fontSize: 13, color: '#555', lineHeight: 1.5 }}>A los 60 dias se retiran equipos. La no entrega genera multas y sobrecargos.</div>
                 </div>
               </div>
             </div>
 
-            {/* === FOOTER === */}
-            <div style={{ backgroundColor: '#0d1b3e', padding: '18px 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {/* ═══ FOOTER ═══ */}
+            <div style={{ backgroundColor: '#0d1b3e', padding: '16px 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ color: '#90caf9', fontSize: 12, letterSpacing: 1.5, marginBottom: 4, textTransform: 'uppercase' }}>Contacto y Soporte</div>
-                <div style={{ color: 'white', fontSize: 20, fontWeight: 700 }}>WhatsApp: 333 728 8745</div>
-                <div style={{ color: '#90caf9', fontSize: 13, marginTop: 3 }}>Medellin, Antioquia, Colombia</div>
+                <div style={{ color: 'white', fontSize: 19, fontWeight: 700 }}>WhatsApp: 333 728 8745</div>
+                <div style={{ color: '#90caf9', fontSize: 14, marginTop: 3 }}>Medellin, Antioquia, Colombia</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ color: 'white', fontSize: 26, fontWeight: 900, letterSpacing: 4, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA</div>
                 <div style={{ color: '#90caf9', fontSize: 13, marginTop: 4 }}>Conectate con velocidad real</div>
-                <div style={{ color: '#546e7a', fontSize: 10, marginTop: 4 }}>Generado: {now.toLocaleString('es-CO')}</div>
+                <div style={{ color: '#546e7a', fontSize: 11, marginTop: 4 }}>Generado: {now.toLocaleString('es-CO')}</div>
               </div>
             </div>
 
-            {/* === NOTA PAGO === */}
-            <div style={{ padding: '12px 36px', backgroundColor: '#fff9c4', borderTop: '3px solid #f9a825', textAlign: 'center' }}>
+            {/* ═══ NOTA PAGO ═══ */}
+            <div style={{ padding: '10px 36px', backgroundColor: '#fff9c4', borderTop: '3px solid #f9a825', textAlign: 'center' }}>
               <p style={{ fontSize: 15, color: '#555', lineHeight: 1.7, margin: 0 }}>
                 Al realizar el pago, envie el comprobante al WhatsApp <strong style={{ color: '#333' }}>333 728 8745</strong> indicando nombre completo y numero de factura <strong style={{ color: '#1565c0' }}>{invoiceNum}</strong>. Gracias por su pago puntual — <strong>Medifibra S.A.S</strong>
               </p>
             </div>
 
-            {/* === AVISO DIAN === */}
-            <div style={{ padding: '8px 36px', backgroundColor: '#f1f5f9', borderTop: '1px solid #cbd5e1', textAlign: 'center' }}>
+            {/* ═══ AVISO DIAN ═══ */}
+            <div style={{ padding: '7px 36px', backgroundColor: '#f1f5f9', borderTop: '1px solid #cbd5e1', textAlign: 'center' }}>
               <p style={{ fontSize: 13, color: '#64748b', margin: 0, letterSpacing: 0.3 }}>
                 <strong>Documento comercial</strong> — no valido como factura electronica DIAN &nbsp;|&nbsp; NIT 902060057-8 &nbsp;|&nbsp; Medifibra S.A.S &nbsp;|&nbsp; Medellin, Colombia
               </p>
