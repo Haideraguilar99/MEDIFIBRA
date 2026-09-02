@@ -163,8 +163,8 @@ export default function FacturaPage() {
                   <img src="/logofact.jpeg" alt="Medifibra" crossOrigin="anonymous"
                     style={{ width: 110, height: 110, objectFit: 'contain', borderRadius: 10, background: 'white', padding: 4 }} />
                   <div>
-                    <div style={{ color: 'white', fontSize: 30, fontWeight: 900, letterSpacing: 2, lineHeight: 1, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: 1, verticalAlign: 'middle', color: '#90caf9' }}>S.A.S</span></div>
-                    <div style={{ color: '#90caf9', fontSize: 13, marginTop: 4 }}>NIT: 902060057-8</div>
+                    <div style={{ color: 'white', fontSize: 30, fontWeight: 900, letterSpacing: 2, lineHeight: 1, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA <span style={{ fontSize: 30, fontWeight: 900, letterSpacing: 2, color: '#90caf9' }}>S.A.S</span></div>
+                    <div style={{ color: '#90caf9', fontSize: 13, marginTop: 10 }}>NIT: 902060057-8</div>
                     <div style={{ color: '#90caf9', fontSize: 14, marginTop: 2 }}>Proveedor de Internet Fibra Optica</div>
                     <div style={{ color: '#90caf9', fontSize: 14, marginTop: 2 }}>Medellin, Antioquia, Colombia</div>
                   </div>
@@ -178,7 +178,7 @@ export default function FacturaPage() {
                   </div>
                   <div style={{ color: '#90caf9', fontSize: 13, marginTop: 2 }}>Emision: {dateStr}</div>
                   <div style={{ color: '#90caf9', fontSize: 13, marginTop: 1 }}>Periodo facturado: {periodLabel}</div>
-                  <div style={{ marginTop: 8, display: 'block', textAlign: 'center', backgroundColor: client.status === 'active' ? '#2e7d32' : '#b71c1c', color: 'white', borderRadius: 4, padding: '5px 14px', fontSize: 11, fontWeight: 700, letterSpacing: 1.5 }}>
+                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: client.status === 'active' ? '#2e7d32' : '#b71c1c', color: 'white', borderRadius: 4, padding: '6px 14px', fontSize: 11, fontWeight: 700, letterSpacing: 1.5, width: '100%' }}>
                     {client.status === 'active' ? 'SERVICIO ACTIVO' : 'SERVICIO SUSPENDIDO'}
                   </div>
                 </div>
@@ -231,9 +231,9 @@ export default function FacturaPage() {
                   { label: 'Vence (3 dias habiles)', value: dueDate,   color: '#c62828', bold: true  },
                   { label: 'Llave / Referencia',     value: CUENTA,    color: '#1b5e20', bold: true  },
                 ].map((row, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 7, paddingBottom: 7, borderBottom: '1px solid #f0f0f0' }}>
-                    <span style={{ fontSize: 15, color: '#666', flexShrink: 0, marginRight: 6 }}>{row.label}</span>
-                    <span style={{ fontSize: 15, fontWeight: row.bold ? 800 : 700, color: row.color, textAlign: 'right' }}>{row.value}</span>
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7, paddingBottom: 7, borderBottom: '1px solid #f0f0f0' }}>
+                    <span style={{ fontSize: 14, color: '#666', flexShrink: 0, marginRight: 8, whiteSpace: 'nowrap' }}>{row.label}</span>
+                    <span style={{ fontSize: 14, fontWeight: row.bold ? 800 : 700, color: row.color, textAlign: 'right', whiteSpace: 'nowrap' }}>{row.value}</span>
                   </div>
                 ))}
               </div>
