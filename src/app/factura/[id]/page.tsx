@@ -24,7 +24,7 @@ function addBusinessDays(date: Date, days: number): Date {
 }
 
 const CUENTA = '0093014896'
-const W = 860
+const W = 794
 
 export default function FacturaPage() {
   const { id } = useParams()
@@ -86,9 +86,9 @@ export default function FacturaPage() {
         imageTimeout: 15000, windowWidth: W,
       })
       const imgData      = canvas.toDataURL('image/jpeg', 0.95)
-      const PAGE_W_MM    = 297
+      const PAGE_W_MM    = 210
       const PAGE_H_MM    = PAGE_W_MM * (canvas.height / canvas.width)
-      const pdf          = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [PAGE_W_MM, PAGE_H_MM] })
+      const pdf          = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [PAGE_W_MM, PAGE_H_MM] })
       pdf.addImage(imgData, 'JPEG', 0, 0, PAGE_W_MM, PAGE_H_MM)
       const safeName = client.name
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
