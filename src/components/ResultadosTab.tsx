@@ -173,15 +173,15 @@ export default function ResultadosTab({ BG,CARD,CARD2,BORDER,TEXT,MUTED }:Result
                         <span style={{ color:ACCENT, fontWeight:800, fontSize:13, fontFamily:'monospace' }}>{order.order_number}</span>
                         <span style={{ background:tColor+'18', color:tColor, border:`1px solid ${tColor}33`, borderRadius:4, padding:'2px 9px', fontSize:12, fontWeight:700 }}>{tLabel}</span>
                         {order.followup_required===1 && (
-                          <span style={{ background:'#431407', color:'#fb923c', border:'1px solid #9a3412', borderRadius:4, padding:'2px 8px', fontSize:11, fontWeight:700 }}>⚠ Seguimiento</span>
+                          <span style={{ background:'#431407', color:'#fb923c', border:'1px solid #9a3412', borderRadius:4, padding:'2px 8px', fontSize:11, fontWeight:700 }}>! Seguimiento</span>
                         )}
                       </div>
                       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:'3px 16px' }}>
-                        <span style={{ color:MUTED, fontSize:13 }}>👷 <strong style={{ color:TEXT }}>{order.technician_name??'—'}</strong></span>
-                        <span style={{ color:MUTED, fontSize:13 }}>👤 <strong style={{ color:TEXT }}>{order.client_name??'—'}</strong></span>
-                        {order.client_address && <span style={{ color:MUTED, fontSize:13 }}>📍 {order.client_neighborhood?`${order.client_address}, ${order.client_neighborhood}`:order.client_address}</span>}
-                        {order.completed_at   && <span style={{ color:MUTED, fontSize:13 }}>✅ {fmtDate(order.completed_at)}</span>}
-                        {order.duration_minutes>0 && <span style={{ color:MUTED, fontSize:13 }}>⏱ {fmtDur(order.duration_minutes)}</span>}
+                        <span style={{ color:MUTED, fontSize:13 }}><strong style={{ color:TEXT }}>{order.technician_name??'—'}</strong></span>
+                        <span style={{ color:MUTED, fontSize:13 }}><strong style={{ color:TEXT }}>{order.client_name??'—'}</strong></span>
+                        {order.client_address && <span style={{ color:MUTED, fontSize:13 }}>{order.client_neighborhood?`${order.client_address}, ${order.client_neighborhood}`:order.client_address}</span>}
+                        {order.completed_at   && <span style={{ color:MUTED, fontSize:13 }}>{fmtDate(order.completed_at)}</span>}
+                        {order.duration_minutes>0 && <span style={{ color:MUTED, fontSize:13 }}>{fmtDur(order.duration_minutes)}</span>}
                       </div>
                     </div>
                     <div style={{ display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
@@ -203,10 +203,10 @@ export default function ResultadosTab({ BG,CARD,CARD2,BORDER,TEXT,MUTED }:Result
                     {/* Sub-tabs */}
                     <div style={{ display:'flex', gap:4, padding:'14px 0', flexWrap:'wrap' }}>
                       {[
-                        { key:'info',    label:'📋 Detalles' },
-                        { key:'fotos',   label:`📷 Fotos (${order.photos.length})` },
-                        { key:'equipos', label:`🔧 Equipos (${order.equipment.length})` },
-                        { key:'rating',  label:'⭐ Calificación' },
+                        { key:'info',    label:'Detalles' },
+                        { key:'fotos',   label:`Fotos (${order.photos.length})` },
+                        { key:'equipos', label:`Equipos (${order.equipment.length})` },
+                        { key:'rating',  label:'Calificacion' },
                       ].map(t=>(
                         <button key={t.key} onClick={()=>setTabs(p=>({...p,[order.id]:t.key}))} style={{ background:tab===t.key?ACCENT:CARD2, color:tab===t.key?'#fff':MUTED, border:`1px solid ${tab===t.key?ACCENT:BORDER}`, borderRadius:7, padding:'6px 14px', cursor:'pointer', fontSize:13, fontWeight:600 }}>
                           {t.label}
@@ -238,7 +238,7 @@ export default function ResultadosTab({ BG,CARD,CARD2,BORDER,TEXT,MUTED }:Result
                         )}
                         {order.followup_required===1 && order.followup_notes && (
                           <div>
-                            <div style={{ color:'#fb923c', fontSize:12, fontWeight:700, textTransform:'uppercase', letterSpacing:0.5, marginBottom:6 }}>⚠ Pendiente de Seguimiento</div>
+                            <div style={{ color:'#fb923c', fontSize:12, fontWeight:700, textTransform:'uppercase', letterSpacing:0.5, marginBottom:6 }}>Pendiente de Seguimiento</div>
                             <div style={{ background:'#431407', border:'1px solid #9a3412', borderRadius:8, padding:'12px 14px', color:'#fb923c', fontSize:14 }}>{order.followup_notes}</div>
                           </div>
                         )}
@@ -262,7 +262,7 @@ export default function ResultadosTab({ BG,CARD,CARD2,BORDER,TEXT,MUTED }:Result
                             const cnt = order.photos.filter(p=>p.phase===ph).length
                             return (
                               <button key={ph} onClick={()=>setPhases(p=>({...p,[order.id]:ph}))} style={{ background:phase===ph?'#1e3a5f':CARD2, color:phase===ph?'#60a5fa':MUTED, border:`1px solid ${phase===ph?'#1d4ed8':BORDER}`, borderRadius:7, padding:'6px 14px', cursor:'pointer', fontSize:13, fontWeight:600, display:'inline-flex', alignItems:'center', gap:6 }}>
-                                {ph==='antes'?'📸 Antes':ph==='durante'?'📸 Durante':'📸 Después'}
+                                {ph==='antes'?'Antes':ph==='durante'?'Durante':'Despues'}
                                 <span style={{ background:cnt>0?'#2563eb':CARD, color:cnt>0?'#fff':MUTED, borderRadius:10, padding:'0 6px', fontSize:11, fontWeight:700 }}>{cnt}</span>
                               </button>
                             )

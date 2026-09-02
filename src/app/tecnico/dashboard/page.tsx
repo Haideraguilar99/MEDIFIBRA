@@ -47,7 +47,7 @@ export default function TecnicoDashboard() {
         fetch('/api/tecnico/ordenes', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/tecnico/stats',   { headers: { Authorization: `Bearer ${token}` } })
       ])
-      if (oRes.status === 401) { router.replace('/tecnico'); return }
+      if (oRes.status === 401 || sRes.status === 401) { clearAuthAndRedirect(); return }
       const [oData, sData] = await Promise.all([oRes.json(), sRes.json()])
       setOrders(oData.orders ?? [])
       setStats(sData.stats ?? null)
@@ -70,10 +70,14 @@ export default function TecnicoDashboard() {
     return () => es.close()
   }, [])
 
-  function logout() {
+  function clearAuthAndRedirect() {
     localStorage.removeItem('tech_token')
     localStorage.removeItem('tech_data')
     router.replace('/tecnico')
+  }
+
+  function logout() {
+    clearAuthAndRedirect()
   }
 
   const filtered = filter === 'todas' ? orders : orders.filter(o => o.status === filter)
@@ -165,15 +169,15 @@ export default function TecnicoDashboard() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.7rem', color: '#374151', flexWrap: 'wrap' }}>
-              {order.scheduled_date && <span>📅 {order.scheduled_date}{order.scheduled_time ? ` ${order.scheduled_time}` : ''}</span>}
+              {order.scheduled_date && <span>{order.scheduled_date}{order.scheduled_time ? ` ${order.scheduled_time}` : ''}</span>}
               {(order.client_neighborhood || order.client_address) && (
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '65%' }}>
-                  📍 {order.client_neighborhood || order.client_address}
+                  {order.client_neighborhood || order.client_address}
                 </span>
               )}
             </div>
             {Number(order.followup_required) === 1 && (
-              <div style={{ marginTop: '0.375rem', fontSize: '0.68rem', color: '#f59e0b' }}>⚠ Seguimiento requerido</div>
+              <div style={{ marginTop: '0.375rem', fontSize: '0.68rem', color: '#f59e0b' }}>Seguimiento requerido</div>
             )}
           </div>
         ))}
