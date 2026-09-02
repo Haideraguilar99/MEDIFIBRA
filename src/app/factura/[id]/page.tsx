@@ -163,7 +163,7 @@ export default function FacturaPage() {
                   <img src="/logofact.jpeg" alt="Medifibra" crossOrigin="anonymous"
                     style={{ width: 110, height: 110, objectFit: 'contain', borderRadius: 10, background: 'white', padding: 4 }} />
                   <div>
-                    <div style={{ color: 'white', fontSize: 30, fontWeight: 900, letterSpacing: 2, lineHeight: 1, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA <span style={{ fontSize: 30, fontWeight: 900, letterSpacing: 2, color: '#90caf9' }}>S.A.S</span></div>
+                    <div style={{ color: 'white', fontSize: 30, fontWeight: 900, letterSpacing: 2, lineHeight: 1, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA <span style={{ fontSize: 30, fontWeight: 900, letterSpacing: 2, color: '#ffffff' }}>S.A.S</span></div>
                     <div style={{ color: '#90caf9', fontSize: 13, marginTop: 10 }}>NIT: 902060057-8</div>
                     <div style={{ color: '#90caf9', fontSize: 14, marginTop: 2 }}>Proveedor de Internet Fibra Optica</div>
                     <div style={{ color: '#90caf9', fontSize: 14, marginTop: 2 }}>Medellin, Antioquia, Colombia</div>
@@ -178,7 +178,7 @@ export default function FacturaPage() {
                   </div>
                   <div style={{ color: '#90caf9', fontSize: 13, marginTop: 2 }}>Emision: {dateStr}</div>
                   <div style={{ color: '#90caf9', fontSize: 13, marginTop: 1 }}>Periodo facturado: {periodLabel}</div>
-                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: client.status === 'active' ? '#2e7d32' : '#b71c1c', color: 'white', borderRadius: 4, padding: '6px 14px', fontSize: 11, fontWeight: 700, letterSpacing: 1.5, width: '100%' }}>
+                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: client.status === 'active' ? '#2e7d32' : '#b71c1c', color: 'white', borderRadius: 4, height: 30, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, width: '100%', lineHeight: 1 }}>
                     {client.status === 'active' ? 'SERVICIO ACTIVO' : 'SERVICIO SUSPENDIDO'}
                   </div>
                 </div>
