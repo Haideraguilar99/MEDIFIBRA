@@ -154,8 +154,16 @@ export default function NotificationBell({
 
   useEffect(() => {
     fetchUpcoming()
-    const interval = setInterval(() => fetchUpcoming(true), 5 * 60 * 1000)
-    return () => clearInterval(interval)
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'hidden') return
+      fetchUpcoming(true)
+    }, 5 * 60 * 1000)
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchUpcoming(true) }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [fetchUpcoming])
 
   const handleToggle = () => {

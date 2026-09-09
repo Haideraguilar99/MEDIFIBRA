@@ -1,7 +1,7 @@
 import { addSSEClient, removeSSEClient } from '@/lib/sse'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+export const maxDuration = 15
 
 export async function GET() {
   const id = crypto.randomUUID()

@@ -1,0 +1,128 @@
+{
+  "functions": {
+    "src/app/api/sse/route.ts": {
+      "maxDuration": 15,
+      "memory": 256
+    },
+    "src/app/api/clients/import/route.ts": {
+      "maxDuration": 20,
+      "memory": 512
+    },
+    "src/app/api/img-proxy/route.ts": {
+      "maxDuration": 20,
+      "memory": 512
+    },
+    "src/app/api/auth/login/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/auth/logout/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/auth/me/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/auth/seed/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/clients/[id]/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/clients/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/init/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/notifications/log/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/notifications/upcoming-payments/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/payments/[id]/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/payments/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/push/send/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/push/subscribe/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/reports/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/resultados/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/technicians/[id]/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/technicians/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/tecnico/auth/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/tecnico/equipment/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/tecnico/evidence/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/tecnico/followup/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/tecnico/ordenes/[id]/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/tecnico/ordenes/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/tecnico/rating/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/tecnico/stats/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/webhook/payment/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/work-orders/[id]/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    },
+    "src/app/api/work-orders/route.ts": {
+      "maxDuration": 10,
+      "memory": 256
+    }
+  }
+}
