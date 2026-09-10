@@ -121,7 +121,7 @@ export default function Dashboard() {
   const [editPayment,  setEditPayment]  = useState<Payment|null>(null)
   const [form,         setForm]         = useState(EMPTY_CLIENT)
   const [payForm,      setPayForm]      = useState(EMPTY_PAYMENT)
-  const [sseStatus,    setSseStatus]    = useState<'connecting'|'connected'|'error'>('connecting')
+
   const [dbStatus,     setDbStatus]     = useState<'checking'|'ok'|'error'>('checking')
   const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'|'tecnicos'|'resultados'>('dashboard')
   const [search,       setSearch]       = useState('')
@@ -183,17 +183,13 @@ export default function Dashboard() {
   }, [fetchClients, fetchPayments, fetchReports, runAutoClassify])
 
   useEffect(() => {
-    setSseStatus('connecting')
-    const es = new EventSource('/api/sse')
-    es.addEventListener('connected',      () => setSseStatus('connected'))
-    es.addEventListener('new-client',     e  => { const c=JSON.parse(e.data); setClients(p=>[c,...p]); toast.success('Nuevo cliente: '+c.name); fetchClients() })
-    es.addEventListener('update-client',  e  => { const u=JSON.parse(e.data); setClients(p=>p.map(c=>c.id===u.id?u:c)); toast.success('Actualizado: '+u.name) })
-    es.addEventListener('delete-client',  () => { fetchClients(); toast.success('Cliente eliminado') })
-    es.addEventListener('new-payment',    e  => { const p=JSON.parse(e.data); setPayments(prev=>[p,...prev]); toast.success('Pago registrado: '+p.client_name); fetchPayments(); fetchReports() })
-    es.addEventListener('update-payment', e  => { const u=JSON.parse(e.data); setPayments(p=>p.map(x=>x.id===u.id?u:x)); fetchReports() })
-    es.addEventListener('delete-payment', () => { fetchPayments(); fetchReports(); toast.success('Pago eliminado') })
-    es.onerror = () => setSseStatus('error')
-    return () => es.close()
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'hidden') return
+      fetchClients()
+      fetchPayments()
+      fetchReports()
+    }, 60000)
+    return () => clearInterval(interval)
   }, [fetchClients, fetchPayments, fetchReports])
 
   const handleSaveClient = async () => {
@@ -427,10 +423,10 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{backgroundColor:dark?'#0a0a0a':'#f1f5f9',border:`1px solid ${dark?'#1a1a1a':'#e2e8f0'}`}}>
             <span className="relative flex h-2 w-2 flex-shrink-0">
-              {sseStatus==='connected'&&<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"/>}
-              <span className={`relative inline-flex rounded-full h-2 w-2 ${sseStatus==='connected'?'bg-green-400':sseStatus==='error'?'bg-red-500':'bg-yellow-400'}`}/>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"/>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"/>
             </span>
-            <span className={`text-xs font-semibold ${sseStatus==='connected'?'text-green-400':sseStatus==='error'?'text-red-400':'text-yellow-400'}`}>SSE · En vivo</span>
+            <span className="text-xs font-semibold text-green-400">Sync · Activo</span>
           </div>
         </div>
 

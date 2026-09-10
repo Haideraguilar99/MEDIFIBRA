@@ -1,7 +1,7 @@
 import { addSSEClient, removeSSEClient } from '@/lib/sse'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 15
+export const maxDuration = 55
 
 export async function GET() {
   const id = crypto.randomUUID()
@@ -12,7 +12,7 @@ export async function GET() {
     start(controller) {
       addSSEClient(id, controller)
       controller.enqueue(encoder.encode(`event: connected\ndata: {"id":"${id}"}\n\n`))
-      // Heartbeat cada 25s para mantener conexión viva en Vercel
+      // Heartbeat cada 45s — dentro del maxDuration de 55s
       interval = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(`: heartbeat\n\n`))
@@ -20,7 +20,7 @@ export async function GET() {
           clearInterval(interval)
           removeSSEClient(id)
         }
-      }, 25000)
+      }, 45000)
     },
     cancel() {
       clearInterval(interval)

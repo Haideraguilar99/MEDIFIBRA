@@ -62,12 +62,13 @@ export default function TecnicoDashboard() {
     fetchData()
   }, [fetchData, router])
 
-  // SSE — actualización en tiempo real
+  // Polling cada 60s — reemplaza SSE para reducir consumo Vercel
   useEffect(() => {
-    const es = new EventSource('/api/sse')
-    es.onmessage = () => { fetchRef.current() }
-    es.onerror = () => {}
-    return () => es.close()
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'hidden') return
+      fetchRef.current()
+    }, 60000)
+    return () => clearInterval(interval)
   }, [])
 
   function clearAuthAndRedirect() {
