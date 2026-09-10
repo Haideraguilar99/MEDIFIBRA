@@ -112,6 +112,11 @@ export default function Dashboard() {
   const [reports,      setReports]      = useState<ReportData|null>(null)
   const [showModal,    setShowModal]    = useState(false)
   const [showPayModal, setShowPayModal] = useState(false)
+  const [showWAModal,  setShowWAModal]  = useState(false)
+  const [waClient,     setWAClient]     = useState<Client|null>(null)
+  const [waMessage,    setWAMessage]    = useState('')
+  const [waEdited,     setWAEdited]     = useState(false)
+  const [waSending,    setWASending]    = useState(false)
   const [editClient,   setEditClient]   = useState<Client|null>(null)
   const [editPayment,  setEditPayment]  = useState<Payment|null>(null)
   const [form,         setForm]         = useState(EMPTY_CLIENT)
@@ -219,49 +224,78 @@ export default function Dashboard() {
   }
   const openEditPayment = (p:Payment) => { setEditPayment(p); setPayForm({ client_id:p.client_id, amount:p.amount, period:p.period, method:p.method, status:p.status, notes:p.notes }); setShowPayModal(true) }
   const getPlanColor = (n:string) => PLANS.find(p=>p.name===n)?.color ?? '#64748b'
-  const sendWhatsAppReminder = async (c: Client) => {
-    const diaTexto = c.dia_pago ? `el dia ${c.dia_pago} de este mes` : 'proximamente'
-    const valor = formatCurrency(c.plan_value)
-    const cedula = c.cedula ? `CC ${c.cedula}` : 'sin cedula registrada'
-    const lineas = [
-      `Estimado(a) ${c.name},`,
-      `${cedula}`,
-      ``,
-      `Le informamos que su factura del servicio de internet ${c.plan} por valor de ${valor} tiene fecha de pago ${diaTexto}.`,
-      ``,
-      `Medios de pago disponibles:`,
-      ``,
-      `Bancolombia - Cuenta de Ahorros`,
-      `Numero: 009-952025-14`,
-      `A nombre de: Medifibra S.A.S`,
-      ``,
-      `Nequi`,
-      `Numero: 301 508 0961`,
-      `A nombre de: Medifibra S.A.S`,
-      ``,
-      `Recuerde enviar el comprobante de pago al WhatsApp de Medifibra una vez realizada la transferencia.`,
-      ``,
-      `Gracias por preferirnos.`,
-      `Medifibra S.A.S`,
-    ].join('\n')
-    const phone = (c.cellphone ?? '').replace(/\D/g, '')
-    window.open(`https://wa.me/57${phone}?text=${encodeURIComponent(lineas)}`, '_blank')
+  // ── Plantillas WhatsApp por clasificacion ─────────────────────────────────
+  const buildWAMessage = (cl: Client): string => {
+    const nombre  = cl.name || 'Cliente'
+    const plan    = cl.plan || 'su plan'
+    const monto   = formatCurrency(cl.plan_value)
+    const dia     = cl.dia_pago ? `dia ${cl.dia_pago} de cada mes` : 'la fecha acordada'
+    const cls     = cl.classification || 'AL_DIA'
+    const empresa = 'Medifibra S.A.S'
+    const wa      = '333 728 8745'
+    const cuenta  = '0093014896'
+
+    const firma = `\n-- ${empresa} | ${wa}`
+
+    const tpl: Record<string, string> = {
+      AL_DIA: `${empresa} -- Pago Confirmado\n\nHola ${nombre},\n\nTu pago ha sido recibido y verificado con exito. Tu servicio de internet se encuentra AL DIA.\n\nPlan: ${plan}\nProximo pago: ${dia}\nValor: ${monto}\n\nRecuerda enviar tu comprobante a este WhatsApp cuando realices tu proximo pago. Gracias por tu puntualidad.${firma}`,
+
+      PROXIMO_PAGAR: `${empresa} -- Recordatorio de Pago\n\nHola ${nombre},\n\nTe recordamos que tu fecha de pago es el ${dia}, que se aproxima en los proximos dias.\n\nPlan: ${plan}\nValor a pagar: ${monto}\n\nUna vez realices tu pago, envianos el comprobante directamente a este numero para registrarlo.\n\nGracias por estar al dia con nosotros.${firma}`,
+
+      RECORDAR_RECIBO: `${empresa} -- Comprobante Pendiente\n\nHola ${nombre},\n\nHemos verificado que aun no hemos recibido tu comprobante de pago.\n\nAccion requerida: Por favor envianos la foto o captura de tu comprobante de pago directamente a este WhatsApp para actualizar tu cuenta de forma inmediata. Una vez recibido, confirmamos tu estado en minutos.${firma}`,
+
+      DEUDA_PENDIENTE: `${empresa} -- Deuda Pendiente\n\nHola ${nombre},\n\nTe informamos que tu fecha de pago (${dia}) ya vencio y aun no hemos recibido tu pago.\n\nValor adeudado: ${monto}\n\nImportante: Si no regularizas tu pago pronto, tu servicio sera suspendido automaticamente. Realiza tu pago y envia el comprobante a este numero.\n\nEstamos aqui para ayudarte.${firma}`,
+
+      NOVEDAD_PAGO: `${empresa} -- Novedad en tu Pago\n\nHola ${nombre},\n\nHemos identificado una novedad relacionada con tu pago que requiere ser atendida. Tu cuenta esta siendo revisada por nuestro equipo de cartera.\n\nSi ya realizaste algun pago, por favor envianos el comprobante a este numero. Si tienes alguna duda, puedes comunicarte directamente aqui.${firma}`,
+
+      NO_PAGA_AUTORIZADO: `${empresa} -- Confirmacion de Acuerdo\n\nHola ${nombre},\n\nTe confirmamos que hemos registrado en tu cuenta un acuerdo especial de pago previamente autorizado.\n\nPlan: ${plan}\nValor: ${monto}\n\nTu servicio continua activo con total normalidad. Cuando llegue la fecha acordada, recuerda enviar tu comprobante a este numero.${firma}`,
+
+      SUSPENDIDO_TEMP: `${empresa} -- Servicio Suspendido Temporalmente\n\nHola ${nombre},\n\nTu servicio se encuentra suspendido temporalmente por una situacion registrada en tu cuenta.\n\nCuando estes listo para retomar el servicio, contactanos directamente aqui para coordinar la reactivacion.\n\nValor del plan: ${monto}${firma}`,
+
+      SUSPENDIDO: `${empresa} -- Servicio Suspendido\n\nHola ${nombre},\n\nTu servicio de internet ha sido SUSPENDIDO por falta de pago.\n\nTotal a pagar para reactivar: ${monto}\n\nComo reactivar tu servicio:\n1. Realiza tu pago por el valor indicado.\n2. Envia el comprobante a este WhatsApp: ${wa}\n3. Tu servicio sera reactivado en maximo 2 horas habiles.\n\nRecuerda que a los 60 dias de suspension se procede al retiro de los equipos instalados.${firma}`,
+
+      RECOGER_EQUIPO: `${empresa} -- Aviso de Retiro de Equipos\n\nEstimado(a) ${nombre},\n\nHan transcurrido mas de 60 dias desde la suspension de tu servicio sin que se haya regularizado el pago pendiente.\n\nDe acuerdo con nuestra politica de servicio, procederemos al RETIRO DE LOS EQUIPOS instalados en tu domicilio.\n\nImportante: La no entrega de los equipos en la visita tecnica generara multas y sobrecargos adicionales.\n\nDeuda total actual: ${monto}\n\nSi deseas regularizar tu situacion antes de la visita, contactanos urgente a este numero.${firma}`,
+
+      USUARIO_PERDIDO: `${empresa} -- Cierre de Cuenta\n\nEstimado(a) ${nombre},\n\nTe informamos que tu cuenta de servicio con nosotros ha sido oficialmente cerrada. Lamentamos no haber podido continuar brindandote nuestro servicio.\n\nSi en algun momento deseas volver a contratar nuestros servicios, estaremos disponibles para atenderte con gusto.\n\nHasta pronto.${firma}`,
+
+      CLIENTE_NUEVO: `${empresa} -- Bienvenido\n\nHola ${nombre},\n\nBienvenido(a) a ${empresa}. Es un gusto tenerte como nuevo cliente. Tu servicio de internet ya esta activo.\n\nPlan: ${plan}\nValor mensual: ${monto}\nFecha de pago: ${dia}\n\nMedios de pago:\nBancolombia - Cuenta Ahorros: ${cuenta}\nBre-B - Llave: ${cuenta}\n\nPara cualquier consulta, contactanos por este WhatsApp.${firma}`,
+    }
+
+    return tpl[cls] ?? tpl['AL_DIA']
+  }
+
+  const openWAModal = (cl: Client) => {
+    setWAClient(cl)
+    setWAMessage(buildWAMessage(cl))
+    setWAEdited(false)
+    setShowWAModal(true)
+  }
+
+  const sendWAConfirm = async () => {
+    if (!waClient) return
+    setWASending(true)
+    const phone = (waClient.cellphone ?? '').replace(/\D/g, '')
+    window.open(`https://wa.me/57${phone}?text=${encodeURIComponent(waMessage)}`, '_blank')
     try {
       await fetch('/api/notifications/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          client_id: c.id,
+          client_id: waClient.id,
           channel: 'whatsapp',
           type: 'payment_reminder',
-          message: lineas,
+          message: waMessage,
           status: 'sent',
         }),
       })
+      toast.success(`Mensaje enviado a ${waClient.name}`)
     } catch {}
+    setWASending(false)
+    setShowWAModal(false)
+    setWAClient(null)
   }
 
-  const filteredClients = clients.filter(c => {
+    const filteredClients = clients.filter(c => {
     const q = search.toLowerCase()
     const ms = !q || c.name.toLowerCase().includes(q) || c.cellphone.includes(q) || c.cedula?.includes(q) || c.reference?.toLowerCase().includes(q) || c.neighborhood?.toLowerCase().includes(q)
     const mp = !filterPlan   || c.plan   === filterPlan
@@ -693,7 +727,7 @@ export default function Dashboard() {
                           <div className="flex items-center gap-1.5">
                             <button onClick={()=>openNewPayment(c.id)} title="Registrar pago" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#F0FDF4',color:'#16A34A'}}><CreditCard className="w-3.5 h-3.5"/></button>
                             <Link href={`/factura/${c.id}`} target="_blank" title="Factura" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#EFF6FF',color:'#2563EB'}}><FileText className="w-3.5 h-3.5"/></Link>
-                            <button onClick={()=>sendWhatsAppReminder(c)} title="WhatsApp" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#F0FDF4',color:'#16A34A'}}><MessageCircle className="w-3.5 h-3.5"/></button>
+                            <button onClick={()=>openWAModal(c)} title="WhatsApp" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#F0FDF4',color:'#16A34A'}}><MessageCircle className="w-3.5 h-3.5"/></button>
                             <button onClick={()=>openEditClient(c)} title="Editar" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:CARD2,color:LIGHT}}><Pencil className="w-3.5 h-3.5"/></button>
                             <button onClick={()=>handleDeleteClient(c.id)} title="Eliminar" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#FEF2F2',color:'#DC2626'}}><Trash2 className="w-3.5 h-3.5"/></button>
                           </div>
@@ -866,6 +900,79 @@ export default function Dashboard() {
         )}
       </main>
       </div>{/* fin contenido principal */}
+
+      {/* ══ MODAL WHATSAPP ══ */}
+      {showWAModal && waClient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.85)'}}>
+          <div style={{backgroundColor:CARD, border:`1px solid ${BORDER}`, maxWidth:520, width:'100%', borderRadius:16, boxShadow:'0 24px 64px rgba(0,0,0,0.4)'}}>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
+              <div>
+                <p className="font-bold text-sm" style={{color:TEXT}}>Notificar Cliente via WhatsApp</p>
+                <p className="text-xs mt-0.5" style={{color:MUTED}}>{waClient.name} &bull; {waClient.cellphone}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                  style={{backgroundColor:getCC(waClient.classification).bg, color:getCC(waClient.classification).text, border:`1px solid ${getCC(waClient.classification).border}`}}>
+                  {getCC(waClient.classification).label}
+                </span>
+                <button onClick={()=>setShowWAModal(false)} className="p-1.5 rounded-lg hover:opacity-70 transition-opacity" style={{backgroundColor:CARD2,color:MUTED}}>
+                  <X className="w-4 h-4"/>
+                </button>
+              </div>
+            </div>
+
+            {/* Vista previa burbuja */}
+            <div className="px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{color:MUTED}}>Vista previa del mensaje</p>
+              <div className="rounded-xl p-4 text-sm leading-relaxed" style={{backgroundColor:'#075e54', color:'#e9fbe5', fontFamily:'monospace', minHeight:120, whiteSpace:'pre-wrap', wordBreak:'break-word'}}>
+                {waMessage}
+              </div>
+              {waEdited && (
+                <p className="text-xs mt-1.5 font-medium" style={{color:'#f97316'}}>Editado manualmente</p>
+              )}
+            </div>
+
+            {/* Editar mensaje */}
+            <div className="px-5 pb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider mb-1.5" style={{color:MUTED}}>Editar mensaje</p>
+              <textarea
+                value={waMessage}
+                onChange={e=>{setWAMessage(e.target.value); setWAEdited(true)}}
+                rows={6}
+                className="w-full rounded-lg text-sm p-3 resize-none focus:outline-none"
+                style={{backgroundColor:CARD2, color:TEXT, border:`1px solid ${BORDER}`, fontFamily:'monospace', lineHeight:1.5}}
+              />
+            </div>
+
+            {/* Botones */}
+            <div className="flex items-center justify-between px-5 pb-5 gap-3">
+              <button
+                onClick={()=>{setWAMessage(buildWAMessage(waClient)); setWAEdited(false)}}
+                className="text-xs px-3 py-2 rounded-lg hover:opacity-80 transition-opacity font-medium"
+                style={{backgroundColor:CARD2, color:MUTED}}>
+                Restablecer
+              </button>
+              <div className="flex gap-2">
+                <button onClick={()=>setShowWAModal(false)}
+                  className="text-xs px-4 py-2 rounded-lg font-semibold hover:opacity-80 transition-opacity"
+                  style={{backgroundColor:CARD2, color:LIGHT}}>
+                  Cancelar
+                </button>
+                <button
+                  onClick={sendWAConfirm}
+                  disabled={waSending}
+                  className="text-xs px-5 py-2 rounded-lg font-semibold text-white hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-60"
+                  style={{backgroundColor:'#16a34a'}}>
+                  <MessageCircle className="w-3.5 h-3.5"/>
+                  {waSending ? 'Enviando...' : 'Enviar por WhatsApp'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══ MODAL CLIENTE ══ */}
       {showModal&&(
