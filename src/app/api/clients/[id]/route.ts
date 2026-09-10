@@ -29,7 +29,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       b.address??'', b.city??'', b.neighborhood??'', b.commune??'',
       b.consumption_date??'', b.payment_date??'',
       b.plan, b.plan_value, b.reference??'',
-      b.status??'active', b.classification??'AL DÍA', b.notes??'',
+      b.status??'active', b.classification??'AL_DIA', b.notes??'',
       b.cedula??'', b.punto_referencia??'', b.foto_fachada??'',
       b.telefono_alternativo??'', b.fecha_instalacion??'',
       b.incluye_tv?1:0, b.dia_pago??'30',

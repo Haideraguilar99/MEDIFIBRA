@@ -14,15 +14,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   // ── Actualizar clasificación del cliente según nuevo estado del pago ──
   if (body.status === 'paid') {
     await db.execute({
-      sql: `UPDATE clients SET classification = 'AL DÍA', status = 'active' WHERE id = ?`,
+      sql: `UPDATE clients SET classification = 'AL_DIA', status = 'active' WHERE id = ?`,
       args: [body.client_id]
     })
   } else if (body.status === 'pending') {
     await db.execute({
-      sql: `UPDATE clients SET classification = 'PRÓXIMO A PAGAR'
+      sql: `UPDATE clients SET classification = 'PROXIMO_PAGAR'
             WHERE id = ? AND classification NOT IN (
-              'DEBE MUCHO – RECOGER EQUIPO','DEUDA PENDIENTE',
-              'NO PAGA – AUTORIZADO','SUSPENDIDO','USUARIO PERDIDO'
+              'RECOGER_EQUIPO','DEUDA_PENDIENTE','NOVEDAD_PAGO',
+              'NO_PAGA_AUTORIZADO','SUSPENDIDO_TEMP','SUSPENDIDO',
+              'USUARIO_PERDIDO','CLIENTE_NUEVO'
             )`,
       args: [body.client_id]
     })

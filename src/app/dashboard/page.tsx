@@ -2,6 +2,7 @@
 import TecnicosTab from '@/components/TecnicosTab';
 import ResultadosTab from '@/components/ResultadosTab';
 import { useEffect, useState, useCallback, useMemo, memo } from 'react'
+import { CLASSIFICATIONS, CLASS_CONFIG, getCC, isProtected, type Classification } from '@/lib/classification'
 import { PLANS, TV_PLAN, formatCurrency } from '@/lib/plans'
 import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv,
          CreditCard, CheckCircle, Clock, BarChart2, AlertCircle, FileText, LogOut,
@@ -41,33 +42,15 @@ type ReportData   = {
 
 const BLUE = '#2563eb'
 
-const CLASSIFICATIONS = [
-  'AL DÍA','PRÓXIMO A PAGAR','RECORDAR ENVIAR RECIBO',
-  'DEBE MUCHO – RECOGER EQUIPO','DEUDA PENDIENTE','NOVEDAD DE PAGO',
-  'NO PAGA – AUTORIZADO','SUSPENDIDO','USUARIO PERDIDO',
-] as const
-type Classification = typeof CLASSIFICATIONS[number]
-
-const CLASS_CONFIG: Record<Classification, { bg:string; text:string; border:string; label:string }> = {
-  'AL DÍA':                      { bg:'#052e16', text:'#4ade80', border:'#166534', label:'Al día'             },
-  'PRÓXIMO A PAGAR':             { bg:'#1c1917', text:'#fdba74', border:'#9a3412', label:'Próximo a pagar'    },
-  'RECORDAR ENVIAR RECIBO':      { bg:'#1c1400', text:'#fcd34d', border:'#92400e', label:'Enviar recibo'      },
-  'DEBE MUCHO – RECOGER EQUIPO': { bg:'#2d0a0a', text:'#f87171', border:'#991b1b', label:'Recoger equipo'    },
-  'DEUDA PENDIENTE':             { bg:'#2d0a0a', text:'#fca5a5', border:'#7f1d1d', label:'Deuda pendiente'    },
-  'NOVEDAD DE PAGO':             { bg:'#1a0533', text:'#c084fc', border:'#6b21a8', label:'Novedad de pago'    },
-  'NO PAGA – AUTORIZADO':        { bg:'#022c3a', text:'#22d3ee', border:'#164e63', label:'No paga autorizado' },
-  'SUSPENDIDO':                  { bg:'#0f1e3a', text:'#60a5fa', border:'#1e3a8a', label:'Suspendido'         },
-  'USUARIO PERDIDO':             { bg:'#1a1f2e', text:'#9ca3af', border:'#374151', label:'Usuario perdido'    },
-}
-function getCC(cls: string) {
-  return CLASS_CONFIG[cls as Classification] ?? { bg:'#1a1f2e', text:'#9ca3af', border:'#374151', label: cls }
-}
+// CLASSIFICATIONS, CLASS_CONFIG, getCC importados desde @/lib/classification
 
 const ClassBadge = ({ cls, size='sm' }:{ cls:string; size?:'xs'|'sm' }) => {
   const c = getCC(cls)
+  const prot = isProtected(cls)
   return (
-    <span className={`inline-flex items-center font-semibold rounded-full whitespace-nowrap ${size==='xs'?'px-2 py-0.5 text-xs':'px-3 py-1.5 text-sm'}`}
+    <span className={`inline-flex items-center gap-1 font-semibold rounded-full whitespace-nowrap ${size==='xs'?'px-2 py-0.5 text-xs':'px-3 py-1.5 text-sm'}`}
       style={{ backgroundColor:c.bg, color:c.text, border:`1px solid ${c.border}` }}>
+      {prot && <span style={{width:6,height:6,borderRadius:'50%',backgroundColor:c.text,opacity:0.7,display:'inline-block'}}/>}
       {c.label}
     </span>
   )
@@ -90,7 +73,7 @@ const SectionHeader = ({ icon, title }:{ icon?:React.ReactNode; title:string }) 
 const EMPTY_CLIENT = {
   name:'', email:'', phone:'', cellphone:'', address:'', city:'',
   neighborhood:'', commune:'', consumption_date:'', payment_date:'',
-  plan:'', plan_value:0, reference:'', status:'active', classification:'AL DÍA', notes:'',
+  plan:'', plan_value:0, reference:'', status:'active', classification:'AL_DIA', notes:'',
   cedula:'', punto_referencia:'', foto_fachada:'', telefono_alternativo:'',
   fecha_instalacion:'', incluye_tv:0, dia_pago:'',
   referido_nombre:'', referido_telefono:'',
@@ -171,12 +154,28 @@ export default function Dashboard() {
     } catch {}
   }, [])
 
+  // Auto-clasificar clientes segun fecha de pago al iniciar
+  const runAutoClassify = useCallback(async () => {
+    try {
+      const res = await fetch('/api/clients/auto-classify', { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.updated > 0) {
+          fetchClients()
+        }
+      }
+    } catch {}
+  }, [fetchClients])
+
   useEffect(() => {
     fetch('/api/init')
       .then(r => { if (r.ok) setDbStatus('ok'); else setDbStatus('error') })
       .catch(() => setDbStatus('error'))
-      .finally(() => { fetchClients(); fetchPayments(); fetchReports() })
-  }, [fetchClients, fetchPayments, fetchReports])
+      .finally(async () => {
+        await runAutoClassify()
+        fetchClients(); fetchPayments(); fetchReports()
+      })
+  }, [fetchClients, fetchPayments, fetchReports, runAutoClassify])
 
   useEffect(() => {
     setSseStatus('connecting')

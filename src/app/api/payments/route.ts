@@ -40,16 +40,17 @@ export async function POST(req: NextRequest) {
     // ── Actualizar clasificación del cliente según estado del pago ──
     if (payStatus === 'paid') {
       await db.execute({
-        sql: `UPDATE clients SET classification = 'AL DÍA', status = 'active' WHERE id = ?`,
+        sql: `UPDATE clients SET classification = 'AL_DIA', status = 'active' WHERE id = ?`,
         args: [body.client_id]
       })
     } else if (payStatus === 'pending') {
       // Solo actualizar si no tiene una clasificación más grave
       await db.execute({
-        sql: `UPDATE clients SET classification = 'PRÓXIMO A PAGAR'
+        sql: `UPDATE clients SET classification = 'PROXIMO_PAGAR'
               WHERE id = ? AND classification NOT IN (
-                'DEBE MUCHO – RECOGER EQUIPO','DEUDA PENDIENTE',
-                'NO PAGA – AUTORIZADO','SUSPENDIDO','USUARIO PERDIDO'
+                'RECOGER_EQUIPO','DEUDA_PENDIENTE','NOVEDAD_PAGO',
+                'NO_PAGA_AUTORIZADO','SUSPENDIDO_TEMP','SUSPENDIDO',
+                'USUARIO_PERDIDO','CLIENTE_NUEVO'
               )`,
         args: [body.client_id]
       })
