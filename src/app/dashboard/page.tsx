@@ -159,28 +159,14 @@ export default function Dashboard() {
     } catch {}
   }, [])
 
-  // Auto-clasificar clientes segun fecha de pago al iniciar
-  const runAutoClassify = useCallback(async () => {
-    try {
-      const res = await fetch('/api/clients/auto-classify', { method: 'POST' })
-      if (res.ok) {
-        const data = await res.json()
-        if (data.updated > 0) {
-          fetchClients()
-        }
-      }
-    } catch {}
-  }, [fetchClients])
-
   useEffect(() => {
     fetch('/api/init')
       .then(r => { if (r.ok) setDbStatus('ok'); else setDbStatus('error') })
       .catch(() => setDbStatus('error'))
-      .finally(async () => {
-        await runAutoClassify()
+      .finally(() => {
         fetchClients(); fetchPayments(); fetchReports()
       })
-  }, [fetchClients, fetchPayments, fetchReports, runAutoClassify])
+  }, [fetchClients, fetchPayments, fetchReports])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -188,7 +174,7 @@ export default function Dashboard() {
       fetchClients()
       fetchPayments()
       fetchReports()
-    }, 60000)
+    }, 300000)
     return () => clearInterval(interval)
   }, [fetchClients, fetchPayments, fetchReports])
 
