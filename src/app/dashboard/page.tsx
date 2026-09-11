@@ -4,7 +4,7 @@ import ResultadosTab from '@/components/ResultadosTab';
 import CobrosTab from '@/components/CobrosTab';
 import { useEffect, useState, useCallback, useMemo, memo } from 'react'
 import { CLASSIFICATIONS, CLASS_CONFIG, getCC, isProtected, type Classification } from '@/lib/classification'
-import { PLANS, TV_PLAN, formatCurrency } from '@/lib/plans'
+import { formatCurrency } from '@/lib/plans'
 import { Wifi, Users, UserCheck, UserX, DollarSign, Plus, Trash2, Pencil, X, Tv,
          CreditCard, CheckCircle, Clock, BarChart2, AlertCircle, FileText, LogOut,
          Phone, MapPin, Calendar, UserPlus, Image, Sun, Moon, MessageCircle,
@@ -106,6 +106,8 @@ export default function Dashboard() {
   const MUTED = dark ? '#64748B' : '#64748B'
   const LIGHT = dark ? '#94A3B8' : '#475569'
   const TEXT  = dark ? '#F1F5F9' : '#0F172A'
+  const [plans,        setPlans]        = useState<{id:string;name:string;speed:number;value:number;color:string;label:string}[]>([])
+  const [tvPlan,       setTvPlan]       = useState<{name:string;value:number}>({name:'Televisión',value:30000})
   const [clients,      setClients]      = useState<Client[]>([])
   const [payments,     setPayments]     = useState<Payment[]>([])
   const [stats,        setStats]        = useState<Stats>({ total:0, active:0, suspended:0, monthly_income:0 })
@@ -153,6 +155,16 @@ export default function Dashboard() {
     } catch {}
   }, [])
 
+  const fetchPlans = useCallback(async () => {
+    try {
+      const res = await fetch('/api/plans')
+      if (!res.ok) return
+      const data = await res.json()
+      if (data.plans?.length) setPlans(data.plans)
+      if (data.tv) setTvPlan(data.tv)
+    } catch {}
+  }, [])
+
   const fetchReports = useCallback(async () => {
     try {
       const res = await fetch('/api/reports')
@@ -166,7 +178,7 @@ export default function Dashboard() {
       .then(r => { if (r.ok) setDbStatus('ok'); else setDbStatus('error') })
       .catch(() => setDbStatus('error'))
       .finally(() => {
-        fetchClients(); fetchPayments(); fetchReports()
+        fetchClients(); fetchPayments(); fetchReports(); fetchPlans()
       })
   }, [fetchClients, fetchPayments, fetchReports])
 
@@ -207,7 +219,7 @@ export default function Dashboard() {
     setShowPayModal(true)
   }
   const openEditPayment = (p:Payment) => { setEditPayment(p); setPayForm({ client_id:p.client_id, amount:p.amount, period:p.period, method:p.method, status:p.status, notes:p.notes }); setShowPayModal(true) }
-  const getPlanColor = (n:string) => PLANS.find(p=>p.name===n)?.color ?? '#64748b'
+  const getPlanColor = (n:string) => plans.find(p=>p.name===n)?.color ?? '#64748b'
   // ── Plantillas WhatsApp por clasificacion ─────────────────────────────────
   const buildWAMessage = (cl: Client): string => {
     const nombre  = cl.name || 'Cliente'
@@ -567,7 +579,7 @@ export default function Dashboard() {
               <p className="text-sm" style={{color:MUTED}}>Conéctate con velocidad real</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {PLANS.map(plan=>(
+              {plans.map(plan=>(
                 <div key={plan.id} style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-4 text-center hover:border-blue-500/50 transition-all">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{backgroundColor:plan.color}}>
                     <span className="text-white font-bold text-lg">{plan.label}</span>
@@ -583,13 +595,13 @@ export default function Dashboard() {
               <div className="p-3 rounded-xl" style={{backgroundColor:CARD2}}><Tv className="w-6 h-6" style={{color:LIGHT}}/></div>
               <div>
                 <h3 className="font-semibold text-white">Televisión Satelital — MediTV</h3>
-                <p className="text-sm" style={{color:MUTED}}>Cada punto: <span style={{color:BLUE}} className="font-bold">{formatCurrency(TV_PLAN.value)}</span></p>
+                <p className="text-sm" style={{color:MUTED}}>Cada punto: <span style={{color:BLUE}} className="font-bold">{formatCurrency(tvPlan.value)}</span></p>
               </div>
             </div>
             <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-5">
               <h3 className="text-sm font-semibold mb-4" style={{color:LIGHT}}>Distribución por Plan</h3>
               <div className="space-y-4">
-                {PLANS.map(plan=>{
+                {plans.map(plan=>{
                   const planClients=clients.filter(c=>c.plan===plan.name)
                   const count=planClients.length
                   const conTv=planClients.filter(c=>c.incluye_tv).length
@@ -632,7 +644,7 @@ export default function Dashboard() {
                   </div>
                   <select value={filterPlan} onChange={e=>setFilterPlan(e.target.value)} style={iStyle} className={`${iCls} sm:w-44`}>
                     <option value="">Todos los planes</option>
-                    {PLANS.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}
+                    {plans.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}
                   </select>
                   <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={iStyle} className={`${iCls} sm:w-36`}>
                     <option value="">Todos</option>
@@ -834,8 +846,8 @@ export default function Dashboard() {
               <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-5">
                 <h3 className="text-sm font-semibold mb-4" style={{color:LIGHT}}>Clientes por Plan</h3>
                 <div className="space-y-3">
-                  {(reports?.byPlan??PLANS.map(p=>({plan:p.name,count:0,potential:0}))).map((row,i)=>{
-                    const planObj=PLANS.find(p=>p.name===row.plan)
+                  {(reports?.byPlan??plans.map(p=>({plan:p.name,count:0,potential:0}))).map((row,i)=>{
+                    const planObj=plans.find(p=>p.name===row.plan)
                     const total=reports?.byPlan?.reduce((s,r)=>s+Number(r.count),0)||1
                     const pct=Math.round((Number(row.count)/total)*100)
                     return (
@@ -1036,9 +1048,9 @@ export default function Dashboard() {
               {/* ── Servicio ── */}
               <SectionHeader title="Plan y Servicio"/>
               <F muted={MUTED} label="Plan de Internet *">
-                <select value={form.plan} onChange={e=>{const p=PLANS.find(x=>x.name===e.target.value);setForm(prev=>({...prev,plan:e.target.value,plan_value:p?.value??0}))}} style={iStyle} className={iCls}>
+                <select value={form.plan} onChange={e=>{const p=plans.find(x=>x.name===e.target.value);setForm(prev=>({...prev,plan:e.target.value,plan_value:p?.value??0}))}} style={iStyle} className={iCls}>
                   <option value="">Seleccionar plan...</option>
-                  {PLANS.map(p=><option key={p.id} value={p.name}>{p.name} — {formatCurrency(p.value)}/mes</option>)}
+                  {plans.map(p=><option key={p.id} value={p.name}>{p.name} — {formatCurrency(p.value)}/mes</option>)}
                 </select>
               </F>
               <F muted={MUTED} label="Valor Mensual ($)">
