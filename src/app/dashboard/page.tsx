@@ -919,10 +919,10 @@ export default function Dashboard() {
       {/* ══ MODAL WHATSAPP ══ */}
       {showWAModal && waClient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.85)'}}>
-          <div style={{backgroundColor:CARD, border:`1px solid ${BORDER}`, maxWidth:520, width:'100%', borderRadius:16, boxShadow:'0 24px 64px rgba(0,0,0,0.4)'}}>
+          <div style={{backgroundColor:CARD, border:`1px solid ${BORDER}`, maxWidth:520, width:'100%', borderRadius:16, boxShadow:'0 24px 64px rgba(0,0,0,0.4)', maxHeight:'calc(100vh - 32px)', overflowY:'auto'}}>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
+            <div className="flex items-center justify-between px-5 py-4 sticky top-0 z-10" style={{borderBottom:`1px solid ${BORDER}`, backgroundColor:CARD}}>
               <div>
                 <p className="font-bold text-sm" style={{color:TEXT}}>Notificar Cliente via WhatsApp</p>
                 <p className="text-xs mt-0.5" style={{color:MUTED}}>{waClient.name} &bull; {waClient.cellphone}</p>
