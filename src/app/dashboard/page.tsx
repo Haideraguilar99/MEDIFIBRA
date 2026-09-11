@@ -3,6 +3,7 @@ import TecnicosTab from '@/components/TecnicosTab';
 import ResultadosTab from '@/components/ResultadosTab';
 import CobrosTab from '@/components/CobrosTab';
 import PorConfirmarTab from '@/components/PorConfirmarTab';
+import FacturasTab from '@/components/FacturasTab';
 import { useEffect, useState, useCallback, useMemo, memo } from 'react'
 import { CLASSIFICATIONS, CLASS_CONFIG, getCC, isProtected, type Classification } from '@/lib/classification'
 import { formatCurrency } from '@/lib/plans'
@@ -93,6 +94,7 @@ const NAV_ITEMS = [
   { key:'tecnicos',  label:'Técnicos',   icon: UserCheck       },
   { key:'cobros',    label:'Cobros',      icon: DollarSign      },
   { key:'porconfirmar', label:'Por Confirmar', icon: AlertCircle     },
+  { key:'facturas',     label:'Facturas',     icon: FileText        },
 ] as const
 
 export default function Dashboard() {
@@ -129,7 +131,7 @@ export default function Dashboard() {
   const [payForm,      setPayForm]      = useState(EMPTY_PAYMENT)
 
   const [dbStatus,     setDbStatus]     = useState<'checking'|'ok'|'error'>('checking')
-  const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'|'tecnicos'|'resultados'|'cobros'|'porconfirmar'>('dashboard')
+  const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'|'tecnicos'|'resultados'|'cobros'|'porconfirmar'|'facturas'>('dashboard')
   const [search,       setSearch]       = useState('')
   const [filterPlan,   setFilterPlan]   = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -344,7 +346,7 @@ export default function Dashboard() {
 
   const navTabLabel: Record<string,string> = {
     dashboard:'Dashboard', plans:'Planes', clients:'Clientes',
-    payments:'Pagos', reports:'Reportes', tecnicos:'Técnicos', cobros:'Cobros', porconfirmar:'Por Confirmar',
+    payments:'Pagos', reports:'Reportes', tecnicos:'Técnicos', cobros:'Cobros', porconfirmar:'Por Confirmar', facturas:'Facturas',
   }
 
   return (
@@ -815,6 +817,11 @@ export default function Dashboard() {
         {tab==='porconfirmar'&&(
           <div className="p-2">
             <PorConfirmarTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
+          </div>
+        )}
+        {tab==='facturas'&&(
+          <div className="p-2">
+            <FacturasTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
           </div>
         )}
         {tab==='reports'&&(
