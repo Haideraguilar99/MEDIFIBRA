@@ -19,7 +19,7 @@ type GroupState = {
   open: boolean
 }
 
-const PROTECTED = ['RECOGER_EQUIPO','NOVEDAD_PAGO','NO_PAGA_AUTORIZADO','SUSPENDIDO_TEMP','SUSPENDIDO','USUARIO_PERDIDO','CLIENTE_NUEVO']
+const PROTECTED = ['RECOGER_EQUIPO','NOVEDAD_PAGO','NO_PAGA_AUTORIZADO','SUSPENDIDO_TEMP','SUSPENDIDO','USUARIO_PERDIDO']
 
 const DIA_LABELS: Record<string, { label: string; color: string; desc: string }> = {
   '5':  { label: 'DÍA 5',  color: '#dc2626', desc: 'Vencido hace 5 días' },
@@ -52,14 +52,20 @@ export default function CobrosTab({
   const [clients, setClients] = useState<CobrosClient[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<number | null>(null)
+  const [notified, setNotified] = useState<Record<number,string>>({})
   const [groups, setGroups] = useState<Record<string, GroupState>>({})
   const [localClass, setLocalClass] = useState<Record<number, string>>({})
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const r = await fetch('/api/cobros')
+      const [r, rn] = await Promise.all([
+        fetch('/api/cobros'),
+        fetch('/api/notifications/resumen')
+      ])
       const data = await r.json()
+      const dn = await rn.json()
+      setNotified(dn.notified || {})
       const list: CobrosClient[] = data.clients || []
       setClients(list)
       const g: Record<string, GroupState> = {}
@@ -96,6 +102,11 @@ export default function CobrosTab({
             status: 'paid',
             notes: 'Confirmado desde módulo Cobros'
           })
+        })
+        await fetch(`/api/clients/${clientId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ classification: 'AL_DIA' })
         })
       } else {
         await fetch(`/api/clients/${clientId}`, {
@@ -239,11 +250,18 @@ export default function CobrosTab({
                             style={{ backgroundColor: cls === 'DEUDA_PENDIENTE' ? '#f8717120' : CARD, border: `1px solid ${cls === 'DEUDA_PENDIENTE' ? '#f87171' : BORDER}` }}>
                             <XCircle className="w-4 h-4" style={{ color: '#f87171' }}/>
                           </button>
-                          <button onClick={() => onOpenWA(c)} title="WhatsApp"
-                            className="p-1.5 rounded-lg transition-all"
-                            style={{ backgroundColor: CARD, border: `1px solid ${BORDER}` }}>
-                            <MessageCircle className="w-4 h-4" style={{ color: '#25d366' }}/>
-                          </button>
+                          <div className="flex flex-col items-center gap-0.5">
+                            <button onClick={() => onOpenWA(c)} title="WhatsApp"
+                              className="p-1.5 rounded-lg transition-all"
+                              style={{ backgroundColor: notified[c.id] ? '#25d36620' : CARD, border: `1px solid ${notified[c.id] ? '#25d366' : BORDER}` }}>
+                              <MessageCircle className="w-4 h-4" style={{ color: '#25d366' }}/>
+                            </button>
+                            {notified[c.id] && (
+                              <span className="leading-none" style={{ color: '#25d366', fontSize: '9px' }}>
+                                {new Date(notified[c.id]).toLocaleDateString('es-CO', { day:'2-digit', month:'2-digit' })}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <span className="text-xs px-2 py-1 rounded" style={{ color: MUTED, backgroundColor: CARD }}>Sin acción</span>

@@ -13,7 +13,7 @@ type Stats = { total: number; paid: number; pending: number; totalAmount: number
 function fmt(v: number) { return '$' + v.toLocaleString('es-CO') }
 function fmtDate(d: string) { return d ? new Date(d).toLocaleDateString('es-CO') : '—' }
 
-const METHODS = ['efectivo','bancolombia','nequi','bre-b','transferencia']
+const METHODS = ['efectivo','bancolombia','bre-b','transferencia']
 const now = new Date()
 const CURRENT_PERIOD = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
 const PREV_PERIOD = (() => { const d = new Date(now.getFullYear(), now.getMonth()-1, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` })()

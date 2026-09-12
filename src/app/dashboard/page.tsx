@@ -82,7 +82,7 @@ const EMPTY_CLIENT = {
   referido_nombre:'', referido_telefono:'',
 }
 const EMPTY_PAYMENT = { client_id:0, amount:0, period:'', method:'efectivo', status:'paid', notes:'' }
-const METHODS = ['efectivo','transferencia','nequi','daviplata','bancolombia']
+const METHODS = ['efectivo','bancolombia','bre-b','transferencia']
 
 
 const NAV_ITEMS = [
