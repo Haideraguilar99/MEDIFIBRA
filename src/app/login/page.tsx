@@ -4,17 +4,18 @@ import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Lock, User, Shield, AlertTriangle, CheckCircle } from 'lucide-react'
 
 const NAME_MAP: Record<string, string> = {
+  'MEDIFIBRA':     'Administrador',
   'Medifibra2026': 'Mariana Lujan',
   'mariana':       'Mariana Lujan',
   'medardo':       'Medardo Mosquera',
   'haider':        'Haider Aguilar',
 }
 
-const MAX_ATTEMPTS    = 5
-const LOCKOUT_MS      = 10 * 60 * 1000
-const STORAGE_KEY     = 'mf_login_guard'
+const MAX_ATTEMPTS = 5
+const LOCKOUT_MS   = 10 * 60 * 1000
+const STORAGE_KEY  = 'mf_login_guard'
 
-function readGuard(): { attempts: number; lockoutUntil: number } {
+function readGuard() {
   if (typeof window === 'undefined') return { attempts: 0, lockoutUntil: 0 }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -56,7 +57,6 @@ export default function LoginPage() {
   }, [lockoutUntil])
 
   const isLocked = countdown > 0
-
   const fmt = (ms: number) => {
     const m = Math.floor(ms / 60000)
     const s = Math.floor((ms % 60000) / 1000)
@@ -76,8 +76,8 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        const next = attempts + 1
-        let until  = lockoutUntil
+        const next  = attempts + 1
+        let until   = lockoutUntil
         if (next >= MAX_ATTEMPTS) {
           until = Date.now() + LOCKOUT_MS
           setLockoutUntil(until)
@@ -91,8 +91,8 @@ export default function LoginPage() {
         )
       } else {
         writeGuard({ attempts: 0, lockoutUntil: 0 })
-        const uname  = (data.user?.username ?? '') as string
-        const dname  = NAME_MAP[uname] ?? uname
+        const uname = (data.user?.username ?? '') as string
+        const dname = NAME_MAP[uname] ?? uname
         setWelcome(`Bienvenido, ${dname}`)
         if (barRef.current) {
           barRef.current.style.transition = 'width 1.8s linear'
@@ -108,130 +108,95 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: '#0d1117' }}>
+    <div className="min-h-screen flex" style={{ background: '#0b0f1a' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
-
         @keyframes mfPulse {
-          0%,100%{ opacity:1; text-shadow:0 0 18px rgba(220,38,38,0.95),0 0 40px rgba(220,38,38,0.35); }
-          50%    { opacity:0.25; text-shadow:none; }
+          0%,100%{ opacity:1; text-shadow:0 0 18px rgba(220,38,38,1),0 0 40px rgba(220,38,38,0.5); }
+          50%    { opacity:0.15; text-shadow:none; }
         }
         @keyframes fadeUp {
-          from{ opacity:0; transform:translateY(20px); }
+          from{ opacity:0; transform:translateY(18px); }
           to  { opacity:1; transform:translateY(0); }
         }
         @keyframes popIn {
-          0%  { opacity:0; transform:scale(0.88) translateY(12px); }
-          70% { transform:scale(1.03) translateY(-2px); }
+          0%  { opacity:0; transform:scale(0.9) translateY(10px); }
+          70% { transform:scale(1.02); }
           100%{ opacity:1; transform:scale(1) translateY(0); }
         }
-        @keyframes shimmer {
-          0%  { background-position: -400px 0; }
-          100%{ background-position:  400px 0; }
-        }
-
-        .mf-pulse  { animation: mfPulse 1.5s ease-in-out infinite; }
-        .fade-up   { animation: fadeUp  0.55s ease both; }
-        .pop-in    { animation: popIn   0.45s cubic-bezier(.34,1.56,.64,1) both; }
-
+        .mf-pulse { animation: mfPulse 1.5s ease-in-out infinite; }
+        .fade-up  { animation: fadeUp  0.5s ease both; }
+        .pop-in   { animation: popIn   0.4s cubic-bezier(.34,1.56,.64,1) both; }
         .mf-input {
-          width:100%; padding:13px 16px; border-radius:12px;
-          font-size:14px; color:#f1f5f9; outline:none;
-          background:#0d1117; border:1px solid #1e2d40;
-          transition:border-color .2s,box-shadow .2s;
+          width:100%; padding:14px 16px 14px 44px;
+          border-radius:10px; font-size:14px; color:#f1f5f9;
+          outline:none; background:#0b0f1a;
+          border:1px solid #1e2d40;
+          transition:border-color .2s, box-shadow .2s;
         }
         .mf-input:focus {
-          border-color:#2563eb;
-          box-shadow:0 0 0 3px rgba(37,99,235,.18);
+          border-color:#4f46e5;
+          box-shadow:0 0 0 3px rgba(79,70,229,.2);
         }
-        .mf-input::placeholder { color:#334155; }
+        .mf-input::placeholder { color:#2d3d50; }
         .mf-input:disabled     { opacity:.4; cursor:not-allowed; }
-
         input:-webkit-autofill {
-          -webkit-box-shadow:0 0 0 100px #0d1117 inset !important;
+          -webkit-box-shadow:0 0 0 100px #0b0f1a inset !important;
           -webkit-text-fill-color:#f1f5f9 !important;
         }
       `}</style>
 
-      {/* ===== LEFT — imagen de fondo (solo escritorio) ===== */}
+      {/* ===== IZQUIERDA — imagen fondoM.png (solo desktop) ===== */}
       <div
-        className="hidden lg:flex flex-1 relative flex-col justify-end"
+        className="hidden lg:block flex-1 relative"
         style={{
           backgroundImage:    "url('/fondoM.png')",
           backgroundSize:     'cover',
           backgroundPosition: 'center',
         }}
       >
+        {/* overlay suave para no tapar la imagen */}
         <div
           className="absolute inset-0"
-          style={{ background: 'linear-gradient(135deg,rgba(8,12,22,.55) 0%,rgba(8,12,22,.3) 100%)' }}
+          style={{ background: 'linear-gradient(to right, rgba(11,15,26,0.15) 0%, rgba(11,15,26,0.45) 100%)' }}
         />
-        <div className="relative z-10 px-12 pb-14">
-          <p
-            className="text-3xl font-bold text-white leading-snug"
-            style={{ textShadow: '0 2px 20px rgba(0,0,0,.85)' }}
-          >
-            Gestion centralizada<br/>para Medifibra S.A.S.
-          </p>
-          <p
-            className="text-sm mt-3 leading-relaxed"
-            style={{ color: 'rgba(255,255,255,.6)', textShadow: '0 1px 8px rgba(0,0,0,.8)', maxWidth: '380px' }}
-          >
-            Control de clientes, facturacion y cobros en un solo lugar.
-            Disenado exclusivamente para el equipo autorizado.
-          </p>
-          <div className="flex items-center gap-2 mt-5">
-            <div className="w-2 h-2 rounded-full" style={{ background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
-            <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,.5)' }}>
-              Sistema activo — Medifibra S.A.S.
-            </span>
-          </div>
-        </div>
       </div>
 
-      {/* ===== RIGHT — formulario ===== */}
+      {/* ===== DERECHA — formulario ===== */}
       <div
-        className="w-full lg:w-[500px] flex flex-col justify-center relative overflow-hidden"
+        className="w-full lg:w-[460px] flex flex-col justify-center relative"
         style={{
-          background:  '#111827',
-          boxShadow:   '-24px 0 80px rgba(0,0,0,.7), 0 0 0 1px rgba(37,99,235,.07)',
-          minHeight:   '100vh',
+          background: '#0f1117',
+          boxShadow:  '-20px 0 60px rgba(0,0,0,0.8)',
+          minHeight:  '100vh',
         }}
       >
-        {/* Decoracion sutil de fondo */}
-        <div
-          className="absolute top-0 right-0 w-80 h-80 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle,rgba(37,99,235,.06) 0%,transparent 70%)', transform: 'translate(30%,-30%)' }}
-        />
-        <div
-          className="absolute bottom-0 left-0 w-64 h-64 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle,rgba(124,58,237,.05) 0%,transparent 70%)', transform: 'translate(-30%,30%)' }}
-        />
-
-        {/* ── Welcome overlay ── */}
+        {/* Welcome overlay */}
         {welcome && (
           <div
             className="absolute inset-0 z-50 flex flex-col items-center justify-center pop-in"
-            style={{ background: '#111827' }}
+            style={{ background: '#0f1117' }}
           >
             <div
-              className="flex items-center justify-center w-24 h-24 rounded-full mb-6"
+              className="flex items-center justify-center w-20 h-20 rounded-full mb-5"
               style={{
-                background:  'rgba(34,197,94,.08)',
-                border:      '2px solid rgba(34,197,94,.25)',
-                boxShadow:   '0 0 40px rgba(34,197,94,.12)',
+                background: 'rgba(34,197,94,.08)',
+                border:     '2px solid rgba(34,197,94,.3)',
+                boxShadow:  '0 0 40px rgba(34,197,94,.15)',
               }}
             >
-              <CheckCircle className="w-12 h-12" style={{ color: '#22c55e' }} />
+              <CheckCircle className="w-10 h-10" style={{ color: '#22c55e' }} />
             </div>
             <p className="text-2xl font-bold text-white text-center px-8">{welcome}</p>
-            <p className="text-sm mt-2" style={{ color: '#475569' }}>Redirigiendo al panel de control...</p>
-            <div className="mt-8 h-1 w-56 rounded-full overflow-hidden" style={{ background: '#1e293b' }}>
+            <p className="text-sm mt-2" style={{ color: '#475569' }}>
+              Redirigiendo al panel de control...
+            </p>
+            <div className="mt-8 h-1 w-48 rounded-full overflow-hidden" style={{ background: '#1e293b' }}>
               <div
                 ref={barRef}
                 className="h-full rounded-full"
                 style={{
-                  background: 'linear-gradient(90deg,#1d4ed8,#2563eb,#60a5fa)',
+                  background: 'linear-gradient(90deg,#4f46e5,#6366f1,#818cf8)',
                   width:      '0%',
                 }}
               />
@@ -239,34 +204,35 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* ── Contenido principal ── */}
-        <div className="relative z-10 w-full max-w-sm mx-auto px-8 sm:px-0 fade-up">
+        {/* Contenido */}
+        <div className="relative z-10 w-full px-10 sm:px-14 fade-up">
 
           {/* Logo */}
-          <div className="mb-10">
+          <div className="mb-8">
             <div
-              className="flex items-baseline leading-none mb-2"
+              className="flex items-baseline leading-none mb-1"
               style={{ fontFamily: "'Nunito',sans-serif" }}
             >
-              <span className="font-black mf-pulse" style={{ fontSize: '3rem', color: '#dc2626' }}>M</span>
-              <span className="font-black"           style={{ fontSize: '3rem', color: '#fff' }}>EDI</span>
-              <span className="font-black mf-pulse" style={{ fontSize: '3rem', color: '#dc2626' }}>F</span>
-              <span className="font-black"           style={{ fontSize: '3rem', color: '#fff' }}>IBRA</span>
+              <span className="font-black mf-pulse" style={{ fontSize: '2.8rem', color: '#dc2626' }}>M</span>
+              <span className="font-black"           style={{ fontSize: '2.8rem', color: '#fff' }}>EDI</span>
+              <span className="font-black mf-pulse" style={{ fontSize: '2.8rem', color: '#dc2626' }}>F</span>
+              <span className="font-black"           style={{ fontSize: '2.8rem', color: '#fff' }}>IBRA</span>
             </div>
-            <p className="text-xs font-semibold uppercase tracking-[.18em]" style={{ color: '#374151' }}>
+            <p className="text-xs font-semibold" style={{ color: '#374151', letterSpacing: '0.16em' }}>
               Panel Administrativo · v8.2
             </p>
+            <div className="mt-3 w-10 h-0.5 rounded-full" style={{ background: '#4f46e5' }} />
           </div>
 
           {/* Heading */}
-          <div className="mb-8">
+          <div className="mb-7">
             <h2 className="text-xl font-bold text-white">Ingreso al sistema</h2>
             <p className="text-sm mt-1" style={{ color: '#4b5563' }}>
               Acceso exclusivo para personal autorizado.
             </p>
           </div>
 
-          {/* Barra de intentos */}
+          {/* Barra intentos */}
           {attempts > 0 && !isLocked && (
             <div className="mb-5">
               <div className="flex justify-between mb-1.5">
@@ -287,17 +253,17 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Banner bloqueado */}
+          {/* Bloqueado */}
           {isLocked && (
             <div
               className="flex items-start gap-3 p-4 rounded-xl mb-6"
-              style={{ background: '#1c0505', border: '1px solid #7f1d1d', boxShadow: '0 0 0 1px rgba(239,68,68,.1)' }}
+              style={{ background: '#1c0505', border: '1px solid #7f1d1d' }}
             >
               <Lock className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#ef4444' }} />
               <div>
-                <p className="text-sm font-bold" style={{ color: '#ef4444' }}>Acceso bloqueado temporalmente</p>
+                <p className="text-sm font-bold" style={{ color: '#ef4444' }}>Acceso bloqueado</p>
                 <p className="text-xs mt-1 leading-relaxed" style={{ color: '#fca5a5' }}>
-                  Demasiados intentos fallidos. Intenta de nuevo en{" "}
+                  Intenta de nuevo en{" "}
                   <span className="font-mono font-bold text-white">{fmt(countdown)}</span>
                 </p>
               </div>
@@ -315,17 +281,14 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Formulario */}
-          <form onSubmit={handleLogin} className="space-y-5">
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-[.15em] mb-2" style={{ color: '#4b5563' }}>
+              <label className="block text-xs font-semibold uppercase mb-2" style={{ color: '#4b5563', letterSpacing: '0.14em' }}>
                 Cedula
               </label>
               <div className="relative">
-                <User
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                  style={{ color: '#334155' }}
-                />
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#2d3d50' }} />
                 <input
                   type="text"
                   required
@@ -335,20 +298,16 @@ export default function LoginPage() {
                   placeholder="Numero de cedula o usuario"
                   disabled={isLocked}
                   className="mf-input"
-                  style={{ paddingLeft: '44px' }}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-[.15em] mb-2" style={{ color: '#4b5563' }}>
+              <label className="block text-xs font-semibold uppercase mb-2" style={{ color: '#4b5563', letterSpacing: '0.14em' }}>
                 Contrasena
               </label>
               <div className="relative">
-                <Lock
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-                  style={{ color: '#334155' }}
-                />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#2d3d50' }} />
                 <input
                   type={showPass ? 'text' : 'password'}
                   required
@@ -358,12 +317,12 @@ export default function LoginPage() {
                   placeholder="Contrasena de acceso"
                   disabled={isLocked}
                   className="mf-input"
-                  style={{ paddingLeft: '44px', paddingRight: '48px' }}
+                  style={{ paddingRight: '48px' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(s => !s)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
                   style={{ color: '#475569' }}
                 >
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -374,39 +333,38 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || isLocked}
-              className="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all duration-200 mt-2"
+              className="w-full py-4 rounded-xl font-bold text-white text-sm transition-all duration-200 mt-2"
               style={{
-                background:  isLocked
+                background: isLocked
                   ? '#1e293b'
                   : loading
-                  ? '#1e3a8a'
-                  : 'linear-gradient(135deg,#1d4ed8 0%,#2563eb 60%,#3b82f6 100%)',
-                boxShadow:   isLocked || loading
+                  ? '#312e81'
+                  : 'linear-gradient(135deg,#4338ca 0%,#4f46e5 50%,#6366f1 100%)',
+                boxShadow: isLocked || loading
                   ? 'none'
-                  : '0 4px 20px rgba(37,99,235,.4), 0 1px 0 rgba(255,255,255,.08) inset',
-                cursor:      isLocked || loading ? 'not-allowed' : 'pointer',
-                letterSpacing: '0.04em',
-                opacity:     isLocked ? 0.6 : 1,
+                  : '0 4px 24px rgba(79,70,229,.45)',
+                cursor:       isLocked || loading ? 'not-allowed' : 'pointer',
+                letterSpacing: '0.05em',
+                opacity:      isLocked ? 0.5 : 1,
               }}
             >
               {loading
-                ? 'Verificando credenciales...'
+                ? 'Verificando...'
                 : isLocked
-                ? `Bloqueado  ${fmt(countdown)}`
+                ? `Bloqueado ${fmt(countdown)}`
                 : 'Ingresar al Sistema'
               }
             </button>
           </form>
 
-          {/* Aviso seguridad */}
+          {/* Aviso */}
           <div
-            className="mt-8 flex items-start gap-2.5 p-3.5 rounded-xl"
-            style={{ background: '#0d1117', border: '1px solid #1e293b' }}
+            className="mt-6 flex items-start gap-2.5 p-3.5 rounded-xl"
+            style={{ background: '#0b0f1a', border: '1px solid #1a2235' }}
           >
-            <Shield className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#1e3a8a' }} />
+            <Shield className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#312e81' }} />
             <p className="text-xs leading-relaxed" style={{ color: '#374151' }}>
-              Acceso protegido. Los intentos fallidos quedan registrados
-              y generan bloqueo automatico de 10 minutos.
+              Solo personal autorizado — Medifibra S.A.S
             </p>
           </div>
 
