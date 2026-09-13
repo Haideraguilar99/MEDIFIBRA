@@ -754,17 +754,15 @@ export default function Dashboard() {
             <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
                 <div>
-                  <h2 className="font-semibold text-base" style={{color:TEXT}}>Pagos</h2>
+                  <h2 className="font-semibold text-base" style={{color:TEXT}}>Historial de Pagos</h2>
                   <p className="text-xs mt-0.5" style={{color:MUTED}}>{payments.length} registros</p>
                 </div>
-                <button onClick={()=>openNewPayment()} style={{backgroundColor:'#16A34A'}} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity">
-                  <Plus className="w-4 h-4"/><span className="hidden sm:inline">Registrar Pago</span>
-                </button>
+                <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{backgroundColor:CARD2,color:MUTED}}>Solo lectura</span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead><tr style={{backgroundColor:CARD2,borderBottom:`1px solid ${BORDER}`}}>
-                    {['Cliente','Celular','Período','Monto','Método','Estado','Fecha','Acciones'].map(h=>(
+                    {['Cliente','Celular','Período','Monto','Método','Estado','Fecha'].map(h=>(
                       <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
                     ))}
                   </tr></thead>
@@ -784,15 +782,10 @@ export default function Dashboard() {
                           }}>{p.status==='paid'?'Pagado':'Pendiente'}</span>
                         </td>
                         <td className="px-4 py-3 text-sm whitespace-nowrap font-medium" style={{color:MUTED}}>{p.created_at?.slice(0,10)}</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5">
-                            <button onClick={()=>openEditPayment(p)} title="Editar" className="p-1.5 rounded-lg hover:opacity-80 transition-opacity" style={{backgroundColor:CARD2,color:LIGHT}}><Pencil className="w-3.5 h-3.5"/></button>
-                            <button onClick={()=>handleDeletePayment(p.id)} title="Eliminar" className="p-1.5 rounded-lg hover:opacity-80 transition-opacity" style={{backgroundColor:'#FEF2F2',color:'#DC2626'}}><Trash2 className="w-3.5 h-3.5"/></button>
-                          </div>
-                        </td>
+
                       </tr>
                     ))}
-                    {!payments.length&&<tr><td colSpan={8} className="py-12 text-center text-sm" style={{color:MUTED}}>No hay pagos registrados aún</td></tr>}
+                    {!payments.length&&<tr><td colSpan={7} className="py-12 text-center text-sm" style={{color:MUTED}}>No hay pagos registrados aún</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -969,7 +962,7 @@ export default function Dashboard() {
                 style={{backgroundColor:CARD2, color:MUTED}}>
                 Restablecer
               </button>
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full sm:w-auto">
                 <button onClick={()=>setShowWAModal(false)}
                   className="text-xs px-4 py-2 rounded-lg font-semibold hover:opacity-80 transition-opacity"
                   style={{backgroundColor:CARD2, color:LIGHT}}>
