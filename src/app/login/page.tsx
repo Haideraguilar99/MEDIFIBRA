@@ -148,6 +148,10 @@ export default function LoginPage() {
         .mf-field::placeholder { color: #2d3a4f; }
         .mf-field:disabled     { opacity: .4; cursor: not-allowed; }
         .mf-field-pass         { padding-right: 48px; }
+        @media (max-width: 1023px) {
+          .left-img { display: none !important; }
+          .right-panel { max-width: 100% !important; }
+        }
         input:-webkit-autofill {
           -webkit-box-shadow: 0 0 0 100px #12161f inset !important;
           -webkit-text-fill-color: #e2e8f0 !important;
@@ -155,14 +159,13 @@ export default function LoginPage() {
       `}</style>
 
       {/* ===== IZQUIERDA — fondoM.png ===== */}
-      <div
-        className="hidden lg:block lg:flex-1 relative"
-        style={{
-          backgroundImage: "url('/fondoM.png')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
+      <div className="left-img" style={{
+        flex: '1 1 0%',
+        backgroundImage: "url('/fondoM.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        minHeight: '100vh',
+      }} />
 
       {/* ===== DERECHA — formulario ===== */}
       <div style={{
