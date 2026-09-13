@@ -12,6 +12,11 @@ type Client = {
   reference: string; status: string; notes: string; created_at: string
 }
 
+type Invoice = {
+  id: number; invoice_number: string; period: string; amount: number
+  due_date: string; status: string; method: string; paid_at: string | null
+}
+
 function addBusinessDays(date: Date, days: number): Date {
   const result = new Date(date)
   let added = 0
@@ -29,6 +34,7 @@ const W = 794
 export default function FacturaPage() {
   const { id } = useParams()
   const [client, setClient]               = useState<Client | null>(null)
+  const [invoice, setInvoice]             = useState<Invoice | null>(null)
   const [loading, setLoading]             = useState(true)
   const [downloading, setDownloading]     = useState(false)
   const [autoTriggered, setAutoTriggered] = useState(false)
@@ -42,7 +48,7 @@ export default function FacturaPage() {
   const prevMonth   = new Date(now.getFullYear(), now.getMonth() - 1, 1)
   const period      = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`
   const periodLabel = prevMonth.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
-  const invoiceNum  = `MF-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${String(id).padStart(4, '0')}`
+  const invoiceNum  = invoice?.invoice_number || `MF-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${String(id).padStart(4, '0')}`
   const dateStr     = now.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })
   const dueDateObj  = addBusinessDays(now, 3)
   const dueDate     = dueDateObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -58,10 +64,17 @@ export default function FacturaPage() {
   }, [])
 
   useEffect(() => {
-    fetch(`/api/clients/${id}`)
-      .then(r => r.json())
-      .then(d => { setClient(d.client); setLoading(false) })
-      .catch(() => setLoading(false))
+    const now2 = new Date()
+    const prev = new Date(now2.getFullYear(), now2.getMonth() - 1, 1)
+    const per  = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`
+    Promise.all([
+      fetch(`/api/clients/${id}`).then(r => r.json()),
+      fetch(`/api/invoices?client_id=${id}&period=${per}`).then(r => r.json()),
+    ]).then(([dc, di]) => {
+      setClient(dc.client)
+      if (di.invoices && di.invoices.length > 0) setInvoice(di.invoices[0])
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [id])
 
   useEffect(() => {
@@ -125,6 +138,7 @@ export default function FacturaPage() {
     </div>
   )
 
+  const invoiceAmount = invoice?.amount ?? client.plan_value
   const speedMatch = client.plan.match(/\d+/)
   const speedMbps  = speedMatch ? `${speedMatch[0]} Mbps` : '—'
   const viewZoom   = isCapturing ? 1 : mobileScale
@@ -269,19 +283,19 @@ export default function FacturaPage() {
                     </td>
                     <td style={{ padding: '12px 14px', textAlign: 'center', color: '#333', fontWeight: 700, fontSize: 16, verticalAlign: 'middle' }}>{speedMbps}</td>
                     <td style={{ padding: '12px 14px', textAlign: 'center', color: '#555', fontSize: 14, verticalAlign: 'middle' }}>{period}</td>
-                    <td style={{ padding: '12px 14px', textAlign: 'right', fontSize: 24, fontWeight: 900, color: '#0d1b3e', verticalAlign: 'middle' }}>{formatCurrency(client.plan_value)}</td>
+                    <td style={{ padding: '12px 14px', textAlign: 'right', fontSize: 24, fontWeight: 900, color: '#0d1b3e', verticalAlign: 'middle' }}>{formatCurrency(invoiceAmount)}</td>
                   </tr>
                 </tbody>
                 <tfoot>
                   <tr style={{ backgroundColor: '#f0fdf4' }}>
                     <td colSpan={2} style={{ padding: '7px 14px', fontSize: 13, color: '#166534', fontStyle: 'italic' }}>IVA — Exento (Art. 481, literal h, E.T.)</td>
                     <td style={{ padding: '7px 14px', textAlign: 'right', fontSize: 13, color: '#666', fontWeight: 600 }}>Subtotal</td>
-                    <td style={{ padding: '7px 14px', textAlign: 'right', fontSize: 15, fontWeight: 700, color: '#333' }}>{formatCurrency(client.plan_value)}</td>
+                    <td style={{ padding: '7px 14px', textAlign: 'right', fontSize: 15, fontWeight: 700, color: '#333' }}>{formatCurrency(invoiceAmount)}</td>
                   </tr>
                   <tr style={{ borderTop: '3px solid #0d1b3e', backgroundColor: '#eef2ff' }}>
                     <td colSpan={2} style={{ padding: '10px 14px', fontSize: 12, color: '#9ca3af', fontStyle: 'italic' }}>IVA (Art. 481, literal h) — $ 0 &nbsp;·&nbsp; Internet residencial exento</td>
                     <td style={{ padding: '10px 14px', textAlign: 'right', fontSize: 15, fontWeight: 800, color: '#0d1b3e' }}>TOTAL A PAGAR</td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', fontSize: 28, fontWeight: 900, color: '#0d1b3e' }}>{formatCurrency(client.plan_value)}</td>
+                    <td style={{ padding: '10px 14px', textAlign: 'right', fontSize: 28, fontWeight: 900, color: '#0d1b3e' }}>{formatCurrency(invoiceAmount)}</td>
                   </tr>
                 </tfoot>
               </table>
