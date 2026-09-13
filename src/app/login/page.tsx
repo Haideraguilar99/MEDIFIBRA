@@ -155,15 +155,13 @@ export default function LoginPage() {
       `}</style>
 
       {/* ===== IZQUIERDA — fondoM.png ===== */}
-      <div style={{
-        flex: '1 1 0%',
-        display: 'none',
-        backgroundImage: "url('/fondoM.png')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        position: 'relative',
-      }}
-        className="lg-img-panel"
+      <div
+        className="hidden lg:block lg:flex-1 relative"
+        style={{
+          backgroundImage: "url('/fondoM.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       />
 
       {/* ===== DERECHA — formulario ===== */}
@@ -352,18 +350,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* CSS responsive para mostrar imagen en desktop */}
-      <style>{`
-        @media (min-width: 1024px) {
-          .lg-img-panel { display: block !important; }
-        }
-        @media (max-width: 1023px) {
-          div[style*="maxWidth: \'460px\'"] {
-            max-width: 100% !important;
-            padding: 40px 28px !important;
-          }
-        }
-      `}</style>
+
     </div>
   )
 }
