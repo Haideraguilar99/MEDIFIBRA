@@ -72,8 +72,7 @@ function buildWhatsAppLink(client: UpcomingClient): string {
     `• Período: ${period}`,
     ``,
     `💳 *Métodos de pago:*`,
-    `• Bancolombia: 009-952025-14`,
-    `• Nequi: 301 508 0961`,
+    `• Bancolombia Ahorros: 0093014896`,
     `• Bre-B`,
     ``,
     `⚡ Paga a tiempo y evita interrupciones en tu servicio.`,
@@ -112,8 +111,10 @@ function playChime() {
 const URGENCY: Record<number, { label: string; color: string; bg: string; border: string; icon: string }> = {
   0: { label: 'Vence HOY',       color: '#ef4444', bg: '#2d0a0a', border: '#991b1b', icon: '🚨' },
   1: { label: 'Vence MAÑANA',    color: '#f97316', bg: '#2a1400', border: '#9a3412', icon: '⚠️' },
-  3: { label: 'Vence en 3 días', color: '#eab308', bg: '#1c1400', border: '#92400e', icon: '🔔' },
-  5: { label: 'Vence en 5 días', color: '#22c55e', bg: '#052e16', border: '#166534', icon: '📅' },
+  2: { label: 'Vence en 2 dias', color: '#fb923c', bg: '#271200', border: '#9a3412', icon: '⚠️' },
+  3: { label: 'Vence en 3 dias', color: '#eab308', bg: '#1c1400', border: '#92400e', icon: '🔔' },
+  4: { label: 'Vence en 4 dias', color: '#a3e635', bg: '#0f1f02', border: '#365314', icon: '📅' },
+  5: { label: 'Vence en 5 dias', color: '#22c55e', bg: '#052e16', border: '#166534', icon: '📅' },
 }
 
 export default function NotificationBell({
