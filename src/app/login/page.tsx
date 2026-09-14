@@ -113,7 +113,7 @@ export default function LoginPage() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         @keyframes mfPulse {
           0%,100%{ opacity:1; text-shadow:0 0 20px rgba(220,38,38,1),0 0 50px rgba(220,38,38,0.4); }
-          50%    { opacity:0.12; text-shadow:none; }
+          50%    { opacity:0.45; text-shadow:0 0 8px rgba(220,38,38,0.3); }
         }
         @keyframes popIn {
           0%  { opacity:0; transform:scale(0.92); }
@@ -124,7 +124,7 @@ export default function LoginPage() {
           from{ opacity:0; transform:translateY(14px); }
           to  { opacity:1; transform:translateY(0); }
         }
-        .mf-pulse{ animation: mfPulse 1.5s ease-in-out infinite; }
+        .mf-pulse{ animation: mfPulse 3.5s ease-in-out infinite; }
         .pop-in  { animation: popIn   0.38s cubic-bezier(.34,1.56,.64,1) both; }
         .fade-in { animation: fadeIn  0.45s ease both; }
 
@@ -217,10 +217,10 @@ export default function LoginPage() {
           {/* Logo */}
           <div style={{ marginBottom: 28 }}>
             <div style={{ display:'flex', alignItems:'baseline', lineHeight:1, marginBottom: 6 }}>
-              <span className="mf-pulse" style={{ fontSize:'2.4rem', fontWeight:900, color:'#dc2626', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>M</span>
-              <span style={{ fontSize:'2.4rem', fontWeight:900, color:'#fff', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>EDI</span>
-              <span className="mf-pulse" style={{ fontSize:'2.4rem', fontWeight:900, color:'#dc2626', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>F</span>
-              <span style={{ fontSize:'2.4rem', fontWeight:900, color:'#fff', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>IBRA</span>
+              <span className="mf-pulse" style={{ fontSize:'1.2rem', fontWeight:900, color:'#dc2626', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>M</span>
+              <span style={{ fontSize:'1.2rem', fontWeight:900, color:'#fff', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>EDI</span>
+              <span className="mf-pulse" style={{ fontSize:'1.2rem', fontWeight:900, color:'#dc2626', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>F</span>
+              <span style={{ fontSize:'1.2rem', fontWeight:900, color:'#fff', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>IBRA</span>
             </div>
             <p style={{ fontSize: 13, color: '#4b5563', margin: '0 0 10px 0', fontWeight: 400 }}>
               Panel Administrativo · v8.2
