@@ -72,7 +72,7 @@ function buildWhatsAppLink(client: UpcomingClient): string {
     `• Período: ${period}`,
     ``,
     `💳 *Métodos de pago:*`,
-    `• Bancolombia Ahorros: 0093014896`,
+    `• Bancolombia Ahorros: 00995202514`,
     `• Bre-B`,
     ``,
     `⚡ Paga a tiempo y evita interrupciones en tu servicio.`,

@@ -233,7 +233,7 @@ export default function Dashboard() {
     const cls     = cl.classification || 'AL_DIA'
     const empresa = 'Medifibra S.A.S'
     const wa      = '333 728 8745'
-    const cuenta  = '0093014896'
+    const cuenta  = '00995202514'
 
     const firma = `\n-- ${empresa} | ${wa}`
 

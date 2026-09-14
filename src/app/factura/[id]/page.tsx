@@ -28,7 +28,7 @@ function addBusinessDays(date: Date, days: number): Date {
   return result
 }
 
-const CUENTA = '0093014896'
+const CUENTA = '00995202514'
 const W = 794
 
 export default function FacturaPage() {
