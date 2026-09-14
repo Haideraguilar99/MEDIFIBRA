@@ -163,8 +163,9 @@ export default function LoginPage() {
         flex: '1 1 0%',
         backgroundImage: "url('/fondoM.png')",
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: 'center left',
         minHeight: '100vh',
+        alignSelf: 'stretch',
       }} />
 
       {/* ===== DERECHA — formulario ===== */}
@@ -217,10 +218,10 @@ export default function LoginPage() {
           {/* Logo */}
           <div style={{ marginBottom: 28 }}>
             <div style={{ display:'flex', alignItems:'baseline', lineHeight:1, marginBottom: 6 }}>
-              <span className="mf-pulse" style={{ fontSize:'1.2rem', fontWeight:900, color:'#dc2626', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>M</span>
-              <span style={{ fontSize:'1.2rem', fontWeight:900, color:'#fff', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>EDI</span>
-              <span className="mf-pulse" style={{ fontSize:'1.2rem', fontWeight:900, color:'#dc2626', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>F</span>
-              <span style={{ fontSize:'1.2rem', fontWeight:900, color:'#fff', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>IBRA</span>
+              <span className="mf-pulse" style={{ fontSize:'2.2rem', fontWeight:900, color:'#dc2626', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>M</span>
+              <span style={{ fontSize:'2.2rem', fontWeight:900, color:'#fff', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>EDI</span>
+              <span className="mf-pulse" style={{ fontSize:'2.2rem', fontWeight:900, color:'#dc2626', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>F</span>
+              <span style={{ fontSize:'2.2rem', fontWeight:900, color:'#fff', fontFamily:'Inter,sans-serif', letterSpacing:'-0.01em' }}>IBRA</span>
             </div>
             <p style={{ fontSize: 13, color: '#4b5563', margin: '0 0 10px 0', fontWeight: 400 }}>
               Panel Administrativo · v8.2
