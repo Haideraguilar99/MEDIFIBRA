@@ -195,7 +195,7 @@ export default function Dashboard() {
       fetchReports()
     }, 300000)
     return () => clearInterval(interval)
-  }, [fetchClients, fetchPayments, fetchReports])
+  }, [fetchClients, fetchPayments, fetchReports, fetchPlans])
 
   const handleSaveClient = async () => {
     if (!form.name||!form.cellphone||!form.plan) { toast.error('Nombre, celular y plan son obligatorios'); return }
