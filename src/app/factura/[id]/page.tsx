@@ -7,7 +7,7 @@ import Link from 'next/link'
 
 type Client = {
   id: number; name: string; email: string; phone: string; cellphone: string
-  address: string; city: string; neighborhood: string; commune: string
+  address: string; city: string; neighborhood: string; commune: string; punto_referencia: string
   consumption_date: string; payment_date: string; plan: string; plan_value: number
   reference: string; status: string; notes: string; created_at: string
 }
@@ -209,6 +209,12 @@ export default function FacturaPage() {
                   <div style={{ fontSize: 15, color: '#444', marginBottom: 5, display: 'flex', gap: 6 }}>
                     <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 40 }}>Dir:</span>
                     <span>{client.address}{client.neighborhood ? `, ${client.neighborhood}` : ''}</span>
+                  </div>
+                )}
+                {client.punto_referencia && (
+                  <div style={{ fontSize: 13, color: '#555', marginBottom: 5, display: 'flex', gap: 6 }}>
+                    <span style={{ color: '#1565c0', fontWeight: 700, minWidth: 40 }}>Ref:</span>
+                    <span style={{ fontStyle: 'italic' }}>{client.punto_referencia}</span>
                   </div>
                 )}
                 {client.city && (
