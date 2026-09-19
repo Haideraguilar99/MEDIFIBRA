@@ -70,6 +70,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
+    // Verificar que el cliente existe
+    const check = await db.execute({ sql: 'SELECT id FROM clients WHERE id=?', args: [id] })
+    if (!check.rows[0]) return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
+    // Activar FK para que ON DELETE CASCADE funcione en Turso/libSQL
+    await db.execute({ sql: 'PRAGMA foreign_keys = ON', args: [] })
+    // Borrar registros relacionados manualmente como fallback (doble seguridad)
+    await db.execute({ sql: 'DELETE FROM invoices WHERE client_id=?', args: [id] })
+    await db.execute({ sql: 'DELETE FROM payments WHERE client_id=?', args: [id] })
+    await db.execute({ sql: 'DELETE FROM work_orders WHERE client_id=?', args: [id] })
+    // Borrar el cliente
     await db.execute({ sql: 'DELETE FROM clients WHERE id=?', args: [id] })
     broadcast('delete-client', { id })
     return NextResponse.json({ success: true })
