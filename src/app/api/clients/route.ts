@@ -32,14 +32,14 @@ export async function POST(req: NextRequest) {
                fecha_instalacion,incluye_tv,dia_pago,referido_nombre,referido_telefono)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       args: [
-        b.name, b.email??'', b.phone??'', b.cellphone,
+        b.name, b.email??'', b.phone??'', b.cellphone ?? '',
         b.address??'', b.city??'', b.neighborhood??'', b.commune??'',
         b.consumption_date??'', b.payment_date??'',
         b.plan, b.plan_value, b.reference??'',
         b.status??'active', b.classification??'AL_DIA', b.notes??'',
         b.cedula??'', b.punto_referencia??'', b.foto_fachada??'',
         b.telefono_alternativo??'', b.fecha_instalacion??'',
-        b.incluye_tv?1:0, b.dia_pago??'',
+        b.incluye_tv ?? 0, b.dia_pago??'',
         b.referido_nombre??'', b.referido_telefono??'',
       ]
     })
