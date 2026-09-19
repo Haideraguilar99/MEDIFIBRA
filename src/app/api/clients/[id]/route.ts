@@ -78,7 +78,6 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     await db.execute({ sql: 'DELETE FROM notifications_log WHERE client_id=?', args: [id] })
     await db.execute({ sql: 'DELETE FROM invoices WHERE client_id=?', args: [id] })
     await db.execute({ sql: 'DELETE FROM payments WHERE client_id=?', args: [id] })
-    await db.execute({ sql: 'DELETE FROM push_subscriptions WHERE client_id=?', args: [id] })
     await db.execute({ sql: 'DELETE FROM equipment_records WHERE client_id=?', args: [id] })
     await db.execute({ sql: 'DELETE FROM client_ratings WHERE client_id=?', args: [id] })
     await db.execute({ sql: 'DELETE FROM service_followup WHERE client_id=?', args: [id] })
