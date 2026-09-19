@@ -73,13 +73,25 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     // Verificar que el cliente existe
     const check = await db.execute({ sql: 'SELECT id FROM clients WHERE id=?', args: [id] })
     if (!check.rows[0]) return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
-    // Activar FK para que ON DELETE CASCADE funcione en Turso/libSQL
-    await db.execute({ sql: 'PRAGMA foreign_keys = ON', args: [] })
-    // Borrar registros relacionados manualmente como fallback (doble seguridad)
+    // Borrar TODOS los registros relacionados antes del cliente
+    // (Turso no ejecuta ON DELETE CASCADE automáticamente sin PRAGMA por conexión)
+    await db.execute({ sql: 'DELETE FROM notifications_log WHERE client_id=?', args: [id] })
     await db.execute({ sql: 'DELETE FROM invoices WHERE client_id=?', args: [id] })
     await db.execute({ sql: 'DELETE FROM payments WHERE client_id=?', args: [id] })
+    await db.execute({ sql: 'DELETE FROM push_subscriptions WHERE client_id=?', args: [id] })
+    await db.execute({ sql: 'DELETE FROM equipment_records WHERE client_id=?', args: [id] })
+    await db.execute({ sql: 'DELETE FROM client_ratings WHERE client_id=?', args: [id] })
+    await db.execute({ sql: 'DELETE FROM service_followup WHERE client_id=?', args: [id] })
+    await db.execute({ sql: 'DELETE FROM tickets WHERE client_id=?', args: [id] })
+    await db.execute({ sql: 'DELETE FROM equipment WHERE client_id=?', args: [id] })
+    await db.execute({ sql: 'DELETE FROM streaming_accounts WHERE client_id=?', args: [id] })
+    // work_orders: borrar evidencias primero, luego las órdenes
+    const orders = await db.execute({ sql: 'SELECT id FROM work_orders WHERE client_id=?', args: [id] })
+    for (const row of orders.rows) {
+      await db.execute({ sql: 'DELETE FROM service_evidence WHERE work_order_id=?', args: [row.id] })
+    }
     await db.execute({ sql: 'DELETE FROM work_orders WHERE client_id=?', args: [id] })
-    // Borrar el cliente
+    // Finalmente borrar el cliente
     await db.execute({ sql: 'DELETE FROM clients WHERE id=?', args: [id] })
     broadcast('delete-client', { id })
     return NextResponse.json({ success: true })
