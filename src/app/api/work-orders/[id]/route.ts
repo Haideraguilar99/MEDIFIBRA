@@ -86,6 +86,8 @@ export async function DELETE(
   try {
     const { id } = await params;
     const db = getDb();
+    // Eliminar evidencias primero (FK constraint)
+    await db.execute({ sql: 'DELETE FROM service_evidence WHERE work_order_id=?', args: [id] });
     await db.execute({ sql: 'DELETE FROM work_orders WHERE id=?', args: [id] });
     return NextResponse.json({ message: 'Orden eliminada' });
   } catch (e) {
