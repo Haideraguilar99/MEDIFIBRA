@@ -119,6 +119,7 @@ export default function Dashboard() {
   const [classStats,   setClassStats]   = useState<ClassStat[]>([])
   const [reports,      setReports]      = useState<ReportData|null>(null)
   const [showModal,    setShowModal]    = useState(false)
+  const [savingClient, setSavingClient] = useState(false)
   const [viewClient,   setViewClient]   = useState<Client|null>(null)
   const [showPayModal, setShowPayModal] = useState(false)
   const [showWAModal,  setShowWAModal]  = useState(false)
@@ -193,16 +194,20 @@ export default function Dashboard() {
       fetchClients()
       fetchPayments()
       fetchReports()
-    }, 300000)
+    }, 60000)
     return () => clearInterval(interval)
   }, [fetchClients, fetchPayments, fetchReports, fetchPlans])
 
   const handleSaveClient = async () => {
     if (!form.name||!form.cellphone||!form.plan) { toast.error('Nombre, celular y plan son obligatorios'); return }
-    const url = editClient ? `/api/clients/${editClient.id}` : '/api/clients'
-    const res = await fetch(url, { method: editClient?'PUT':'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(form) })
-    if (res.ok) { setShowModal(false); setEditClient(null); setForm(EMPTY_CLIENT); fetchClients() }
-    else toast.error('Error al guardar cliente')
+    if (savingClient) return
+    setSavingClient(true)
+    try {
+      const url = editClient ? `/api/clients/${editClient.id}` : '/api/clients'
+      const res = await fetch(url, { method: editClient?'PUT':'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(form) })
+      if (res.ok) { setShowModal(false); setEditClient(null); setForm(EMPTY_CLIENT); fetchClients() }
+      else { const err = await res.json(); toast.error(err.error || 'Error al guardar cliente') }
+    } finally { setSavingClient(false) }
   }
 
   const handleSavePayment = async () => {
@@ -1207,7 +1212,7 @@ export default function Dashboard() {
             </div>
             <div className="flex justify-end gap-3 p-5" style={{borderTop:`1px solid ${BORDER}`}}>
               <button onClick={()=>setShowModal(false)} className="px-4 py-2 text-sm font-medium rounded-lg hover:opacity-75 transition-opacity" style={{backgroundColor:CARD2,color:LIGHT,border:`1px solid ${BORDER}`}}>Cancelar</button>
-              <button onClick={handleSaveClient} className="px-6 py-2 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity text-white" style={{backgroundColor:'#2563EB'}}>{editClient?'Actualizar Cliente':'Guardar Cliente'}</button>
+              <button onClick={handleSaveClient} disabled={savingClient} className="px-6 py-2 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity text-white disabled:opacity-50" style={{backgroundColor:'#2563EB'}}>{savingClient?'Guardando...':(editClient?'Actualizar Cliente':'Guardar Cliente')}</button>
             </div>
           </div>
         </div>

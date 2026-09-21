@@ -37,6 +37,19 @@ export async function GET(req: Request) {
 export async function POST(req: NextRequest) {
   try {
     const b = await req.json()
+    // Verificar celular duplicado solo si se proporcionó
+    if (b.cellphone) {
+      const dup = await db.execute({
+        sql: 'SELECT id, name FROM clients WHERE cellphone = ? LIMIT 1',
+        args: [b.cellphone]
+      })
+      if (dup.rows[0]) {
+        return NextResponse.json({
+          error: `El celular ya está registrado para: ${dup.rows[0].name}`
+        }, { status: 409 })
+      }
+    }
+
     const result = await db.execute({
       sql: `INSERT INTO clients
               (name,email,phone,cellphone,address,city,neighborhood,commune,

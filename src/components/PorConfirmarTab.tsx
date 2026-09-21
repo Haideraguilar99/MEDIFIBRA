@@ -170,7 +170,7 @@ export default function PorConfirmarTab({
                     )}
                     <span className="text-xs font-medium" style={{ color: '#4f6ef7' }}>{c.plan}</span>
                     <span className="text-xs font-bold" style={{ color: TEXT }}>{fmt(c.plan_value)}</span>
-                    {c.incluye_tv === 1 && <span className="text-xs" style={{ color: MUTED }}>+ TV</span>}
+                    {c.incluye_tv > 0 && <span className="text-xs" style={{ color: MUTED }}>+ TV</span>}
                   </div>
                 </div>
 

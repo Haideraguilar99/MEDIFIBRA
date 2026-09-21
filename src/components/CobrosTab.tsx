@@ -91,7 +91,7 @@ export default function CobrosTab({
     try {
       if (action === 'paid') {
         const client = clients.find(c => c.id === clientId)!
-        await fetch('/api/payments', {
+        const payRes = await fetch('/api/payments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -103,17 +103,23 @@ export default function CobrosTab({
             notes: 'Confirmado desde módulo Cobros'
           })
         })
-        await fetch(`/api/clients/${clientId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ classification: 'AL_DIA' })
-        })
+        if (!payRes.ok) {
+          const e = await payRes.json()
+          alert('Error al registrar pago: ' + (e.error || payRes.status))
+          return
+        }
+        // El POST /api/payments ya actualiza classification a AL_DIA
+        // No necesitamos segundo PUT
       } else {
-        await fetch(`/api/clients/${clientId}`, {
+        const clsRes = await fetch(`/api/clients/${clientId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ classification: newCls })
         })
+        if (!clsRes.ok) {
+          alert('Error al actualizar estado del cliente')
+          return
+        }
       }
       setLocalClass(prev => ({ ...prev, [clientId]: newCls }))
       const client = clients.find(c => c.id === clientId)
@@ -127,8 +133,9 @@ export default function CobrosTab({
           return { ...prev, [dia]: { ...g, confirmed: g.confirmed + delta } }
         })
       }
-    } catch {}
-    finally { setSaving(null) }
+    } catch (err) {
+      alert('Error inesperado: ' + String(err))
+    } finally { setSaving(null) }
   }
 
   const toggleGroup = (dia: string) => setGroups(prev => ({ ...prev, [dia]: { ...prev[dia], open: !prev[dia].open } }))
@@ -230,7 +237,7 @@ export default function CobrosTab({
                           </span>
                           <span className="text-xs font-medium" style={{ color: '#4f6ef7' }}>{c.plan}</span>
                           <span className="text-xs font-bold" style={{ color: TEXT }}>{fmt(c.plan_value)}</span>
-                          {c.incluye_tv === 1 && <span className="text-xs" style={{ color: MUTED }}>+ TV</span>}
+                          {c.incluye_tv > 0 && <span className="text-xs" style={{ color: MUTED }}>+ TV</span>}
                         </div>
                       </div>
                       {!isProt ? (
