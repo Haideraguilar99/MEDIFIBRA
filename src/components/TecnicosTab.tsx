@@ -30,7 +30,7 @@ const ORDER_STATUSES = [
 ];
 const TECH_ROLES = ['Tecnico Lider','Tecnico','Auxiliar Tecnico','Instalador','Supervisor'];
 const EMPTY_T = { name:'',cedula:'',phone:'',cellphone:'',email:'',photo_url:'',role:'Tecnico',specialty:'',status:'active',notes:'' };
-const EMPTY_O = { technician_id:0,client_id:0,task_type:'',task_description:'',priority:'normal',scheduled_date:'',scheduled_time:'',notes:'',created_by:'Mariana' };
+const EMPTY_O = { technician_ids:[] as number[],technician_id:0,client_id:0,task_type:'',task_description:'',priority:'normal',scheduled_date:'',scheduled_time:'',notes:'',created_by:'Mariana' };
 
 const tCfg = (v:string) => TASK_TYPES.find(t=>t.value===v);
 const pCfg = (v:string) => PRIORITIES.find(p=>p.value===v);
@@ -102,8 +102,8 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
   async function delT(id:number,name:string){ if(!confirm(`Eliminar a ${name}?`))return; const r=await fetch(`/api/technicians/${id}`,{method:'DELETE'}); if(!r.ok){const e=await r.json();alert(e.error??'Error');return;} fetchT(); }
 
   function openNO(){ setEditO(null); setOForm({...EMPTY_O}); setSelC(null); setCs(''); setShowOM(true); }
-  function openEO(o:WorkOrder){ setEditO(o); setOForm({technician_id:o.technician_id,client_id:o.client_id,task_type:o.task_type,task_description:o.task_description,priority:o.priority,scheduled_date:o.scheduled_date,scheduled_time:o.scheduled_time,notes:o.notes,created_by:o.created_by}); setSelC({id:o.client_id,name:o.client_name??'',address:o.client_address??'',neighborhood:o.client_neighborhood??'',commune:'',cellphone:o.client_phone??'',plan:o.client_plan??'',status:o.client_status??'',cedula:'',punto_referencia:o.client_punto_referencia??''}); setCs(o.client_name??'');setShowOM(true); }
-  async function saveO(){ if(!oForm.technician_id){alert('Selecciona un tecnico');return;} if(!oForm.client_id){alert('Selecciona un cliente');return;} if(!oForm.task_type){alert('Selecciona el tipo de tarea');return;} setSaving(true); try{ const url=editO?`/api/work-orders/${editO.id}`:'/api/work-orders'; const body=editO?{...oForm,status:editO.status,whatsapp_tech_sent:editO.whatsapp_tech_sent,whatsapp_client_sent:editO.whatsapp_client_sent}:oForm; const r=await fetch(url,{method:editO?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok){const e=await r.json();alert(e.error??'Error');return;} setShowOM(false);fetchO(); }finally{setSaving(false);} }
+  function openEO(o:WorkOrder){ setEditO(o); setOForm({technician_ids:[o.technician_id],technician_id:o.technician_id,client_id:o.client_id,task_type:o.task_type,task_description:o.task_description,priority:o.priority,scheduled_date:o.scheduled_date,scheduled_time:o.scheduled_time,notes:o.notes,created_by:o.created_by}); setSelC({id:o.client_id,name:o.client_name??'',address:o.client_address??'',neighborhood:o.client_neighborhood??'',commune:'',cellphone:o.client_phone??'',plan:o.client_plan??'',status:o.client_status??'',cedula:'',punto_referencia:o.client_punto_referencia??''}); setCs(o.client_name??'');setShowOM(true); }
+  async function saveO(){ const ids=oForm.technician_ids??[]; if(ids.length===0){alert('Selecciona al menos un tecnico');return;} if(!oForm.client_id){alert('Selecciona un cliente');return;} if(!oForm.task_type){alert('Selecciona el tipo de tarea');return;} setSaving(true); try{ if(editO){ const body={...oForm,technician_id:oForm.technician_id,status:editO.status,whatsapp_tech_sent:editO.whatsapp_tech_sent,whatsapp_client_sent:editO.whatsapp_client_sent}; const r=await fetch(`/api/work-orders/${editO.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok){const e=await r.json();alert(e.error??'Error');return;} } else { for(const tid of ids){ const body={...oForm,technician_id:tid}; const r=await fetch('/api/work-orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok){const e=await r.json();alert(e.error??'Error: tecnico '+tid);return;} } } setShowOM(false);fetchO(); }finally{setSaving(false);} }
   async function delO(id:number,num:string){ if(!confirm(`Eliminar orden ${num}?`))return; await fetch(`/api/work-orders/${id}`,{method:'DELETE'}); fetchO(); }
   async function chgStatus(id:number,status:string,o:WorkOrder){ await fetch(`/api/work-orders/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,status})}); fetchO(); }
 
@@ -351,10 +351,22 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))', gap:14 }}>
                 <div style={{ gridColumn:'1/-1' }}>
                   <label style={{ color:MUTED, fontSize:12, fontWeight:700, display:'block', marginBottom:6, textTransform:'uppercase', letterSpacing:0.5 }}>Técnico *</label>
-                  <select value={oForm.technician_id||''} onChange={e=>setOForm(f=>({...f,technician_id:Number(e.target.value)}))} style={iS}>
-                    <option value="">-- Seleccionar --</option>
-                    {technicians.filter(t=>t.status==='active').map(t=><option key={t.id} value={t.id}>{t.name} · {t.role}</option>)}
-                  </select>
+                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                    {technicians.filter(t=>t.status==='active').map(t=>(
+                      <label key={t.id} style={{ display:'flex', alignItems:'center', gap:10, background:CARD2, border:`1px solid ${(oForm.technician_ids??[]).includes(t.id)?ACCENT:BORDER}`, borderRadius:8, padding:'10px 14px', cursor:'pointer' }}>
+                        <input type="checkbox" checked={(oForm.technician_ids??[]).includes(t.id)}
+                          onChange={e=>{
+                            const ids = oForm.technician_ids??[]
+                            if(e.target.checked){ setOForm(f=>({...f,technician_ids:[...ids,t.id],technician_id:ids.length===0?t.id:f.technician_id})) }
+                            else{ setOForm(f=>({...f,technician_ids:ids.filter(i=>i!==t.id),technician_id:f.technician_id===t.id?(ids.filter(i=>i!==t.id)[0]??0):f.technician_id})) }
+                          }}
+                          style={{ accentColor:ACCENT, width:16, height:16 }}
+                        />
+                        <span style={{ color:(oForm.technician_ids??[]).includes(t.id)?TEXT:MUTED, fontWeight:(oForm.technician_ids??[]).includes(t.id)?700:400, fontSize:14 }}>{t.name} · {t.role}</span>
+                      </label>
+                    ))}
+                    {(oForm.technician_ids??[]).length===0 && <p style={{color:'#ef4444',fontSize:12,margin:0}}>Selecciona al menos un tecnico</p>}
+                  </div>
                 </div>
                 <div style={{ gridColumn:'1/-1', position:'relative' }}>
                   <label style={{ color:MUTED, fontSize:12, fontWeight:700, display:'block', marginBottom:6, textTransform:'uppercase', letterSpacing:0.5 }}>Cliente *</label>

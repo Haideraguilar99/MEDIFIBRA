@@ -3,8 +3,21 @@ import { broadcast } from '@/lib/sse'
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const url    = new URL(req.url)
+    const search = url.searchParams.get('search')?.trim() ?? ''
+    const limit  = parseInt(url.searchParams.get('limit') ?? '0')
+
+    if (search) {
+      const q = '%' + search + '%'
+      const result = await db.execute({
+        sql: 'SELECT id, name, address, neighborhood, cellphone, status, classification FROM clients WHERE name LIKE ? OR cellphone LIKE ? OR address LIKE ? ORDER BY name LIMIT ?',
+        args: [q, q, q, limit || 20]
+      })
+      return NextResponse.json({ clients: result.rows })
+    }
+
     const result  = await db.execute('SELECT * FROM clients ORDER BY created_at DESC')
     const stats   = await db.execute(`
       SELECT COUNT(*) as total,
