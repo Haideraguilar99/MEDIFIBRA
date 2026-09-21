@@ -1,10 +1,10 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Pencil, Trash2, MessageCircle, FileText, Phone, Wrench, Search, X, Calendar, RefreshCw } from 'lucide-react';
+import { Plus, Pencil, Trash2, MessageCircle, FileText, Phone, Wrench, Search, X, Calendar, RefreshCw, Eye } from 'lucide-react';
 
 interface Technician { id:number; name:string; cedula:string; phone:string; cellphone:string; email:string; photo_url:string; role:string; specialty:string; status:string; notes:string; created_at:string; }
 interface ClientResult { id:number; name:string; address:string; neighborhood:string; commune:string; cellphone:string; plan:string; status:string; cedula:string; punto_referencia:string; }
-interface WorkOrder { id:number; order_number:string; technician_id:number; client_id:number; task_type:string; task_description:string; priority:string; scheduled_date:string; scheduled_time:string; status:string; notes:string; created_by:string; whatsapp_tech_sent:number; whatsapp_client_sent:number; created_at:string; technician_name?:string; technician_phone?:string; technician_role?:string; client_name?:string; client_address?:string; client_phone?:string; client_plan?:string; client_status?:string; client_neighborhood?:string; client_punto_referencia?:string; }
+interface WorkOrder { id:number; order_number:string; technician_id:number; client_id:number; task_type:string; task_description:string; priority:string; scheduled_date:string; scheduled_time:string; status:string; notes:string; created_by:string; whatsapp_tech_sent:number; whatsapp_client_sent:number; created_at:string; technician_name?:string; technician_phone?:string; technician_role?:string; client_name?:string; client_address?:string; client_phone?:string; client_plan?:string; client_status?:string; client_neighborhood?:string; client_punto_referencia?:string; completion_notes?:string; started_at?:string; completed_at?:string; duration_minutes?:number; after_photos?:string; }
 
 const TASK_TYPES = [
   { value:'INSTALACION_SERVICIO',  label:'Instalacion de Servicio', color:'#16a34a' },
@@ -77,7 +77,9 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
   const [editT,setEditT]=useState<Technician|null>(null);
   const [tForm,setTForm]=useState({...EMPTY_T});
   const [showOM,setShowOM]=useState(false);
+  const [viewO,setViewO]=useState<WorkOrder|null>(null);
   const [editO,setEditO]=useState<WorkOrder|null>(null);
+  const [viewOrder,setViewOrder]=useState<WorkOrder|null>(null);
   const [oForm,setOForm]=useState({...EMPTY_O});
   const [cs,setCs]=useState('');
   const [cRes,setCRes]=useState<ClientResult[]>([]);
@@ -114,7 +116,7 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
   const stats={ total:workOrders.length, pending:workOrders.filter(o=>o.status==='pending').length, in_progress:workOrders.filter(o=>o.status==='in_progress').length, completed:workOrders.filter(o=>o.status==='completed').length };
 
   const Btn=({onClick,title,color,bg,children}:{onClick:()=>void;title:string;color:string;bg:string;children:React.ReactNode})=>(
-    <button onClick={onClick} title={title} style={{ background:bg, color, border:`1px solid ${color}33`, borderRadius:6, width:30, height:30, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{children}</button>
+    <button onClick={onClick} title={title} style={{ background:'transparent', color, border:'none', width:28, height:28, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, padding:0 }}>{children}</button>
   );
 
   return (
@@ -167,8 +169,8 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
                       <div style={{ marginTop:14, paddingTop:14, borderTop:`1px solid ${BORDER}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                         <span style={{ color:MUTED, fontSize:13 }}>{workOrders.filter(o=>o.technician_id===t.id&&o.status!=='completed'&&o.status!=='cancelled').length} orden(es) activa(s)</span>
                         <div style={{ display:'flex', gap:6 }}>
-                          <Btn onClick={()=>openET(t)} title="Editar" color={ACCENT} bg={ACCENT+'15'}><Pencil size={13}/></Btn>
-                          <Btn onClick={()=>delT(t.id,t.name)} title="Eliminar" color="#DC2626" bg="#FEF2F2"><Trash2 size={13}/></Btn>
+                          <Btn onClick={()=>openET(t)} title="Editar" color="#6b7280" bg="transparent"><Pencil size={13}/></Btn>
+                          <Btn onClick={()=>delT(t.id,t.name)} title="Eliminar" color="#6b7280" bg="transparent"><Trash2 size={13}/></Btn>
                         </div>
                       </div>
                     </div>
@@ -268,9 +270,10 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
                             </td>
                             <td style={{ padding:'14px 16px' }}>
                               <div style={{ display:'flex', gap:5, alignItems:'center', flexWrap:'nowrap' }}>
-                                <Btn onClick={()=>window.open(`/orden/${o.id}`,'_blank')} title="Ver PDF" color="#7c3aed" bg="#F5F3FF"><FileText size={13}/></Btn>
-                                <Btn onClick={()=>waT(o)} title={`WhatsApp Técnico${o.whatsapp_tech_sent?' ✓':''}`} color={o.whatsapp_tech_sent?'#16a34a':'#16a34a'} bg={o.whatsapp_tech_sent?'#DCFCE7':'#F0FDF4'}><Wrench size={13}/></Btn>
-                                <Btn onClick={()=>waC(o)} title={`WhatsApp Cliente${o.whatsapp_client_sent?' ✓':''}`} color={o.whatsapp_client_sent?'#0891b2':'#16a34a'} bg={o.whatsapp_client_sent?'#E0F2FE':'#F0FDF4'}><MessageCircle size={13}/></Btn>
+                                <Btn onClick={()=>setViewOrder(o)} title="Ver detalle" color="#6b7280" bg="transparent"><Eye size={14}/></Btn>
+                                <Btn onClick={()=>window.open(`/orden/${o.id}`,'_blank')} title="Ver PDF" color="#6b7280" bg="transparent"><FileText size={13}/></Btn>
+                                <Btn onClick={()=>waT(o)} title={`WhatsApp Técnico${o.whatsapp_tech_sent?' ✓':''}`} color="#6b7280" bg="transparent"><Wrench size={13}/></Btn>
+                                <Btn onClick={()=>waC(o)} title={`WhatsApp Cliente${o.whatsapp_client_sent?' ✓':''}`} color="#6b7280" bg="transparent"><MessageCircle size={13}/></Btn>
                                 <Btn onClick={()=>openEO(o)} title="Editar" color={ACCENT} bg={ACCENT+'15'}><Pencil size={13}/></Btn>
                                 <Btn onClick={()=>delO(o.id,o.order_number)} title="Eliminar" color="#DC2626" bg="#FEF2F2"><Trash2 size={13}/></Btn>
                               </div>
@@ -408,6 +411,72 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
                 <button onClick={()=>setShowOM(false)} style={{ background:CARD2, color:MUTED, border:`1px solid ${BORDER}`, borderRadius:8, padding:'9px 18px', cursor:'pointer', fontSize:14, fontWeight:600 }}>Cancelar</button>
                 <button onClick={saveO} disabled={saving} style={{ background:'#16a34a', color:'#fff', border:'none', borderRadius:8, padding:'9px 22px', cursor:saving?'not-allowed':'pointer', fontWeight:700, fontSize:14, opacity:saving?0.7:1 }}>{saving?'Guardando...':editO?'Actualizar':'Crear Orden'}</button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewOrder && (
+        <div onClick={()=>setViewOrder(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:2000, padding:16 }}>
+          <div onClick={e=>e.stopPropagation()} style={{ background:'#111827', border:'1px solid #374151', borderRadius:16, width:'100%', maxWidth:560, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 24px 64px rgba(0,0,0,0.4)' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 20px', borderBottom:'1px solid #374151' }}>
+              <div>
+                <div style={{ color:'#3b82f6', fontWeight:800, fontSize:15, fontFamily:'monospace' }}>{viewOrder.order_number}</div>
+                <div style={{ color:'#9ca3af', fontSize:12, marginTop:2 }}>Detalle de la orden</div>
+              </div>
+              <button onClick={()=>setViewOrder(null)} style={{ background:'#1f2937', border:'1px solid #374151', borderRadius:8, color:'#9ca3af', cursor:'pointer', width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={16}/></button>
+            </div>
+            <div style={{ padding:'20px' }}>
+              <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+                {(()=>{ const s=sCfg(viewOrder.status); return s ? <span style={{ background:s.color+'22', color:s.color, border:'1px solid '+s.color+'44', borderRadius:6, padding:'4px 12px', fontSize:13, fontWeight:700 }}>{s.label}</span> : null; })()}
+                {(()=>{ const p=pCfg(viewOrder.priority); return p ? <span style={{ background:p.color+'22', color:p.color, border:'1px solid '+p.color+'44', borderRadius:6, padding:'4px 12px', fontSize:13, fontWeight:700 }}>{p.label}</span> : null; })()}
+                {(()=>{ const t=tCfg(viewOrder.task_type); return t ? <span style={{ background:t.color+'22', color:t.color, border:'1px solid '+t.color+'44', borderRadius:6, padding:'4px 12px', fontSize:13, fontWeight:700 }}>{t.label}</span> : null; })()}
+              </div>
+              <div style={{ background:'#1f2937', borderRadius:10, padding:'14px 16px', marginBottom:12, border:'1px solid #374151' }}>
+                <div style={{ color:'#9ca3af', fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>Tecnico</div>
+                <div style={{ color:'#f9fafb', fontWeight:700, fontSize:15 }}>{viewOrder.technician_name ?? '—'}</div>
+                {viewOrder.technician_role && <div style={{ color:'#9ca3af', fontSize:13, marginTop:2 }}>{viewOrder.technician_role}</div>}
+                {viewOrder.technician_phone && <div style={{ color:'#6b7280', fontSize:13, marginTop:4 }}>{viewOrder.technician_phone}</div>}
+              </div>
+              <div style={{ background:'#1f2937', borderRadius:10, padding:'14px 16px', marginBottom:12, border:'1px solid #374151' }}>
+                <div style={{ color:'#9ca3af', fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>Cliente</div>
+                <div style={{ color:'#f9fafb', fontWeight:700, fontSize:15 }}>{viewOrder.client_name ?? '—'}</div>
+                {viewOrder.client_address && <div style={{ color:'#9ca3af', fontSize:13, marginTop:4 }}>{viewOrder.client_address}{viewOrder.client_neighborhood ? ', '+viewOrder.client_neighborhood : ''}</div>}
+                {viewOrder.client_punto_referencia && <div style={{ color:'#6b7280', fontSize:12, marginTop:3, fontStyle:'italic' }}>{viewOrder.client_punto_referencia}</div>}
+                {viewOrder.client_phone && <div style={{ color:'#6b7280', fontSize:13, marginTop:4 }}>{viewOrder.client_phone}</div>}
+                {viewOrder.client_plan && <div style={{ color:'#6b7280', fontSize:12, marginTop:3 }}>Plan: {viewOrder.client_plan}</div>}
+              </div>
+              <div style={{ background:'#1f2937', borderRadius:10, padding:'14px 16px', marginBottom:12, border:'1px solid #374151' }}>
+                <div style={{ color:'#9ca3af', fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>Tarea</div>
+                {viewOrder.task_description && <div style={{ color:'#f9fafb', fontSize:14, lineHeight:1.5 }}>{viewOrder.task_description}</div>}
+                {viewOrder.scheduled_date && <div style={{ color:'#9ca3af', fontSize:13, marginTop:8 }}>Fecha: {viewOrder.scheduled_date}{viewOrder.scheduled_time ? ' a las '+viewOrder.scheduled_time : ''}</div>}
+                {viewOrder.notes && <div style={{ background:'#92400e22', border:'1px solid #92400e44', borderRadius:6, padding:'8px 12px', marginTop:10, color:'#fbbf24', fontSize:13 }}>{viewOrder.notes}</div>}
+              </div>
+              {(viewOrder.completion_notes || viewOrder.duration_minutes) && (
+                <div style={{ background:'#064e3b22', borderRadius:10, padding:'14px 16px', marginBottom:12, border:'1px solid #10b98144' }}>
+                  <div style={{ color:'#10b981', fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>Trabajo realizado</div>
+                  {viewOrder.completion_notes && <div style={{ color:'#f9fafb', fontSize:14, lineHeight:1.5 }}>{viewOrder.completion_notes}</div>}
+                  {viewOrder.duration_minutes && <div style={{ color:'#9ca3af', fontSize:13, marginTop:6 }}>Duracion: {Math.floor(Number(viewOrder.duration_minutes)/60).toString().padStart(2,'0')}h {(Number(viewOrder.duration_minutes)%60).toString().padStart(2,'0')}m</div>}
+                </div>
+              )}
+              {viewOrder.after_photos && viewOrder.after_photos !== '[]' && (()=>{
+                try {
+                  const photos = JSON.parse(viewOrder.after_photos!);
+                  if (!photos.length) return null;
+                  return (
+                    <div style={{ marginBottom:12 }}>
+                      <div style={{ color:'#9ca3af', fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:1, marginBottom:10 }}>Evidencia fotografica</div>
+                      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:8 }}>
+                        {photos.map((url:string, i:number) => (
+                          <a key={i} href={url} target="_blank" rel="noreferrer">
+                            <img src={url} alt={"Evidencia "+(i+1)} style={{ width:'100%', aspectRatio:'1', objectFit:'cover', borderRadius:8, border:'1px solid #374151', cursor:'pointer' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                } catch { return null; }
+              })()}
             </div>
           </div>
         </div>
