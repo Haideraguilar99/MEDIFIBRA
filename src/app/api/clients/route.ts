@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     if (search) {
       const q = '%' + search + '%'
       const result = await db.execute({
-        sql: 'SELECT id, name, address, neighborhood, cellphone, status, classification FROM clients WHERE name LIKE ? OR cellphone LIKE ? OR address LIKE ? ORDER BY name LIMIT ?',
+        sql: 'SELECT id, name, address, neighborhood, cellphone, status, classification, plan, plan_value, dia_pago, incluye_tv FROM clients WHERE name LIKE ? OR cellphone LIKE ? OR address LIKE ? ORDER BY name LIMIT ?',
         args: [q, q, q, limit || 20]
       })
       return NextResponse.json({ clients: result.rows })
