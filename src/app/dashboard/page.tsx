@@ -438,7 +438,7 @@ export default function Dashboard() {
               <span>Blanquizal, Medellín</span>
             </div>
             <div style={{width:1,height:16,backgroundColor:BORDER}} className="hidden lg:block"/>
-            <NotificationBell dark={dark} BG={BG} BG2={BG2} CARD={CARD} BORDER={BORDER} MUTED={MUTED} TEXT={TEXT} LIGHT={LIGHT}/>
+            <NotificationBell dark={dark} BG={BG} BG2={BG2} CARD={CARD} BORDER={BORDER} MUTED={MUTED} TEXT={TEXT} LIGHT={LIGHT} onGoToCobros={()=>setTab('cobros')}/>
             <button onClick={handleLogout} style={{backgroundColor:'#FEF2F2',border:'1px solid #FECACA',color:'#DC2626'}}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-80 transition-opacity">
               <LogOut className="w-3.5 h-3.5"/><span className="hidden sm:inline">Salir</span>
