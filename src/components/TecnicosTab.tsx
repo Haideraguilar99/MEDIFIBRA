@@ -134,7 +134,7 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
           const tName = technicians.find(x=>x.id===tid)?.name??'Tecnico';
           const secNotes = 'ACOMPANAMIENTO | Tecnico principal: '+(primaryTech?primaryTech.name:'')+(oForm.notes?' | '+oForm.notes:'');
           const secDesc = (oForm.task_description?oForm.task_description+' ':'')+'[Equipo: '+allNames+']';
-          const secBody={...oForm,technician_id:tid,notes:secNotes,task_description:secDesc};
+          const secBody={...oForm,technician_id:tid,notes:secNotes,task_description:secDesc,is_secondary:1};
           await fetch('/api/work-orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(secBody)});
         }
       }

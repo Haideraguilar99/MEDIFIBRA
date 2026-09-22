@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       FROM work_orders wo
       LEFT JOIN technicians t ON wo.technician_id = t.id
       LEFT JOIN clients     c ON wo.client_id     = c.id
-      WHERE 1=1
+      WHERE wo.is_secondary = 0
     `;
     const args: (string | number)[] = [];
 
