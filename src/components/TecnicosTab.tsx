@@ -141,19 +141,19 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
                 <Wrench size={32} color={MUTED} style={{ marginBottom:12 }}/>
                 <div style={{ color:MUTED, fontSize:15 }}>No hay técnicos registrados.</div>
               </div>
-            : <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 }}>
+            : <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(360px,1fr))', gap:20 }}>
                 {technicians.map(t=>(
                   <div key={t.id} style={{ background:CARD, borderRadius:12, border:`1px solid ${BORDER}`, overflow:'hidden', boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
                     <div style={{ height:3, background:t.status==='active'?'#16a34a':'#94a3b8' }}/>
                     <div style={{ padding:20 }}>
-                      <div style={{ display:'flex', gap:14, alignItems:'center' }}>
-                        <div style={{ width:56, height:56, borderRadius:10, background:CARD2, border:`2px solid ${BORDER}`, flexShrink:0, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, color:MUTED, fontWeight:800 }}>
+                      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
+                        <div style={{ width:96, height:96, borderRadius:'50%', background:CARD2, border:`3px solid ${BORDER}`, flexShrink:0, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', fontSize:36, color:MUTED, fontWeight:800 }}>
                           {t.photo_url
                             ? <img src={`/api/img-proxy?url=${encodeURIComponent(t.photo_url)}`} alt={t.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
                             : t.name.charAt(0).toUpperCase()}
                         </div>
-                        <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontWeight:700, fontSize:16, color:TEXT, marginBottom:5, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{t.name}</div>
+                        <div style={{ textAlign:'center' }}>
+                          <div style={{ fontWeight:700, fontSize:17, color:TEXT, marginBottom:6, textAlign:'center' }}>{t.name}</div>
                           <span style={{ background:ACCENT+'18', color:ACCENT, border:`1px solid ${ACCENT}33`, borderRadius:4, padding:'2px 8px', fontSize:12, fontWeight:700 }}>{t.role}</span>
                         </div>
                         <span style={{ background:t.status==='active'?'#F0FDF4':'#F1F5F9', color:t.status==='active'?'#16a34a':'#64748b', border:`1px solid ${t.status==='active'?'#BBF7D0':'#CBD5E1'}`, borderRadius:20, padding:'2px 10px', fontSize:11, fontWeight:700, whiteSpace:'nowrap' }}>
