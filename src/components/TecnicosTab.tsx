@@ -141,78 +141,76 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
                 <Wrench size={32} color={MUTED} style={{ marginBottom:12 }}/>
                 <div style={{ color:MUTED, fontSize:15 }}>No hay técnicos registrados.</div>
               </div>
-            : <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(500px,1fr))', gap:20 }}>
+            : <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:20 }}>
               {technicians.map(t=>{
                 const activeOrders = workOrders.filter(o=>o.technician_id===t.id&&o.status!=='completed'&&o.status!=='cancelled').length;
                 return (
-                  <div key={t.id} style={{ background:CARD, borderRadius:14, border:`1px solid ${BORDER}`, overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.10)', display:'flex', flexDirection:'column' }}>
-                    <div style={{ height:3, background:t.status==='active'?'#16a34a':'#94a3b8', flexShrink:0 }}/>
-                    <div style={{ display:'flex', flexDirection:'row', flex:1, minHeight:160 }}>
-                      {/* Foto izquierda */}
-                      <div style={{ width:150, minWidth:150, background:CARD2, display:'flex', alignItems:'center', justifyContent:'center', padding:'20px 16px', flexShrink:0, borderRight:`1px solid ${BORDER}` }}>
-                        <div style={{ width:118, height:140, borderRadius:10, background:CARD, border:`2px solid ${BORDER}`, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', fontSize:46, color:MUTED, fontWeight:800 }}>
-                          {t.photo_url
-                            ? <img src={`/api/img-proxy?url=${encodeURIComponent(t.photo_url)}`} alt={t.name} style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top center' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
-                            : <span style={{ userSelect:'none' }}>{t.name.charAt(0).toUpperCase()}</span>}
-                        </div>
+                  <div key={t.id} style={{ background:CARD, borderRadius:16, border:`1px solid ${BORDER}`, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,0.12)', display:'flex', flexDirection:'column' }}>
+                    {/* Barra superior accent */}
+                    <div style={{ height:4, background:'rgb(79,110,247)', flexShrink:0 }}/>
+                    {/* Zona foto */}
+                    <div style={{ background:CARD2, display:'flex', alignItems:'center', justifyContent:'center', padding:'28px 20px 20px', borderBottom:`1px solid ${BORDER}` }}>
+                      <div style={{ width:160, height:190, borderRadius:12, background:CARD, border:`2px solid ${BORDER}`, overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center', fontSize:56, color:MUTED, fontWeight:800, boxShadow:'0 4px 16px rgba(0,0,0,0.18)' }}>
+                        {t.photo_url
+                          ? <img src={`/api/img-proxy?url=${encodeURIComponent(t.photo_url)}`} alt={t.name} style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top center' }} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
+                          : <span style={{ userSelect:'none' }}>{t.name.charAt(0).toUpperCase()}</span>}
                       </div>
-                      {/* Info derecha */}
-                      <div style={{ flex:1, padding:'18px 20px', display:'flex', flexDirection:'column', gap:8, minWidth:0 }}>
-                        {/* Nombre y badges */}
-                        <div>
-                          <div style={{ fontWeight:800, fontSize:19, color:TEXT, lineHeight:1.2, marginBottom:8, wordBreak:'break-word' }}>{t.name}</div>
-                          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                            <span style={{ background:ACCENT+'22', color:ACCENT, border:`1px solid ${ACCENT}44`, borderRadius:4, padding:'2px 10px', fontSize:12, fontWeight:700 }}>{t.role}</span>
-                            <span style={{ background:t.status==='active'?'#052e16':'#1e293b', color:t.status==='active'?'#4ade80':'#94a3b8', border:`1px solid ${t.status==='active'?'#166534':'#334155'}`, borderRadius:20, padding:'2px 10px', fontSize:11, fontWeight:700 }}>
-                              {t.status==='active'?'Activo':'Inactivo'}
-                            </span>
+                    </div>
+                    {/* Info */}
+                    <div style={{ padding:'16px 18px', display:'flex', flexDirection:'column', gap:10, flex:1 }}>
+                      {/* Nombre */}
+                      <div style={{ fontWeight:800, fontSize:17, color:TEXT, lineHeight:1.25, wordBreak:'break-word' }}>{t.name}</div>
+                      {/* Badges */}
+                      <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                        <span style={{ background:'rgb(79,110,247,0.15)', color:'rgb(79,110,247)', border:'1px solid rgba(79,110,247,0.35)', borderRadius:4, padding:'2px 10px', fontSize:12, fontWeight:700 }}>{t.role}</span>
+                        <span style={{ background:t.status==='active'?'#052e16':'#1e293b', color:t.status==='active'?'#4ade80':'#94a3b8', border:`1px solid ${t.status==='active'?'#166534':'#334155'}`, borderRadius:20, padding:'2px 10px', fontSize:11, fontWeight:700 }}>
+                          {t.status==='active'?'Activo':'Inactivo'}
+                        </span>
+                      </div>
+                      {/* Separador */}
+                      <div style={{ height:1, background:BORDER }}/>
+                      {/* Datos */}
+                      <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+                        {t.cedula && (
+                          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                            <span style={{ fontSize:11, fontWeight:700, color:MUTED, textTransform:'uppercase', letterSpacing:0.5, minWidth:52, flexShrink:0 }}>C.C.</span>
+                            <span style={{ fontSize:14, color:TEXT, fontWeight:600 }}>{t.cedula}</span>
                           </div>
+                        )}
+                        {t.cellphone && (
+                          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                            <span style={{ fontSize:11, fontWeight:700, color:MUTED, textTransform:'uppercase', letterSpacing:0.5, minWidth:52, flexShrink:0 }}>Celular</span>
+                            <span style={{ fontSize:14, color:TEXT, display:'flex', alignItems:'center', gap:5 }}><Phone size={12} color={MUTED}/>{t.cellphone}</span>
+                          </div>
+                        )}
+                        {t.specialty && (
+                          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                            <span style={{ fontSize:11, fontWeight:700, color:MUTED, textTransform:'uppercase', letterSpacing:0.5, minWidth:52, flexShrink:0 }}>Espec.</span>
+                            <span style={{ fontSize:13, color:MUTED, fontStyle:'italic' }}>{t.specialty}</span>
+                          </div>
+                        )}
+                        {t.email && (
+                          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                            <span style={{ fontSize:11, fontWeight:700, color:MUTED, textTransform:'uppercase', letterSpacing:0.5, minWidth:52, flexShrink:0 }}>Email</span>
+                            <span style={{ fontSize:12, color:MUTED, wordBreak:'break-all' }}>{t.email}</span>
+                          </div>
+                        )}
+                        {t.notes && (
+                          <div style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
+                            <span style={{ fontSize:11, fontWeight:700, color:MUTED, textTransform:'uppercase', letterSpacing:0.5, minWidth:52, flexShrink:0, paddingTop:2 }}>Notas</span>
+                            <span style={{ fontSize:12, color:MUTED, lineHeight:1.5 }}>{t.notes}</span>
+                          </div>
+                        )}
+                      </div>
+                      {/* Footer */}
+                      <div style={{ marginTop:'auto', paddingTop:12, borderTop:`1px solid ${BORDER}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                          <div style={{ width:8, height:8, borderRadius:'50%', background:activeOrders>0?'#f59e0b':'#6b7280', flexShrink:0 }}/>
+                          <span style={{ color:MUTED, fontSize:13 }}>{activeOrders} orden{activeOrders!==1?'es':''} activa{activeOrders!==1?'s':''}</span>
                         </div>
-                        {/* Separador */}
-                        <div style={{ height:1, background:BORDER, margin:'2px 0' }}/>
-                        {/* Datos */}
-                        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                          {t.cedula && (
-                            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                              <span style={{ fontSize:11, fontWeight:700, color:MUTED, textTransform:'uppercase', letterSpacing:0.5, minWidth:56, flexShrink:0 }}>C.C.</span>
-                              <span style={{ fontSize:14, color:TEXT, fontWeight:600 }}>{t.cedula}</span>
-                            </div>
-                          )}
-                          {t.cellphone && (
-                            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                              <span style={{ fontSize:11, fontWeight:700, color:MUTED, textTransform:'uppercase', letterSpacing:0.5, minWidth:56, flexShrink:0 }}>Celular</span>
-                              <span style={{ fontSize:14, color:TEXT, display:'flex', alignItems:'center', gap:5 }}><Phone size={12} color={MUTED}/>{t.cellphone}</span>
-                            </div>
-                          )}
-                          {t.specialty && (
-                            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                              <span style={{ fontSize:11, fontWeight:700, color:MUTED, textTransform:'uppercase', letterSpacing:0.5, minWidth:56, flexShrink:0 }}>Espec.</span>
-                              <span style={{ fontSize:13, color:MUTED, fontStyle:'italic' }}>{t.specialty}</span>
-                            </div>
-                          )}
-                          {t.email && (
-                            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                              <span style={{ fontSize:11, fontWeight:700, color:MUTED, textTransform:'uppercase', letterSpacing:0.5, minWidth:56, flexShrink:0 }}>Email</span>
-                              <span style={{ fontSize:12, color:MUTED, wordBreak:'break-all' }}>{t.email}</span>
-                            </div>
-                          )}
-                          {t.notes && (
-                            <div style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
-                              <span style={{ fontSize:11, fontWeight:700, color:MUTED, textTransform:'uppercase', letterSpacing:0.5, minWidth:56, flexShrink:0, paddingTop:2 }}>Notas</span>
-                              <span style={{ fontSize:12, color:MUTED, lineHeight:1.5 }}>{t.notes}</span>
-                            </div>
-                          )}
-                        </div>
-                        {/* Footer ordenes + acciones */}
-                        <div style={{ marginTop:'auto', paddingTop:10, borderTop:`1px solid ${BORDER}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                            <div style={{ width:8, height:8, borderRadius:'50%', background:activeOrders>0?'#f59e0b':'#6b7280', flexShrink:0 }}/>
-                            <span style={{ color:MUTED, fontSize:13 }}>{activeOrders} orden{activeOrders!==1?'es':''} activa{activeOrders!==1?'s':''}</span>
-                          </div>
-                          <div style={{ display:'flex', gap:6 }}>
-                            <Btn onClick={()=>openET(t)} title="Editar" color="#6b7280" bg="transparent"><Pencil size={13}/></Btn>
-                            <Btn onClick={()=>delT(t.id,t.name)} title="Eliminar" color="#ef4444" bg="transparent"><Trash2 size={13}/></Btn>
-                          </div>
+                        <div style={{ display:'flex', gap:6 }}>
+                          <Btn onClick={()=>openET(t)} title="Editar" color="#6b7280" bg="transparent"><Pencil size={13}/></Btn>
+                          <Btn onClick={()=>delT(t.id,t.name)} title="Eliminar" color="#ef4444" bg="transparent"><Trash2 size={13}/></Btn>
                         </div>
                       </div>
                     </div>
