@@ -105,12 +105,37 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
 
   function openNO(){ setEditO(null); setOForm({...EMPTY_O}); setSelC(null); setCs(''); setShowOM(true); }
   function openEO(o:WorkOrder){ setEditO(o); setOForm({technician_ids:[o.technician_id],technician_id:o.technician_id,client_id:o.client_id,task_type:o.task_type,task_description:o.task_description,priority:o.priority,scheduled_date:o.scheduled_date,scheduled_time:o.scheduled_time,notes:o.notes,created_by:o.created_by}); setSelC({id:o.client_id,name:o.client_name??'',address:o.client_address??'',neighborhood:o.client_neighborhood??'',commune:'',cellphone:o.client_phone??'',plan:o.client_plan??'',status:o.client_status??'',cedula:'',punto_referencia:o.client_punto_referencia??''}); setCs(o.client_name??'');setShowOM(true); }
-  async function saveO(){ const ids=oForm.technician_ids??[]; if(ids.length===0){alert('Selecciona al menos un tecnico');return;} if(!oForm.client_id){alert('Selecciona un cliente');return;} if(!oForm.task_type){alert('Selecciona el tipo de tarea');return;} setSaving(true); try{ if(editO){ const body={...oForm,technician_id:oForm.technician_id,status:editO.status,whatsapp_tech_sent:editO.whatsapp_tech_sent,whatsapp_client_sent:editO.whatsapp_client_sent}; const r=await fetch(`/api/work-orders/${editO.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok){const e=await r.json();alert(e.error??'Error');return;} } else { for(const tid of ids){ const body={...oForm,technician_id:tid}; const r=await fetch('/api/work-orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok){const e=await r.json();alert(e.error??'Error: tecnico '+tid);return;} } } setShowOM(false);fetchO(); }finally{setSaving(false);} }
+  async function saveO(){
+    const ids=oForm.technician_ids??[];
+    if(ids.length===0){alert('Selecciona al menos un tecnico');return;}
+    if(!oForm.client_id){alert('Selecciona un cliente');return;}
+    if(!oForm.task_type){alert('Selecciona el tipo de tarea');return;}
+    setSaving(true);
+    try{
+      const primaryId = ids[0];
+      const extraTechs = ids.slice(1).map(tid=>{ const t=technicians.find(x=>x.id===tid); return t?t.name:''; }).filter(Boolean);
+      let notesVal = oForm.notes??'';
+      if(extraTechs.length>0){
+        const extraLine = 'Tecnicos adicionales: '+extraTechs.join(', ');
+        notesVal = notesVal ? notesVal+' | '+extraLine : extraLine;
+      }
+      if(editO){
+        const body={...oForm,technician_id:oForm.technician_id,notes:notesVal,status:editO.status,whatsapp_tech_sent:editO.whatsapp_tech_sent,whatsapp_client_sent:editO.whatsapp_client_sent};
+        const r=await fetch(`/api/work-orders/${editO.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        if(!r.ok){const e=await r.json();alert(e.error??'Error');return;}
+      } else {
+        const body={...oForm,technician_id:primaryId,notes:notesVal};
+        const r=await fetch('/api/work-orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        if(!r.ok){const e=await r.json();alert(e.error??'Error');return;}
+      }
+      setShowOM(false);fetchO();
+    }finally{setSaving(false);}
+  }
   async function delO(id:number,num:string){ if(!confirm(`Eliminar orden ${num}?`))return; await fetch(`/api/work-orders/${id}`,{method:'DELETE'}); fetchO(); }
   async function chgStatus(id:number,status:string,o:WorkOrder){ await fetch(`/api/work-orders/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,status})}); fetchO(); }
 
-  async function waT(o:WorkOrder){ const t=tCfg(o.task_type); const msg=[`ORDEN DE SERVICIO - MEDIFIBRA S.A.S`,`Orden: ${o.order_number}`,``,`Tecnico: ${o.technician_name}`,`Tarea: ${t?.label??o.task_type}`,`Fecha: ${o.scheduled_date||'Por definir'}${o.scheduled_time?' a las '+o.scheduled_time:''}`,``,`CLIENTE:`,`Nombre: ${o.client_name}`,`Direccion: ${o.client_address??''}${o.client_neighborhood?', '+o.client_neighborhood:''}`,o.client_punto_referencia?`Referencia: ${o.client_punto_referencia}`:'',`Telefono: ${o.client_phone}`,`Plan: ${o.client_plan}`,o.task_description?`\nDescripcion: ${o.task_description}`:'',o.notes?`\nNovedades: ${o.notes}`:'',``,`Confirme recibido.`,`Mariana - Medifibra S.A.S`].filter(Boolean).join('\n').trim(); window.open(`https://wa.me/57${o.technician_phone}?text=${encodeURIComponent(msg)}`,'_blank'); await fetch(`/api/work-orders/${o.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,whatsapp_tech_sent:1})}); fetchO(); }
-  async function waC(o:WorkOrder){ const t=tCfg(o.task_type); const msg=[`MEDIFIBRA S.A.S - Agendamiento de Visita Tecnica`,`Orden: ${o.order_number}`,``,`Estimado(a) ${o.client_name},`,``,`Le informamos que hemos programado una visita tecnica:`,`Servicio: ${t?.label??o.task_type}`,`Fecha: ${o.scheduled_date||'Por definir'}${o.scheduled_time?' a las '+o.scheduled_time+' hrs':''}`,`Tecnico asignado: ${o.technician_name}`,``,`Direccion registrada: ${o.client_address??''}`,``,`Para dudas comuniquese al 333 728 8745`,``,`Medifibra S.A.S - "Conectate con velocidad real"`].join('\n'); window.open(`https://wa.me/57${o.client_phone}?text=${encodeURIComponent(msg)}`,'_blank'); await fetch(`/api/work-orders/${o.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,whatsapp_client_sent:1})}); fetchO(); }
+  async function waT(o:WorkOrder){ const t=tCfg(o.task_type); const msg=[`ORDEN DE SERVICIO - MEDIFIBRA S.A.S`,`Orden: ${o.order_number}`,``,`Tecnicos: ${o.technician_name}${o.notes&&o.notes.includes('Tecnicos adicionales:')?', '+o.notes.split('Tecnicos adicionales:')[1].trim():''}`,`Tarea: ${t?.label??o.task_type}`,`Fecha: ${o.scheduled_date||'Por definir'}${o.scheduled_time?' a las '+o.scheduled_time:''}`,``,`CLIENTE:`,`Nombre: ${o.client_name}`,`Direccion: ${o.client_address??''}${o.client_neighborhood?', '+o.client_neighborhood:''}`,o.client_punto_referencia?`Referencia: ${o.client_punto_referencia}`:'',`Telefono: ${o.client_phone}`,`Plan: ${o.client_plan}`,o.task_description?`\nDescripcion: ${o.task_description}`:'',o.notes?`\nNovedades: ${o.notes}`:'',``,`Confirme recibido.`,`Mariana - Medifibra S.A.S`].filter(Boolean).join('\n').trim(); window.open(`https://wa.me/57${o.technician_phone}?text=${encodeURIComponent(msg)}`,'_blank'); await fetch(`/api/work-orders/${o.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,whatsapp_tech_sent:1})}); fetchO(); }
+  async function waC(o:WorkOrder){ const t=tCfg(o.task_type); const msg=[`MEDIFIBRA S.A.S - Agendamiento de Visita Tecnica`,`Orden: ${o.order_number}`,``,`Estimado(a) ${o.client_name},`,``,`Le informamos que hemos programado una visita tecnica:`,`Servicio: ${t?.label??o.task_type}`,`Fecha: ${o.scheduled_date||'Por definir'}${o.scheduled_time?' a las '+o.scheduled_time+' hrs':''}`,`Tecnicos asignados: ${o.technician_name}${o.notes&&o.notes.includes('Tecnicos adicionales:')?', '+o.notes.split('Tecnicos adicionales:')[1].trim():''}`,``,`Direccion registrada: ${o.client_address??''}`,``,`Para dudas comuniquese al 333 728 8745`,``,`Medifibra S.A.S - "Conectate con velocidad real"`].join('\n'); window.open(`https://wa.me/57${o.client_phone}?text=${encodeURIComponent(msg)}`,'_blank'); await fetch(`/api/work-orders/${o.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,whatsapp_client_sent:1})}); fetchO(); }
 
   const filtered=workOrders.filter(o=>oTab==='all'||o.status===oTab);
   const stats={ total:workOrders.length, pending:workOrders.filter(o=>o.status==='pending').length, in_progress:workOrders.filter(o=>o.status==='in_progress').length, completed:workOrders.filter(o=>o.status==='completed').length };
