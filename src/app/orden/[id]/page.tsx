@@ -306,19 +306,6 @@ export default function OrdenPage() {
           </div>
         )}
 
-        {/* FIRMAS */}
-        <div style={{ padding: '20px 44px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-          {[
-            { label: 'Firma del Tecnico', name: order.technician_name },
-            { label: 'Firma del Cliente',  name: order.client_name },
-          ].map(({ label, name }) => (
-            <div key={label} style={{ background: '#f8fafc', borderRadius: 10, padding: '24px 20px 18px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-              <div style={{ height: 70, borderBottom: '1.5px solid #cbd5e1', marginBottom: 12 }}></div>
-              <div style={{ color: '#64748b', fontSize: 13, fontWeight: 600 }}>{label}</div>
-              <div style={{ color: '#1e293b', fontSize: 14, fontWeight: 700, marginTop: 4 }}>{name}</div>
-            </div>
-          ))}
-        </div>
 
         {/* FOOTER + BARCODE */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 44px 30px', marginTop: 20, borderTop: '1px solid #e2e8f0' }}>
