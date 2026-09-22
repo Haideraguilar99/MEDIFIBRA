@@ -1,5 +1,6 @@
 'use client'
 import TecnicosTab from '@/components/TecnicosTab';
+import PagosTab from '@/components/PagosTab';
 import ResultadosTab from '@/components/ResultadosTab';
 import CobrosTab from '@/components/CobrosTab';
 import PorConfirmarTab from '@/components/PorConfirmarTab';
@@ -81,7 +82,6 @@ const EMPTY_CLIENT = {
   fecha_instalacion:'', incluye_tv:0, dia_pago:'',
   referido_nombre:'', referido_telefono:'',
 }
-const EMPTY_PAYMENT = { client_id:0, amount:0, period:'', method:'efectivo', status:'paid', notes:'' }
 const METHODS = ['efectivo','bancolombia','bre-b','transferencia']
 
 
@@ -113,24 +113,19 @@ export default function Dashboard() {
   const [plans,        setPlans]        = useState<{id:string;name:string;speed:number;value:number;color:string;label:string}[]>([])
   const [tvPlan,       setTvPlan]       = useState<{name:string;value:number}>({name:'Televisión',value:30000})
   const [clients,      setClients]      = useState<Client[]>([])
-  const [payments,     setPayments]     = useState<Payment[]>([])
   const [stats,        setStats]        = useState<Stats>({ total:0, active:0, suspended:0, monthly_income:0 })
-  const [payStats,     setPayStats]     = useState<PaymentStats>({ total:0, total_amount:0, paid_amount:0, pending_amount:0 })
   const [classStats,   setClassStats]   = useState<ClassStat[]>([])
   const [reports,      setReports]      = useState<ReportData|null>(null)
   const [showModal,    setShowModal]    = useState(false)
   const [savingClient, setSavingClient] = useState(false)
   const [viewClient,   setViewClient]   = useState<Client|null>(null)
-  const [showPayModal, setShowPayModal] = useState(false)
   const [showWAModal,  setShowWAModal]  = useState(false)
   const [waClient,     setWAClient]     = useState<Client|null>(null)
   const [waMessage,    setWAMessage]    = useState('')
   const [waEdited,     setWAEdited]     = useState(false)
   const [waSending,    setWASending]    = useState(false)
   const [editClient,   setEditClient]   = useState<Client|null>(null)
-  const [editPayment,  setEditPayment]  = useState<Payment|null>(null)
   const [form,         setForm]         = useState(EMPTY_CLIENT)
-  const [payForm,      setPayForm]      = useState(EMPTY_PAYMENT)
 
   const [dbStatus,     setDbStatus]     = useState<'checking'|'ok'|'error'>('checking')
   const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'|'tecnicos'|'resultados'|'cobros'|'porconfirmar'|'facturas'>('dashboard')
@@ -149,16 +144,6 @@ export default function Dashboard() {
       setClassStats(data.byClassification ?? [])
       setDbStatus('ok')
     } catch { setDbStatus('error') }
-  }, [])
-
-  const fetchPayments = useCallback(async () => {
-    try {
-      const res = await fetch('/api/payments')
-      if (!res.ok) return
-      const data = await res.json()
-      setPayments(data.payments ?? [])
-      setPayStats(data.stats ?? { total:0, total_amount:0, paid_amount:0, pending_amount:0 })
-    } catch {}
   }, [])
 
   const fetchPlans = useCallback(async () => {
@@ -184,19 +169,18 @@ export default function Dashboard() {
       .then(r => { if (r.ok) setDbStatus('ok'); else setDbStatus('error') })
       .catch(() => setDbStatus('error'))
       .finally(() => {
-        fetchClients(); fetchPayments(); fetchReports(); fetchPlans()
+        fetchClients(); fetchReports(); fetchPlans()
       })
-  }, [fetchClients, fetchPayments, fetchReports])
+  }, [fetchClients, fetchReports])
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (document.visibilityState === 'hidden') return
       fetchClients()
-      fetchPayments()
       fetchReports()
     }, 60000)
     return () => clearInterval(interval)
-  }, [fetchClients, fetchPayments, fetchReports, fetchPlans])
+  }, [fetchClients, fetchReports, fetchPlans])
 
   const handleSaveClient = async () => {
     if (!form.name||!form.cellphone||!form.plan) { toast.error('Nombre, celular y plan son obligatorios'); return }
@@ -210,25 +194,9 @@ export default function Dashboard() {
     } finally { setSavingClient(false) }
   }
 
-  const handleSavePayment = async () => {
-    if (!payForm.client_id||!payForm.amount||!payForm.period) { toast.error('Cliente, monto y período son obligatorios'); return }
-    const url = editPayment ? `/api/payments/${editPayment.id}` : '/api/payments'
-    const res = await fetch(url, { method: editPayment?'PUT':'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payForm) })
-    if (res.ok) { setShowPayModal(false); setEditPayment(null); setPayForm(EMPTY_PAYMENT); fetchPayments(); fetchReports() }
-    else toast.error('Error al guardar pago')
-  }
-
   const handleDeleteClient  = async (id:number) => { if (!confirm('¿Eliminar este cliente?')) return; await fetch(`/api/clients/${id}`,{method:'DELETE'}); fetchClients() }
-  const handleDeletePayment = async (id:number) => { if (!confirm('¿Eliminar este pago?')) return; await fetch(`/api/payments/${id}`,{method:'DELETE'}); fetchPayments(); fetchReports() }
 
   const openEditClient = (c:Client) => { setEditClient(c); setForm({...c, incluye_tv: Number(c.incluye_tv)}); setShowModal(true) }
-  const openNewPayment = (clientId?:number) => {
-    setEditPayment(null)
-    const client = clientId ? clients.find(c=>c.id===clientId) : null
-    setPayForm({ ...EMPTY_PAYMENT, client_id: clientId??0, amount: client?.plan_value??0, period: new Date().toISOString().slice(0,7) })
-    setShowPayModal(true)
-  }
-  const openEditPayment = (p:Payment) => { setEditPayment(p); setPayForm({ client_id:p.client_id, amount:p.amount, period:p.period, method:p.method, status:p.status, notes:p.notes }); setShowPayModal(true) }
   const getPlanColor = (n:string) => plans.find(p=>p.name===n)?.color ?? '#64748b'
   // ── Plantillas WhatsApp por clasificacion ─────────────────────────────────
   const buildWAMessage = (cl: Client): string => {
@@ -490,11 +458,8 @@ export default function Dashboard() {
               <MetricCard label="Total Clientes"    value={stats.total}/>
               <MetricCard label="Activos"           value={stats.active}/>
               <MetricCard label="Suspendidos"       value={stats.suspended}/>
-              <MetricCard label="Pagos Registrados" value={payStats.total??0}/>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-              <MetricCard label="Total Cobrado"  value={formatCurrency(payStats.paid_amount??0)}/>
-              <MetricCard label="Pendiente"      value={formatCurrency(payStats.pending_amount??0)}/>
               <MetricCard label="Ingresos / Mes" value={formatCurrency(stats.monthly_income??0)}/>
             </div>
 
@@ -551,31 +516,6 @@ export default function Dashboard() {
                 </table>
               </div>
               <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,boxShadow:'0 1px 3px rgba(0,0,0,0.04)'}} className="rounded-xl overflow-hidden">
-                <div className="px-5 py-4 flex items-center justify-between" style={{borderBottom:`1px solid ${BORDER}`}}>
-                  <h2 className="text-sm font-semibold uppercase tracking-wider" style={{color:MUTED}}>Últimos Pagos</h2>
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{backgroundColor:CARD2,color:MUTED}}>{payments.length} total</span>
-                </div>
-                <table className="w-full">
-                  <thead><tr style={{backgroundColor:CARD2,borderBottom:`1px solid ${BORDER}`}}>
-                    {['Cliente','Monto','Estado'].map(h=><th key={h} className="text-left px-5 py-2.5 text-xs font-semibold uppercase tracking-wider" style={{color:MUTED}}>{h}</th>)}
-                  </tr></thead>
-                  <tbody>
-                    {payments.slice(0,6).map(p=>(
-                      <tr key={p.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-black/[0.02] transition-colors">
-                        <td className="px-5 py-3 font-semibold text-sm" style={{color:TEXT}}>{p.client_name}</td>
-                        <td className="px-5 py-3 font-bold text-sm" style={{color:'#16A34A'}}>{formatCurrency(p.amount)}</td>
-                        <td className="px-5 py-3">
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{
-                            backgroundColor: p.status==='paid' ? '#F0FDF4' : '#FFFBEB',
-                            color: p.status==='paid' ? '#16A34A' : '#D97706',
-                            border: `1px solid ${p.status==='paid' ? '#BBF7D0' : '#FDE68A'}`
-                          }}>{p.status==='paid'?'Pagado':'Pendiente'}</span>
-                        </td>
-                      </tr>
-                    ))}
-                    {!payments.length&&<tr><td colSpan={3} className="py-10 text-center text-sm" style={{color:MUTED}}>Sin pagos aún</td></tr>}
-                  </tbody>
-                </table>
               </div>
             </div>
           </>
@@ -731,7 +671,6 @@ export default function Dashboard() {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
-                            <button onClick={()=>openNewPayment(c.id)} title="Registrar pago" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#F0FDF4',color:'#16A34A'}}><CreditCard className="w-3.5 h-3.5"/></button>
                             <Link href={`/factura/${c.id}`} target="_blank" title="Factura" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#EFF6FF',color:'#2563EB'}}><FileText className="w-3.5 h-3.5"/></Link>
                             <button onClick={()=>openWAModal(c)} title="WhatsApp" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#F0FDF4',color:'#16A34A'}}><MessageCircle className="w-3.5 h-3.5"/></button>
                             <button onClick={()=>setViewClient(c)} title="Ver detalle" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#0f2744',color:'#60a5fa'}}><Eye className="w-3.5 h-3.5"/></button>
@@ -751,80 +690,12 @@ export default function Dashboard() {
 
         {/* ── PAGOS ── */}
         {tab==='payments'&&(
-          <div className="space-y-5">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
-              <MetricCard label="Total Pagos"     value={payStats.total??0}/>
-              <MetricCard label="Total Recaudado" value={formatCurrency(payStats.total_amount??0)}/>
-              <MetricCard label="Cobrado"          value={formatCurrency(payStats.paid_amount??0)}/>
-              <MetricCard label="Pendiente"        value={formatCurrency(payStats.pending_amount??0)}/>
-            </div>
-            <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
-                <div>
-                  <h2 className="font-semibold text-base" style={{color:TEXT}}>Historial de Pagos</h2>
-                  <p className="text-xs mt-0.5" style={{color:MUTED}}>{payments.length} registros</p>
-                </div>
-                <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{backgroundColor:CARD2,color:MUTED}}>Solo lectura</span>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead><tr style={{backgroundColor:CARD2,borderBottom:`1px solid ${BORDER}`}}>
-                    {['Cliente','Celular','Período','Monto','Método','Estado','Fecha'].map(h=>(
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
-                    ))}
-                  </tr></thead>
-                  <tbody>
-                    {payments.map(p=>(
-                      <tr key={p.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-black/[0.02] transition-colors">
-                        <td className="px-4 py-3 font-semibold text-sm whitespace-nowrap" style={{color:TEXT}}>{p.client_name}</td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap font-medium" style={{color:LIGHT}}>{p.cellphone}</td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap font-medium" style={{color:LIGHT}}>{p.period}</td>
-                        <td className="px-4 py-3 font-bold text-sm whitespace-nowrap" style={{color:'#16A34A'}}>{formatCurrency(p.amount)}</td>
-                        <td className="px-4 py-3 text-xs font-medium capitalize whitespace-nowrap" style={{color:LIGHT}}>{p.method}</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{
-                            backgroundColor:p.status==='paid'?'#F0FDF4':'#FFFBEB',
-                            color:p.status==='paid'?'#16A34A':'#D97706',
-                            border:`1px solid ${p.status==='paid'?'#BBF7D0':'#FDE68A'}`
-                          }}>{p.status==='paid'?'Pagado':'Pendiente'}</span>
-                        </td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap font-medium" style={{color:MUTED}}>{p.created_at?.slice(0,10)}</td>
-
-                      </tr>
-                    ))}
-                    {!payments.length&&<tr><td colSpan={7} className="py-12 text-center text-sm" style={{color:MUTED}}>No hay pagos registrados aún</td></tr>}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          <div>
+            <PagosTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
           </div>
         )}
 
-        {/* ── REPORTES ── */}
-        {tab==='tecnicos'&&(
-          <div style={{padding:'0'}}>
-            <TecnicosTab dark={dark} BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
-          </div>
-        )}
-        {tab==='resultados'&&(
-          <ResultadosTab dark={dark} BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
-        )}
-        {tab==='cobros'&&(
-          <div className="p-2">
-            <CobrosTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED} onOpenWA={(c) => openWAModal(c as unknown as Client)}/>
-          </div>
-        )}
-        {tab==='porconfirmar'&&(
-          <div className="p-2">
-            <PorConfirmarTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
-          </div>
-        )}
-        {tab==='facturas'&&(
-          <div className="p-2">
-            <FacturasTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
-          </div>
-        )}
-        {tab==='reports'&&(
+                {tab==='reports'&&(
           <div className="space-y-5">
             <div className="flex items-center gap-3 pb-1">
               <BarChart2 className="w-5 h-5" style={{color:BLUE}}/>
@@ -900,9 +771,6 @@ export default function Dashboard() {
                         <td className="px-4 py-3 text-yellow-400 font-semibold whitespace-nowrap">{formatCurrency(c.plan_value)}</td>
                         <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>{c.payment_date}</td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <button onClick={()=>openNewPayment(c.id)} style={{backgroundColor:'#16a34a'}} className="flex items-center gap-1 hover:opacity-90 text-xs px-3 py-1.5 rounded-lg transition-opacity font-medium text-white">
-                            <CreditCard className="w-3 h-3"/> Registrar
-                          </button>
                         </td>
                       </tr>
                     ))}
@@ -1050,7 +918,6 @@ export default function Dashboard() {
 {/* ══ MODAL CLIENTE ══ */}
       {showModal&&(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.85)'}}>
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.6)'}}>
           <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,boxShadow:'0 20px 60px rgba(0,0,0,0.15)'}} className="rounded-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 sticky top-0 z-10" style={{backgroundColor:CARD,borderBottom:`1px solid ${BORDER}`}}>
               <div>
@@ -1216,61 +1083,8 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </div>
       )}
 
-      {/* ══ MODAL PAGO ══ */}
-      {showPayModal&&(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.85)'}}>
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{backgroundColor:'rgba(0,0,0,0.6)'}}>
-          <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`,boxShadow:'0 20px 60px rgba(0,0,0,0.15)'}} className="rounded-2xl w-full max-w-lg">
-            <div className="flex items-center justify-between px-6 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
-              <div>
-                <h3 className="font-bold text-base" style={{color:TEXT}}>{editPayment?'Editar Pago':'Registrar Pago'}</h3>
-                <p className="text-xs mt-0.5 font-medium" style={{color:MUTED}}>Ingresa los datos del pago</p>
-              </div>
-              <button onClick={()=>setShowPayModal(false)} className="p-2 rounded-lg hover:opacity-75 transition-opacity" style={{backgroundColor:CARD2,color:MUTED}}><X className="w-4 h-4"/></button>
-            </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Cliente *</label>
-                <select value={payForm.client_id} onChange={e=>{const c=clients.find(x=>x.id===Number(e.target.value));setPayForm(p=>({...p,client_id:Number(e.target.value),amount:c?.plan_value??p.amount}))}} style={iStyle} className={iCls}>
-                  <option value={0}>Seleccionar cliente...</option>
-                  {clients.map(c=><option key={c.id} value={c.id}>{c.name} — {c.cellphone}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Período *</label>
-                <input type="month" value={payForm.period} onChange={e=>setPayForm(p=>({...p,period:e.target.value}))} style={iStyle} className={iCls}/>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Monto *</label>
-                <input type="number" value={payForm.amount} onChange={e=>setPayForm(p=>({...p,amount:Number(e.target.value)}))} style={iStyle} className={iCls}/>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Método de Pago</label>
-                <select value={payForm.method} onChange={e=>setPayForm(p=>({...p,method:e.target.value}))} style={iStyle} className={iCls}>
-                  {METHODS.map(m=><option key={m} value={m}>{m.charAt(0).toUpperCase()+m.slice(1)}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Estado</label>
-                <select value={payForm.status} onChange={e=>setPayForm(p=>({...p,status:e.target.value}))} style={iStyle} className={iCls}>
-                  <option value="paid">Pagado</option>
-                  <option value="pending">Pendiente</option>
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1.5" style={{color:MUTED}}>Notas</label>
-                <textarea value={payForm.notes} onChange={e=>setPayForm(p=>({...p,notes:e.target.value}))} rows={2} style={iStyle} className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none resize-none transition-colors"/>
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 p-5" style={{borderTop:`1px solid ${BORDER}`}}>
-              <button onClick={()=>setShowPayModal(false)} className="px-4 py-2 text-sm font-medium rounded-lg hover:opacity-75 transition-opacity" style={{backgroundColor:CARD2,color:LIGHT,border:`1px solid ${BORDER}`}}>Cancelar</button>
-              <button onClick={handleSavePayment} className="px-6 py-2 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity text-white" style={{backgroundColor:'#16A34A'}}>{editPayment?'Actualizar':'Guardar Pago'}</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
