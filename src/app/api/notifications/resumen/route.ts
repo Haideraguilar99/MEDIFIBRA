@@ -6,6 +6,8 @@ export async function GET() {
     const result = await db.execute({
       sql: `SELECT client_id, MAX(sent_at) as last_sent
             FROM notifications_log
+            WHERE type = 'cobro_enviado'
+              AND sent_at >= datetime('now', '-2 hours')
             GROUP BY client_id`,
       args: []
     })
