@@ -93,8 +93,8 @@ const NAV_ITEMS = [
   { key:'reports',   label:'Reportes',   icon: BarChart2       },
   { key:'tecnicos',  label:'Técnicos',   icon: UserCheck       },
   { key:'cobros',    label:'Cobros',      icon: DollarSign      },
-  { key:'porconfirmar', label:'Por Confirmar', icon: AlertCircle     },
   { key:'facturas',     label:'Facturas',     icon: FileText        },
+  { key:'sin_fecha',    label:'Sin Fecha',    icon: Calendar        },
 ] as const
 
 export default function Dashboard() {
@@ -128,7 +128,7 @@ export default function Dashboard() {
   const [form,         setForm]         = useState(EMPTY_CLIENT)
 
   const [dbStatus,     setDbStatus]     = useState<'checking'|'ok'|'error'>('checking')
-  const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'|'tecnicos'|'resultados'|'cobros'|'porconfirmar'|'facturas'>('dashboard')
+  const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'|'tecnicos'|'resultados'|'cobros'|'facturas'|'sin_fecha'>('dashboard')
   const [search,       setSearch]       = useState('')
   const [filterPlan,   setFilterPlan]   = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -231,6 +231,7 @@ export default function Dashboard() {
       RECOGER_EQUIPO: `${empresa} -- Aviso de Retiro de Equipos\n\nEstimado(a) ${nombre},\n\nHan transcurrido mas de 60 dias desde la suspension de tu servicio sin que se haya regularizado el pago pendiente.\n\nDe acuerdo con nuestra politica de servicio, procederemos al RETIRO DE LOS EQUIPOS instalados en tu domicilio.\n\nImportante: La no entrega de los equipos en la visita tecnica generara multas y sobrecargos adicionales.\n\nDeuda total actual: ${monto}\n\nSi deseas regularizar tu situacion antes de la visita, contactanos urgente a este numero.${firma}`,
 
       USUARIO_PERDIDO: `${empresa} -- Cierre de Cuenta\n\nEstimado(a) ${nombre},\n\nTe informamos que tu cuenta de servicio con nosotros ha sido oficialmente cerrada. Lamentamos no haber podido continuar brindandote nuestro servicio.\n\nSi en algun momento deseas volver a contratar nuestros servicios, estaremos disponibles para atenderte con gusto.\n\nHasta pronto.${firma}`,
+          SIN_FECHA: `${empresa} -- Falta tu fecha de pago\n\nHola ${nombre},\n\nTu cuenta esta activa pero no tenemos registrada tu fecha de pago mensual.\n\nPlan: ${plan}\nValor: ${monto}\n\nComunicate con nosotros para definir tu dia de pago y mantener tu servicio al dia.${firma}`,
 
       CLIENTE_NUEVO: `${empresa} -- Bienvenido\n\nHola ${nombre},\n\nBienvenido(a) a ${empresa}. Es un gusto tenerte como nuevo cliente. Tu servicio de internet ya esta activo.\n\nPlan: ${plan}\nValor mensual: ${monto}\nFecha de pago: ${dia}\n\nMedios de pago:\nBancolombia - Cuenta Ahorros: ${cuenta}\nBre-B - Llave: ${cuenta}\n\nPara cualquier consulta, contactanos por este WhatsApp.${firma}`,
     }
@@ -320,7 +321,7 @@ export default function Dashboard() {
 
   const navTabLabel: Record<string,string> = {
     dashboard:'Dashboard', plans:'Planes', clients:'Clientes',
-    payments:'Pagos', reports:'Reportes', tecnicos:'Técnicos', cobros:'Cobros', porconfirmar:'Por Confirmar', facturas:'Facturas',
+    payments:'Pagos', reports:'Reportes', tecnicos:'Técnicos', cobros:'Cobros', facturas:'Facturas', sin_fecha:'Sin Fecha',
   }
 
   return (
@@ -384,11 +385,7 @@ export default function Dashboard() {
             return <button key={item.key} onClick={()=>{setTab(item.key as typeof tab);setSidebarOpen(false)}}
               className={`sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-left ${active?'active':''}`}
               style={{color:active?'#4f6ef7':LIGHT}}><Icon className="w-4 h-4 flex-shrink-0"/><span>{item.label}</span></button>
-          })}
-          <Link href="/import" className="sb-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold" style={{color:LIGHT}}>
-            <Upload className="w-4 h-4 flex-shrink-0"/><span>Importar</span>
-          </Link>
-        </nav>
+          })}        </nav>
 
         {/* Status */}
         <div className="px-3 py-3 space-y-1.5" style={{borderTop:`1px solid ${dark?'#222222':'#e2e8f0'}`}}>
@@ -708,16 +705,59 @@ export default function Dashboard() {
             <CobrosTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED} onOpenWA={(c) => openWAModal(c as unknown as Client)}/>
           </div>
         )}
-        {tab==='porconfirmar'&&(
-          <div className="p-2">
-            <PorConfirmarTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
-          </div>
-        )}
         {tab==='facturas'&&(
           <div className="p-2">
             <FacturasTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
           </div>
         )}
+
+            {tab==='sin_fecha'&&(
+              <div className="p-4">
+                <div style={{backgroundColor:'#111827',border:'1px solid #1f2937',borderRadius:16,padding:'24px'}}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Calendar className="w-5 h-5" style={{color:'#60a5fa'}}/>
+                    <h2 className="text-base font-bold" style={{color:'#f1f5f9'}}>Clientes Sin Fecha de Pago</h2>
+                    <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full" style={{backgroundColor:'#1e3a5f',color:'#60a5fa'}}>
+                      {clients.filter(cl=>cl.classification==='SIN_FECHA').length}
+                    </span>
+                  </div>
+                  <p className="text-xs mb-5" style={{color:'#64748b'}}>Estos clientes no tienen dia de pago asignado. Editalos para completar su perfil.</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead><tr style={{backgroundColor:'#1f2937',borderBottom:'1px solid #374151'}}>
+                        {['Cliente','Cedula','Celular','Plan','Acciones'].map(h=>(
+                          <th key={h} className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{color:'#64748b'}}>{h}</th>
+                        ))}
+                      </tr></thead>
+                      <tbody>
+                        {clients.filter(cl=>cl.classification==='SIN_FECHA').map(cl=>(
+                          <tr key={cl.id} style={{borderBottom:'1px solid #1f2937'}} className="hover:bg-white/5 transition-colors">
+                            <td className="px-4 py-3">
+                              <p className="font-semibold text-sm" style={{color:'#f1f5f9'}}>{cl.name}</p>
+                              {cl.address&&<p className="text-xs mt-0.5" style={{color:'#64748b'}}>{cl.address}</p>}
+                            </td>
+                            <td className="px-4 py-3 text-sm font-medium" style={{color:'#94a3b8'}}>{cl.cedula||'—'}</td>
+                            <td className="px-4 py-3 text-sm font-medium" style={{color:'#94a3b8'}}>{cl.cellphone}</td>
+                            <td className="px-4 py-3">
+                              <span className="px-2 py-0.5 rounded text-xs text-white font-semibold" style={{backgroundColor:getPlanColor(cl.plan)}}>{cl.plan||'—'}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1.5">
+                                <button onClick={()=>openEditClient(cl)} className="p-1.5 rounded-lg hover:opacity-80" style={{backgroundColor:CARD2,color:'#94a3b8'}}><Pencil className="w-3.5 h-3.5"/></button>
+                                <button onClick={()=>openWAModal(cl)} className="p-1.5 rounded-lg hover:opacity-80" style={{backgroundColor:'#f0fdf4',color:'#16a34a'}}><MessageCircle className="w-3.5 h-3.5"/></button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {!clients.filter(cl=>cl.classification==='SIN_FECHA').length&&(
+                          <tr><td colSpan={5} className="py-10 text-center text-sm" style={{color:'#64748b'}}>Todos los clientes tienen fecha de pago asignada</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
 
         {tab==='reports'&&(
           <div className="space-y-5">
