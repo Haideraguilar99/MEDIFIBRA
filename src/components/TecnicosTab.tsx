@@ -113,7 +113,9 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
     setSaving(true);
     try{
       const primaryId = ids[0];
-      const extraTechs = ids.slice(1).map(tid=>{ const t=technicians.find(x=>x.id===tid); return t?t.name:''; }).filter(Boolean);
+      const extraIds = ids.slice(1);
+      const primaryTech = technicians.find(x=>x.id===primaryId);
+      const extraTechs = extraIds.map(tid=>{ const t=technicians.find(x=>x.id===tid); return t?t.name:''; }).filter(Boolean);
       let notesVal = oForm.notes??'';
       if(extraTechs.length>0){
         const extraLine = 'Tecnicos adicionales: '+extraTechs.join(', ');
@@ -124,9 +126,17 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
         const r=await fetch(`/api/work-orders/${editO.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         if(!r.ok){const e=await r.json();alert(e.error??'Error');return;}
       } else {
+        const allNames = [primaryTech?primaryTech.name:'Tecnico principal',...extraTechs].join(', ');
         const body={...oForm,technician_id:primaryId,notes:notesVal};
         const r=await fetch('/api/work-orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         if(!r.ok){const e=await r.json();alert(e.error??'Error');return;}
+        for(const tid of extraIds){
+          const tName = technicians.find(x=>x.id===tid)?.name??'Tecnico';
+          const secNotes = 'ACOMPANAMIENTO | Tecnico principal: '+(primaryTech?primaryTech.name:'')+(oForm.notes?' | '+oForm.notes:'');
+          const secDesc = (oForm.task_description?oForm.task_description+' ':'')+'[Equipo: '+allNames+']';
+          const secBody={...oForm,technician_id:tid,notes:secNotes,task_description:secDesc};
+          await fetch('/api/work-orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(secBody)});
+        }
       }
       setShowOM(false);fetchO();
     }finally{setSaving(false);}
