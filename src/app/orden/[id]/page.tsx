@@ -248,6 +248,11 @@ export default function OrdenPage() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: 18, color: '#0f172a', marginBottom: 6, lineHeight: 1.2 }}>{order.technician_name || 'Sin asignar'}</div>
+                {order.notes && order.notes.includes('Tecnicos adicionales:') && (
+                  <div style={{ fontSize: 13, color: '#1d4ed8', fontWeight: 600, marginTop: 4 }}>
+                    + {order.notes.split('Tecnicos adicionales:')[1].split('|')[0].trim()}
+                  </div>
+                )}
                 <div style={{ background: '#dbeafe', color: '#1d4ed8', border: '1px solid #93c5fd', borderRadius: 6, padding: '3px 10px', fontSize: 12, fontWeight: 700, display: 'inline-block', marginBottom: 12 }}>{order.technician_role}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ fontSize: 14, color: '#334155' }}><span style={{ color: '#94a3b8', fontWeight: 600 }}>C.C. </span>{order.technician_cedula || 'No registrada'}</div>
@@ -289,25 +294,12 @@ export default function OrdenPage() {
               <div style={{ color: '#94a3b8', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12, borderBottom: '1px solid #e2e8f0', paddingBottom: 10 }}>
                 DESCRIPCION DEL TRABAJO
               </div>
-              <div style={{ color: '#1e293b', fontSize: 15, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{order.task_description}</div>
+              <div style={{ color: '#1e293b', fontSize: 15, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{order.task_description.replace(/\s*\[Equipo:[^\]]*\]/g, '').trim()}</div>
             </div>
           </div>
         )}
 
-        {/* NOVEDADES */}
-        {order.notes && (
-          <div style={{ padding: '20px 44px 0' }}>
-            <div style={{ background: '#fffbeb', borderRadius: 10, padding: 24, border: '1px solid #fcd34d' }}>
-              <div style={{ color: '#92400e', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12, borderBottom: '1px solid #fde68a', paddingBottom: 10 }}>
-                NOVEDADES / OBSERVACIONES
-              </div>
-              <div style={{ color: '#78350f', fontSize: 15, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{order.notes}</div>
-            </div>
-          </div>
-        )}
-
-
-        {/* FOOTER + BARCODE */}
+                {/* FOOTER + BARCODE */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 44px 30px', marginTop: 20, borderTop: '1px solid #e2e8f0' }}>
           <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 2 }}>
             <div style={{ fontWeight: 700, color: '#64748b', marginBottom: 2, fontSize: 13 }}>Medifibra S.A.S</div>
