@@ -695,7 +695,31 @@ export default function Dashboard() {
           </div>
         )}
 
-                {tab==='reports'&&(
+                {tab==='tecnicos'&&(
+          <div style={{padding:'0'}}>
+            <TecnicosTab dark={dark} BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
+          </div>
+        )}
+        {tab==='resultados'&&(
+          <ResultadosTab dark={dark} BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
+        )}
+        {tab==='cobros'&&(
+          <div className="p-2">
+            <CobrosTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED} onOpenWA={(c) => openWAModal(c as unknown as Client)}/>
+          </div>
+        )}
+        {tab==='porconfirmar'&&(
+          <div className="p-2">
+            <PorConfirmarTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
+          </div>
+        )}
+        {tab==='facturas'&&(
+          <div className="p-2">
+            <FacturasTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
+          </div>
+        )}
+
+        {tab==='reports'&&(
           <div className="space-y-5">
             <div className="flex items-center gap-3 pb-1">
               <BarChart2 className="w-5 h-5" style={{color:BLUE}}/>
