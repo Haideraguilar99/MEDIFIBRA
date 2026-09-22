@@ -1,252 +1,244 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import { CheckCircle, Clock, FileText, Search, Zap, ExternalLink, Trash2, ChevronDown } from 'lucide-react'
+import { FileText, MessageCircle, CheckCircle, Calendar } from 'lucide-react'
 
-type Invoice = {
-  id: number; client_id: number; client_name: string; cellphone: string
-  invoice_number: string; period: string; amount: number; plan: string
-  plan_value: number; status: string; due_date: string; paid_at: string
-  method: string; notes: string; created_at: string; incluye_tv: number
+type FacturaClient = {
+  id: number
+  name: string
+  cellphone: string
+  plan: string
+  plan_value: number
+  incluye_tv: number
+  dia_pago: string
+  has_invoice: boolean
 }
-type Stats = { total: number; paid: number; pending: number; totalAmount: number; paidAmount: number }
+
+const DIAS = ['5','10','12','15','20','25','30']
 
 function fmt(v: number) { return '$' + v.toLocaleString('es-CO') }
-function fmtDate(d: string) { return d ? new Date(d).toLocaleDateString('es-CO') : '—' }
 
-const METHODS = ['efectivo','bancolombia','bre-b','transferencia']
-const now = new Date()
-const CURRENT_PERIOD = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
-const PREV_PERIOD = (() => { const d = new Date(now.getFullYear(), now.getMonth()-1, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` })()
+function getActiveDia(): string {
+  const today = new Date()
+  const d = today.getDate()
+  const target = d + 5
+  // Buscar el día fijo >= target dentro del mes
+  for (const dia of DIAS) {
+    if (parseInt(dia) >= target) return dia
+  }
+  // Si ninguno en este mes, el primero del siguiente (día 5)
+  return '5'
+}
+
+function getCurrentPeriod(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+}
 
 export default function FacturasTab({
   BG, CARD, CARD2, BORDER, TEXT, MUTED
 }: {
   BG: string; CARD: string; CARD2: string; BORDER: string; TEXT: string; MUTED: string
 }) {
-  const [invoices, setInvoices] = useState<Invoice[]>([])
-  const [stats,    setStats]    = useState<Stats>({ total:0, paid:0, pending:0, totalAmount:0, paidAmount:0 })
-  const [loading,  setLoading]  = useState(true)
-  const [saving,   setSaving]   = useState<number|null>(null)
-  const [search,   setSearch]   = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
-  const [period,   setPeriod]   = useState(CURRENT_PERIOD)
-  const [generating, setGenerating] = useState(false)
-  const [genResult,  setGenResult]  = useState<{created:number;skipped:number}|null>(null)
+  const [activeTab, setActiveTab]     = useState<string>(getActiveDia())
+  const [clients,   setClients]       = useState<Record<string, FacturaClient[]>>({})
+  const [loading,   setLoading]       = useState(true)
+  const [sending,   setSending]       = useState<number|null>(null)
+  const [done,      setDone]          = useState<Record<number, boolean>>({})
+
+  const period = getCurrentPeriod()
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({ period })
-      if (filterStatus) params.set('status', filterStatus)
-      const r = await fetch(`/api/invoices?${params}`)
+      // Cargar clientes activos con su dia_pago y si ya tienen factura este período
+      const r = await fetch(`/api/facturas-pendientes?period=${period}`)
+      if (!r.ok) throw new Error('Error cargando')
       const data = await r.json()
-      setInvoices(data.invoices || [])
-      setStats(data.stats || { total:0, paid:0, pending:0, totalAmount:0, paidAmount:0 })
+      const map: Record<string, FacturaClient[]> = {}
+      for (const dia of DIAS) { map[dia] = [] }
+      for (const c of (data.clients as FacturaClient[])) {
+        if (map[c.dia_pago] && !c.has_invoice) {
+          map[c.dia_pago].push(c)
+        }
+      }
+      setClients(map)
     } catch {}
     finally { setLoading(false) }
-  }, [period, filterStatus])
+  }, [period])
 
   useEffect(() => { load() }, [load])
 
-  const markPaid = async (inv: Invoice, method: string) => {
-    setSaving(inv.id)
+  const generarYEnviar = async (c: FacturaClient) => {
+    setSending(c.id)
     try {
-      await fetch(`/api/invoices/${inv.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'paid', method })
-      })
-      await load()
-    } catch {}
-    finally { setSaving(null) }
-  }
-
-  const markPending = async (inv: Invoice) => {
-    setSaving(inv.id)
-    try {
-      await fetch(`/api/invoices/${inv.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'pending' })
-      })
-      await load()
-    } catch {}
-    finally { setSaving(null) }
-  }
-
-  const deleteInv = async (id: number) => {
-    if (!confirm('¿Eliminar esta factura?')) return
-    try {
-      await fetch(`/api/invoices/${id}`, { method: 'DELETE' })
-      await load()
-    } catch {}
-  }
-
-  const generate = async () => {
-    setGenerating(true)
-    setGenResult(null)
-    try {
+      // 1. Generar factura individual
       const r = await fetch('/api/invoices/generar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ period })
+        body: JSON.stringify({ period, dia_pago: c.dia_pago }),
       })
-      const data = await r.json()
-      setGenResult({ created: data.created, skipped: data.skipped })
-      await load()
-    } catch {}
-    finally { setGenerating(false) }
+      if (!r.ok) { alert('Error al generar factura'); return }
+
+      // 2. Abrir WhatsApp con link a la factura
+      const phone = (c.cellphone ?? '').replace(/\D/g, '')
+      const monto = fmt(c.plan_value + (c.incluye_tv || 0))
+      const linkFactura = `${window.location.origin}/factura/${c.id}`
+      const msg = encodeURIComponent(
+        `Medifibra S.A.S -- Factura de Servicio\n\nHola ${c.name},\n\nTe enviamos tu factura correspondiente al periodo ${period}.\n\nPlan: ${c.plan}\nValor: ${monto}\n\nVer factura: ${linkFactura}\n\nRealiza tu pago antes del dia ${c.dia_pago} de este mes.\n-- Medifibra S.A.S | 333 728 8745`
+      )
+      window.open(`https://wa.me/57${phone}?text=${msg}`, '_blank')
+
+      // 3. Marcar como hecho localmente
+      setDone(prev => ({ ...prev, [c.id]: true }))
+      setClients(prev => ({
+        ...prev,
+        [c.dia_pago]: (prev[c.dia_pago] || []).filter(x => x.id !== c.id)
+      }))
+    } catch {
+      alert('Error inesperado')
+    } finally {
+      setSending(null)
+    }
   }
 
-  const filtered = invoices.filter(inv =>
-    inv.client_name?.toLowerCase().includes(search.toLowerCase()) ||
-    inv.invoice_number?.toLowerCase().includes(search.toLowerCase()) ||
-    inv.cellphone?.includes(search)
-  )
+  const tabClients = clients[activeTab] || []
+  const activeDia  = getActiveDia()
 
-  const pctPaid = stats.total > 0 ? Math.round((stats.paid / stats.total) * 100) : 0
+  const diaLabel = (dia: string) => {
+    const count = (clients[dia] || []).length
+    return { count, isActive: dia === activeDia }
+  }
 
   return (
     <div className="space-y-4 max-w-5xl mx-auto">
 
-      {/* Header métricas */}
+      {/* Header */}
       <div className="rounded-xl p-5" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}` }}>
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <div>
-            <h2 className="text-base font-bold" style={{ color: TEXT }}>Facturación</h2>
-            <p className="text-xs mt-0.5" style={{ color: MUTED }}>Gestión de facturas y cobros por período</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <select value={period} onChange={e => setPeriod(e.target.value)}
-              className="text-sm rounded-lg px-3 py-1.5 outline-none"
-              style={{ backgroundColor: CARD2, border: `1px solid ${BORDER}`, color: TEXT }}>
-              <option value={CURRENT_PERIOD}>Mes actual ({CURRENT_PERIOD})</option>
-              <option value={PREV_PERIOD}>Mes anterior ({PREV_PERIOD})</option>
-            </select>
-            <button onClick={generate} disabled={generating}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50"
-              style={{ backgroundColor: '#4f6ef720', border: '1px solid #4f6ef7', color: '#4f6ef7' }}>
-              <Zap className="w-3.5 h-3.5"/>
-              {generating ? 'Generando...' : 'Generar ciclo'}
+        <div className="flex items-center gap-3 mb-1">
+          <Calendar className="w-5 h-5" style={{ color: '#4f6ef7' }}/>
+          <h2 className="text-base font-bold" style={{ color: TEXT }}>Facturacion por Fecha</h2>
+          <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold"
+            style={{ backgroundColor: '#4f6ef720', color: '#4f6ef7' }}>
+            Periodo {period}
+          </span>
+        </div>
+        <p className="text-xs" style={{ color: MUTED }}>
+          Genera y envia la factura a cada cliente 5 dias antes de su fecha de pago. La pestana resaltada es la que vence hoy +5 dias.
+        </p>
+      </div>
+
+      {/* Pestanas por dia */}
+      <div className="flex gap-2 flex-wrap">
+        {DIAS.map(dia => {
+          const { count, isActive } = diaLabel(dia)
+          const isSelected = dia === activeTab
+          return (
+            <button key={dia} onClick={() => setActiveTab(dia)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold transition-all"
+              style={{
+                backgroundColor: isSelected ? '#4f6ef7' : isActive ? '#4f6ef720' : CARD,
+                color: isSelected ? '#ffffff' : isActive ? '#4f6ef7' : MUTED,
+                border: `2px solid ${isSelected ? '#4f6ef7' : isActive ? '#4f6ef7' : BORDER}`,
+              }}>
+              Dia {dia}
+              {count > 0 && (
+                <span className="text-xs px-1.5 py-0.5 rounded-full font-black"
+                  style={{
+                    backgroundColor: isSelected ? 'rgba(255,255,255,0.25)' : '#f8717120',
+                    color: isSelected ? '#ffffff' : '#f87171',
+                  }}>
+                  {count}
+                </span>
+              )}
+              {isActive && !isSelected && (
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"/>
+              )}
             </button>
-          </div>
-        </div>
-
-        {genResult && (
-          <div className="mb-3 px-3 py-2 rounded-lg text-xs font-medium" style={{ backgroundColor: '#6ee7b715', border: '1px solid #6ee7b7', color: '#6ee7b7' }}>
-            Ciclo generado: {genResult.created} facturas nuevas · {genResult.skipped} ya existían
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { label: 'Total',     value: stats.total,                    color: TEXT },
-            { label: 'Pagadas',   value: stats.paid,                     color: '#6ee7b7' },
-            { label: 'Pendientes',value: stats.pending,                  color: '#fb923c' },
-            { label: 'Recaudado', value: fmt(stats.paidAmount),          color: '#4f6ef7' },
-          ].map(m => (
-            <div key={m.label} className="rounded-lg p-3" style={{ backgroundColor: CARD2 }}>
-              <p className="text-xs" style={{ color: MUTED }}>{m.label}</p>
-              <p className="text-xl font-black mt-0.5" style={{ color: m.color }}>{m.value}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-3">
-          <div className="w-full rounded-full h-2" style={{ backgroundColor: CARD2 }}>
-            <div className="h-2 rounded-full transition-all duration-500" style={{ width: `${pctPaid}%`, backgroundColor: '#6ee7b7' }}/>
-          </div>
-          <p className="text-xs mt-1 text-right" style={{ color: MUTED }}>{pctPaid}% cobrado · {fmt(stats.totalAmount - stats.paidAmount)} pendiente</p>
-        </div>
+          )
+        })}
       </div>
 
-      {/* Filtros */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: MUTED }}/>
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar cliente, factura o celular..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
-            style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, color: TEXT }}/>
-        </div>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="text-sm rounded-xl px-3 py-2 outline-none"
-          style={{ backgroundColor: CARD, border: `1px solid ${BORDER}`, color: TEXT }}>
-          <option value="">Todos</option>
-          <option value="pending">Pendientes</option>
-          <option value="paid">Pagadas</option>
-        </select>
-      </div>
-
-      {/* Lista */}
+      {/* Lista de clientes de la pestana activa */}
       {loading ? (
         <div className="flex items-center justify-center h-40">
           <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/>
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-xl p-10 text-center" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}` }}>
-          <FileText className="w-10 h-10 mx-auto mb-3" style={{ color: MUTED }}/>
-          <p className="font-semibold" style={{ color: TEXT }}>
-            {stats.total === 0 ? 'Sin facturas para este período' : 'No hay resultados'}
+      ) : tabClients.length === 0 ? (
+        <div className="rounded-xl p-12 text-center" style={{ backgroundColor: CARD, border: `1px solid ${BORDER}` }}>
+          <CheckCircle className="w-10 h-10 mx-auto mb-3" style={{ color: '#6ee7b7' }}/>
+          <p className="font-semibold" style={{ color: TEXT }}>Dia {activeTab} al dia</p>
+          <p className="text-xs mt-1" style={{ color: MUTED }}>
+            Todos los clientes con fecha de pago dia {activeTab} ya tienen su factura generada este periodo.
           </p>
-          {stats.total === 0 && (
-            <p className="text-xs mt-1" style={{ color: MUTED }}>Presiona "Generar ciclo" para crear las facturas del mes</p>
-          )}
         </div>
       ) : (
         <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
-          {filtered.map((inv, i) => {
-            const isPaid = inv.status === 'paid'
-            const isSaving = saving === inv.id
+          <div className="px-4 py-3 flex items-center justify-between"
+            style={{ backgroundColor: CARD2, borderBottom: `1px solid ${BORDER}` }}>
+            <span className="text-sm font-bold" style={{ color: TEXT }}>
+              Clientes dia {activeTab} — {tabClients.length} pendientes
+            </span>
+            <button
+              onClick={async () => {
+                if (!confirm(`Generar y enviar factura a los ${tabClients.length} clientes del dia ${activeTab}?`)) return
+                for (const c of tabClients) { await generarYEnviar(c) }
+              }}
+              className="text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
+              style={{ backgroundColor: '#4f6ef720', color: '#4f6ef7', border: '1px solid #4f6ef7' }}>
+              Enviar todos ({tabClients.length})
+            </button>
+          </div>
+
+          {tabClients.map((c, i) => {
+            const isSending = sending === c.id
+            const isDone = done[c.id]
             return (
-              <div key={inv.id} className="flex items-center gap-3 px-4 py-3.5 text-sm"
-                style={{ backgroundColor: i % 2 === 0 ? CARD : BG, borderTop: i > 0 ? `1px solid ${BORDER}` : undefined, opacity: isSaving ? 0.6 : 1 }}>
+              <div key={c.id}
+                className="flex items-center gap-3 px-4 py-3.5 text-sm transition-all"
+                style={{
+                  backgroundColor: isDone ? '#6ee7b708' : i % 2 === 0 ? CARD : BG,
+                  borderTop: i > 0 ? `1px solid ${BORDER}` : undefined,
+                  opacity: isSending ? 0.6 : 1,
+                }}>
 
-                {/* Estado indicator */}
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: isPaid ? '#6ee7b7' : '#fb923c' }}/>
-
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold truncate" style={{ color: TEXT }}>{inv.client_name}</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ backgroundColor: CARD2, color: MUTED }}>{inv.invoice_number}</span>
-                    {isPaid && <span className="text-xs px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#6ee7b720', color: '#6ee7b7' }}>Pagada</span>}
+                    <span className="font-semibold" style={{ color: TEXT }}>{c.name}</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded font-medium"
+                      style={{ backgroundColor: '#4f6ef720', color: '#4f6ef7' }}>
+                      {c.plan}
+                    </span>
+                    {c.incluye_tv > 0 && (
+                      <span className="text-xs px-1.5 py-0.5 rounded"
+                        style={{ backgroundColor: '#f59e0b20', color: '#f59e0b' }}>
+                        + MediTV
+                      </span>
+                    )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
-                    <span className="text-xs" style={{ color: MUTED }}>{inv.cellphone || '—'}</span>
-                    <span className="text-xs font-medium" style={{ color: '#4f6ef7' }}>{inv.plan}</span>
-                    <span className="text-xs font-bold" style={{ color: TEXT }}>{fmt(inv.amount)}</span>
-                    <span className="text-xs" style={{ color: MUTED }}>Vence: {fmtDate(inv.due_date)}</span>
-                    {isPaid && <span className="text-xs" style={{ color: '#6ee7b7' }}>Pagó: {fmtDate(inv.paid_at)} · {inv.method}</span>}
+                  <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                    <span className="text-xs" style={{ color: MUTED }}>{c.cellphone || '—'}</span>
+                    <span className="text-xs font-bold" style={{ color: '#6ee7b7' }}>
+                      {fmt(c.plan_value + (c.incluye_tv || 0))}
+                    </span>
                   </div>
                 </div>
 
-                {/* Acciones */}
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  {!isPaid ? (
-                    <select onChange={e => { if (e.target.value) markPaid(inv, e.target.value) }}
-                      defaultValue=""
-                      className="text-xs rounded-lg px-2 py-1.5 outline-none cursor-pointer"
-                      style={{ backgroundColor: '#6ee7b720', border: '1px solid #6ee7b7', color: '#6ee7b7' }}>
-                      <option value="" disabled>Marcar pagada</option>
-                      {METHODS.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                  ) : (
-                    <button onClick={() => markPending(inv)} title="Revertir a pendiente"
-                      className="p-1.5 rounded-lg text-xs transition-all"
-                      style={{ backgroundColor: CARD2, border: `1px solid ${BORDER}`, color: MUTED }}>
-                      <Clock className="w-3.5 h-3.5"/>
-                    </button>
-                  )}
-                  <a href={`/factura/${inv.client_id}`} target="_blank" rel="noopener noreferrer"
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <a href={`/factura/${c.id}`} target="_blank" rel="noopener noreferrer"
+                    title="Ver factura PDF"
                     className="p-1.5 rounded-lg transition-all"
                     style={{ backgroundColor: CARD2, border: `1px solid ${BORDER}`, color: MUTED }}>
-                    <ExternalLink className="w-3.5 h-3.5"/>
+                    <FileText className="w-3.5 h-3.5"/>
                   </a>
-                  <button onClick={() => deleteInv(inv.id)}
-                    className="p-1.5 rounded-lg transition-all"
-                    style={{ backgroundColor: CARD2, border: `1px solid ${BORDER}`, color: '#f87171' }}>
-                    <Trash2 className="w-3.5 h-3.5"/>
+                  <button
+                    onClick={() => generarYEnviar(c)}
+                    disabled={isSending}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+                    style={{ backgroundColor: '#25d36620', color: '#25d366', border: '1px solid #25d366' }}>
+                    {isSending
+                      ? <div className="w-3.5 h-3.5 border border-green-500 border-t-transparent rounded-full animate-spin"/>
+                      : <MessageCircle className="w-3.5 h-3.5"/>}
+                    <span>{isSending ? 'Enviando...' : 'Generar y enviar'}</span>
                   </button>
                 </div>
               </div>
