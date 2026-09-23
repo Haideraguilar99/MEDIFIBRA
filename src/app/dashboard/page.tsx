@@ -77,7 +77,7 @@ const SectionHeader = ({ icon, title }:{ icon?:React.ReactNode; title:string }) 
 const EMPTY_CLIENT = {
   name:'', email:'', phone:'', cellphone:'', address:'', city:'',
   neighborhood:'', commune:'', consumption_date:'', payment_date:'',
-  plan:'', plan_value:0, reference:'', status:'active', classification:'CLIENTE_NUEVO', notes:'',
+  plan:'', plan_value:0, reference:'', status:'active', classification:'SIN_FECHA', notes:'',
   cedula:'', punto_referencia:'', foto_fachada:'', telefono_alternativo:'',
   fecha_instalacion:'', incluye_tv:0, dia_pago:'',
   referido_nombre:'', referido_telefono:'',

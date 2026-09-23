@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { broadcast } from '@/lib/sse'
+import { computeAutoClassification } from '@/lib/classification'
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +12,10 @@ export async function GET(req: Request) {
 
     if (search) {
       const q = '%' + search + '%'
-      const result = await db.execute({
+      // Calcular clasificacion automatica segun dia_pago (ignora lo que mande el form)
+    const autoClass = computeAutoClassification('', b.dia_pago ?? '', null)
+
+    const result = await db.execute({
         sql: 'SELECT id, name, address, neighborhood, cellphone, status, classification, plan, plan_value, dia_pago, incluye_tv FROM clients WHERE name LIKE ? OR cellphone LIKE ? OR address LIKE ? ORDER BY name LIMIT ?',
         args: [q, q, q, limit || 20]
       })
@@ -62,7 +66,7 @@ export async function POST(req: NextRequest) {
         b.address??'', b.city??'', b.neighborhood??'', b.commune??'',
         b.consumption_date??'', b.payment_date??'',
         b.plan, b.plan_value, b.reference??'',
-        b.status??'active', b.classification??'AL_DIA', b.notes??'',
+        b.status??'active', autoClass, b.notes??'',
         b.cedula??'', b.punto_referencia??'', b.foto_fachada??'',
         b.telefono_alternativo??'', b.fecha_instalacion??'',
         b.incluye_tv ?? 0, b.dia_pago??'',
