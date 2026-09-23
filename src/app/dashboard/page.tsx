@@ -77,7 +77,7 @@ const SectionHeader = ({ icon, title }:{ icon?:React.ReactNode; title:string }) 
 const EMPTY_CLIENT = {
   name:'', email:'', phone:'', cellphone:'', address:'', city:'',
   neighborhood:'', commune:'', consumption_date:'', payment_date:'',
-  plan:'', plan_value:0, reference:'', status:'active', classification:'AL_DIA', notes:'',
+  plan:'', plan_value:0, reference:'', status:'active', classification:'CLIENTE_NUEVO', notes:'',
   cedula:'', punto_referencia:'', foto_fachada:'', telefono_alternativo:'',
   fecha_instalacion:'', incluye_tv:0, dia_pago:'',
   referido_nombre:'', referido_telefono:'',
@@ -189,7 +189,14 @@ export default function Dashboard() {
     try {
       const url = editClient ? `/api/clients/${editClient.id}` : '/api/clients'
       const res = await fetch(url, { method: editClient?'PUT':'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(form) })
-      if (res.ok) { setShowModal(false); setEditClient(null); setForm(EMPTY_CLIENT); fetchClients() }
+      if (res.ok) {
+        if (!editClient) {
+          // Cliente NUEVO: limpiar filtros para que sea visible de inmediato
+          setSearch(''); setFilterPlan(''); setFilterStatus(''); setFilterClass('')
+        }
+        setShowModal(false); setEditClient(null); setForm(EMPTY_CLIENT)
+        await fetchClients()   // ← await: espera que la lista se actualice antes de cerrar
+      }
       else { const err = await res.json(); toast.error(err.error || 'Error al guardar cliente') }
     } finally { setSavingClient(false) }
   }
