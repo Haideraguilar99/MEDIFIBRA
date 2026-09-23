@@ -12,10 +12,7 @@ export async function GET(req: Request) {
 
     if (search) {
       const q = '%' + search + '%'
-      // Calcular clasificacion automatica segun dia_pago (ignora lo que mande el form)
-    const autoClass = computeAutoClassification('', b.dia_pago ?? '', null)
-
-    const result = await db.execute({
+      const result = await db.execute({
         sql: 'SELECT id, name, address, neighborhood, cellphone, status, classification, plan, plan_value, dia_pago, incluye_tv FROM clients WHERE name LIKE ? OR cellphone LIKE ? OR address LIKE ? ORDER BY name LIMIT ?',
         args: [q, q, q, limit || 20]
       })
@@ -41,6 +38,8 @@ export async function GET(req: Request) {
 export async function POST(req: NextRequest) {
   try {
     const b = await req.json()
+    // Calcular clasificacion automatica segun dia_pago (ignora lo que mande el form)
+    const autoClass = computeAutoClassification('', b.dia_pago ?? '', null)
     // Verificar celular duplicado solo si se proporcionó
     if (b.cellphone) {
       const dup = await db.execute({
