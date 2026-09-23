@@ -170,9 +170,6 @@ export default function OrdenPage() {
         <button onClick={handleDownloadPDF} disabled={generating} style={{ background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: 8, padding: '11px 24px', cursor: generating ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: generating ? 0.7 : 1 }}>
           {generating ? 'Generando...' : 'Descargar PDF'}
         </button>
-        <button onClick={() => window.print()} style={{ background: '#334155', color: '#f8fafc', border: 'none', borderRadius: 8, padding: '11px 24px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
-          Imprimir
-        </button>
         <button onClick={() => window.close()} style={{ background: '#94a3b8', color: '#fff', border: 'none', borderRadius: 8, padding: '11px 20px', cursor: 'pointer', fontSize: 14 }}>
           Cerrar
         </button>
@@ -183,14 +180,13 @@ export default function OrdenPage() {
 
         {/* HEADER azul profesional */}
         <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #2563eb 100%)', padding: '32px 44px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '4px solid #1d4ed8' }}>
-          <div>
-            <div style={{ fontWeight: 900, fontSize: 40, color: '#ffffff', letterSpacing: '-1.5px', lineHeight: 1, marginBottom: 6 }}>
-              MEDI<span style={{ color: '#fca5a5' }}>FIBRA</span>
-            </div>
-            <div style={{ color: '#bfdbfe', fontSize: 13, marginBottom: 3, fontStyle: 'italic' }}>"Conectate con velocidad real"</div>
-            <div style={{ color: '#dbeafe', fontSize: 12.5, marginBottom: 2 }}>NIT: 902060057-8</div>
-            <div style={{ color: '#dbeafe', fontSize: 12.5, marginBottom: 2 }}>Blanquizal, Comuna 13, Medellin, Colombia</div>
-            <div style={{ color: '#dbeafe', fontSize: 12.5 }}>WhatsApp: 333 728 8745</div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img
+              src="/medifibra_sin_fondo_1050.png"
+              alt="Medifibra"
+              style={{ height: 100, width: 'auto', objectFit: 'contain' }}
+              crossOrigin="anonymous"
+            />
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 10, padding: '14px 22px', marginBottom: 12, backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.25)' }}>
@@ -231,10 +227,10 @@ export default function OrdenPage() {
               TECNICO ASIGNADO
             </div>
             <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>
-              <div style={{ width: 110, height: 110, borderRadius: 12, background: '#e2e8f0', border: '3px solid #1d4ed8', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 145, height: 165, borderRadius: 12, background: '#e2e8f0', border: '3px solid #1d4ed8', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {order.technician_photo ? (
                   <img
-                    src={order.technician_photo}
+                    src={order.technician_photo.startsWith('/foto-') ? `https://medifibra-tecnico.vercel.app${order.technician_photo}` : order.technician_photo}
                     alt={order.technician_name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     crossOrigin="anonymous"
