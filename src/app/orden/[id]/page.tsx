@@ -162,8 +162,19 @@ export default function OrdenPage() {
   const stat   = STATUS_CFG[order.status]       ?? STATUS_CFG.pending;
   const tLabel = TASK_LABELS[order.task_type]   ?? order.task_type;
 
+  const responsiveStyles = `
+    @media (max-width: 640px) {
+      .orden-header { padding: 20px 20px !important; }
+      .orden-banner { padding: 14px 20px !important; flex-direction: column !important; gap: 10px !important; }
+      .orden-body   { padding: 16px 20px 0 !important; }
+      .orden-footer { padding: 14px 20px 20px !important; flex-direction: column !important; gap: 14px !important; }
+      .orden-desc   { padding: 14px 20px 0 !important; }
+    }
+  `;
+
   return (
     <div style={{ background: '#e2e8f0', minHeight: '100vh', padding: '24px 16px', fontFamily: "'Segoe UI', Arial, sans-serif" }}>
+      <style dangerouslySetInnerHTML={{ __html: responsiveStyles }} />
 
       {/* Action bar */}
       <div style={{ maxWidth: 860, margin: '0 auto 20px', display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
@@ -179,12 +190,12 @@ export default function OrdenPage() {
       <div ref={contentRef} style={{ maxWidth: 860, margin: '0 auto', background: '#ffffff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 32px rgba(0,0,0,0.15)' }}>
 
         {/* HEADER azul profesional */}
-        <div style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #2563eb 100%)', padding: '32px 44px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '4px solid #1d4ed8' }}>
+        <div className="orden-header" style={{ background: 'linear-gradient(135deg, #000814 0%, #0d36a9 55%, #2563eb 100%)' 0%, #1d4ed8 60%, #2563eb 100%)', padding: '32px 44px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '4px solid #1d4ed8' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <img
               src="/medifibra_sin_fondo_1050.png"
               alt="Medifibra"
-              style={{ height: 100, width: 'auto', objectFit: 'contain' }}
+              style={{ height: 150, width: 'auto', objectFit: 'contain' }}
               crossOrigin="anonymous"
             />
           </div>
@@ -219,7 +230,7 @@ export default function OrdenPage() {
         </div>
 
         {/* TECNICO + CLIENTE */}
-        <div style={{ padding: '28px 44px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div style={{ padding: '28px 44px 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
 
           {/* Card Tecnico */}
           <div style={{ background: '#f8fafc', borderRadius: 10, padding: 24, border: '1px solid #e2e8f0' }}>
@@ -230,7 +241,7 @@ export default function OrdenPage() {
               <div style={{ width: 145, height: 165, borderRadius: 12, background: '#e2e8f0', border: '3px solid #1d4ed8', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {order.technician_photo ? (
                   <img
-                    src={order.technician_photo.startsWith('/foto-') ? `https://medifibra-tecnico.vercel.app${order.technician_photo}` : order.technician_photo}
+                    src={order.technician_photo ? `/api/img-proxy?url=${encodeURIComponent(order.technician_photo.startsWith('/foto-') ? 'https://medifibra-tecnico.vercel.app' + order.technician_photo : order.technician_photo)}` : ''}
                     alt={order.technician_name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     crossOrigin="anonymous"
