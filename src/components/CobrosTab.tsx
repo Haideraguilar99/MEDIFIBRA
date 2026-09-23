@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import { CheckCircle, MessageCircle, ChevronDown, ChevronRight, Phone, Send } from 'lucide-react'
+import { CheckCircle, ChevronDown, ChevronRight, Phone, Send } from 'lucide-react'
 
 type CobrosClient = {
   id: number
@@ -41,10 +41,8 @@ function minutesAgo(isoStr: string): number {
 
 export default function CobrosTab({
   BG, CARD, CARD2, BORDER, TEXT, MUTED,
-  onOpenWA
 }: {
   BG: string; CARD: string; CARD2: string; BORDER: string; TEXT: string; MUTED: string
-  onOpenWA: (c: CobrosClient) => void
 }) {
   const [clients, setClients] = useState<CobrosClient[]>([])
   const [loading, setLoading] = useState(true)
@@ -210,43 +208,40 @@ export default function CobrosTab({
                       </div>
 
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        {recentlySent && (
-                          <span className="text-xs px-2 py-1 rounded-full font-semibold"
-                            style={{ backgroundColor: '#25d36620', color: '#25d366' }}>
-                            Enviado hace {mins}m
-                          </span>
-                        )}
                         {!isProt && (
-                          <>
-                            <button
-                              onClick={() => enviarCobro(c)}
-                              disabled={isSending}
-                              title="Enviar cobro por WhatsApp"
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
-                              style={{
-                                backgroundColor: recentlySent ? '#25d36620' : '#dcfce7',
-                                color: '#16a34a',
-                                border: `1px solid ${recentlySent ? '#25d366' : '#bbf7d0'}`,
-                              }}>
-                              {isSending
-                                ? <div className="w-3.5 h-3.5 border border-green-600 border-t-transparent rounded-full animate-spin"/>
-                                : <Send className="w-3.5 h-3.5"/>}
-                              <span className="hidden sm:inline">{recentlySent ? 'Reenviar' : 'Enviar'}</span>
-                            </button>
-                            <button
-                              onClick={() => markPaid(c.id, c.plan_value)}
-                              title="Marcar como pagado — desaparece de la lista"
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                              style={{ backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }}>
-                              <CheckCircle className="w-3.5 h-3.5"/>
-                              <span className="hidden sm:inline">Cobrado</span>
-                            </button>
-                            <button onClick={() => onOpenWA(c)} title="WhatsApp personalizado"
-                              className="p-1.5 rounded-lg transition-all"
-                              style={{ backgroundColor: CARD, border: `1px solid ${BORDER}` }}>
-                              <MessageCircle className="w-4 h-4" style={{ color: '#25d366' }}/>
-                            </button>
-                          </>
+                          <div className="flex flex-col items-end gap-1">
+                            {recentlySent && (
+                              <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                                style={{ backgroundColor: '#25d36618', color: '#25d366', border: '1px solid #25d36640' }}>
+                                Cobro enviado hace {mins}m
+                              </span>
+                            )}
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => enviarCobro(c)}
+                                disabled={isSending}
+                                title="Enviar cobro por WhatsApp"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                                style={{
+                                  backgroundColor: recentlySent ? '#25d36618' : '#dcfce7',
+                                  color: '#16a34a',
+                                  border: `1px solid ${recentlySent ? '#25d36660' : '#bbf7d0'}`,
+                                }}>
+                                {isSending
+                                  ? <div className="w-3.5 h-3.5 border border-green-600 border-t-transparent rounded-full animate-spin"/>
+                                  : <Send className="w-3.5 h-3.5"/>}
+                                <span className="hidden sm:inline">{recentlySent ? 'Reenviar' : 'Enviar'}</span>
+                              </button>
+                              <button
+                                onClick={() => markPaid(c.id, c.plan_value)}
+                                title="Marcar como pagado"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                                style={{ backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }}>
+                                <CheckCircle className="w-3.5 h-3.5"/>
+                                <span className="hidden sm:inline">Cobrado</span>
+                              </button>
+                            </div>
+                          </div>
                         )}
                         {isProt && (
                           <span className="text-xs px-2 py-1 rounded" style={{ color: MUTED, backgroundColor: CARD }}>Sin accion</span>

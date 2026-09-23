@@ -343,21 +343,13 @@ export default function Dashboard() {
 
         {/* Logo */}
         <div className="flex items-center justify-between px-4 py-5" style={{borderBottom:`1px solid ${dark?'#222222':'#e2e8f0'}`}}>
-          <div className="flex items-center gap-3">
-            <div style={{borderRadius:14,overflow:'hidden',border:`2px solid ${dark?'#2a2a2a':'#e2e8f0'}`,width:96,height:96,flexShrink:0,position:'relative',backgroundColor:'#ffffff'}}>
-              <NextImage src="/medifibrasas.png" alt="Medifibra" fill style={{objectFit:'contain',padding:'4px'}}/>
-            </div>
-            <div>
-              <div className="flex items-baseline leading-none">
-                <span className="text-xl font-black" style={{color:'#DC2626'}}>M</span>
-                <span className="text-xl font-black" style={{color:TEXT}}>EDI</span>
-                <span className="text-xl font-black" style={{color:'#DC2626'}}>F</span>
-                <span className="text-xl font-black" style={{color:TEXT}}>IBRA</span>
+          <div className="flex flex-col items-center justify-center flex-1 py-1">
+                <div style={{position:'relative',width:200,height:80}}>
+                  <NextImage src="/medifibra_sin_fondo_1050.png" alt="Medifibra" fill style={{objectFit:'contain'}}/>
+                </div>
+                <p className="text-xs font-semibold mt-1 tracking-widest uppercase" style={{color:MUTED}}>Panel de Control</p>
               </div>
-              <p className="text-xs font-medium mt-0.5" style={{color:MUTED}}>Panel de Control</p>
-            </div>
-          </div>
-          <button className="lg:hidden p-1 rounded" style={{color:MUTED}} onClick={()=>setSidebarOpen(false)}><ChevronLeft className="w-4 h-4"/></button>
+              <button className="lg:hidden p-1 rounded" style={{color:MUTED}} onClick={()=>setSidebarOpen(false)}><ChevronLeft className="w-4 h-4"/></button>
         </div>
 
         {/* Nav */}
@@ -667,13 +659,13 @@ export default function Dashboard() {
                           {c.fecha_instalacion&&<p className="text-xs mt-0.5" style={{color:MUTED}}>{c.fecha_instalacion}</p>}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5">
-                            <Link href={`/factura/${c.id}`} target="_blank" title="Factura" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#EFF6FF',color:'#2563EB'}}><FileText className="w-3.5 h-3.5"/></Link>
-                            <button onClick={()=>openWAModal(c)} title="WhatsApp" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#F0FDF4',color:'#16A34A'}}><MessageCircle className="w-3.5 h-3.5"/></button>
-                            <button onClick={()=>setViewClient(c)} title="Ver detalle" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#0f2744',color:'#60a5fa'}}><Eye className="w-3.5 h-3.5"/></button>
-                            <button onClick={()=>openEditClient(c)} title="Editar" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:CARD2,color:LIGHT}}><Pencil className="w-3.5 h-3.5"/></button>
-                            <button onClick={()=>handleDeleteClient(c.id)} title="Eliminar" className="p-1.5 rounded-lg transition-colors hover:opacity-80" style={{backgroundColor:'#FEF2F2',color:'#DC2626'}}><Trash2 className="w-3.5 h-3.5"/></button>
-                          </div>
+                            <div className="flex items-center gap-3">
+                                <Link href={`/factura/${c.id}`} target="_blank" title="Factura" className="hover:opacity-60 transition-opacity" style={{color:'#2563EB'}}><FileText className="w-4 h-4"/></Link>
+                                <button onClick={()=>openWAModal(c)} title="WhatsApp" className="hover:opacity-60 transition-opacity" style={{color:'#16A34A'}}><MessageCircle className="w-4 h-4"/></button>
+                                <button onClick={()=>setViewClient(c)} title="Ver detalle" className="hover:opacity-60 transition-opacity" style={{color:'#60a5fa'}}><Eye className="w-4 h-4"/></button>
+                                <button onClick={()=>openEditClient(c)} title="Editar" className="hover:opacity-60 transition-opacity" style={{color:LIGHT}}><Pencil className="w-4 h-4"/></button>
+                                <button onClick={()=>handleDeleteClient(c.id)} title="Eliminar" className="hover:opacity-60 transition-opacity" style={{color:'#DC2626'}}><Trash2 className="w-4 h-4"/></button>
+                              </div>
                         </td>
                       </tr>
                     ))}
@@ -702,7 +694,7 @@ export default function Dashboard() {
         )}
         {tab==='cobros'&&(
           <div className="p-2">
-            <CobrosTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED} onOpenWA={(c) => openWAModal(c as unknown as Client)}/>
+            <CobrosTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
           </div>
         )}
         {tab==='facturas'&&(
