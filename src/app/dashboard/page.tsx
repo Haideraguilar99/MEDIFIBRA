@@ -343,11 +343,10 @@ export default function Dashboard() {
 
         {/* Logo */}
         <div className="flex items-center justify-between px-4 py-5" style={{borderBottom:`1px solid ${dark?'#222222':'#e2e8f0'}`}}>
-          <div className="flex flex-col items-center justify-center flex-1 py-1">
-                <div style={{position:'relative',width:200,height:80}}>
+          <div className="flex items-center justify-center flex-1 py-2">
+                <div style={{position:'relative',width:230,height:115}}>
                   <NextImage src="/medifibra_sin_fondo_1050.png" alt="Medifibra" fill style={{objectFit:'contain'}}/>
                 </div>
-                <p className="text-xs font-semibold mt-1 tracking-widest uppercase" style={{color:MUTED}}>Panel de Control</p>
               </div>
               <button className="lg:hidden p-1 rounded" style={{color:MUTED}} onClick={()=>setSidebarOpen(false)}><ChevronLeft className="w-4 h-4"/></button>
         </div>
