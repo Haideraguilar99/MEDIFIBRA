@@ -190,7 +190,7 @@ export default function OrdenPage() {
       <div ref={contentRef} style={{ maxWidth: 860, margin: '0 auto', background: '#ffffff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 32px rgba(0,0,0,0.15)' }}>
 
         {/* HEADER azul profesional */}
-        <div className="orden-header" style={{ background: 'linear-gradient(135deg, #000814 0%, #0d36a9 55%, #2563eb 100%)' 0%, #1d4ed8 60%, #2563eb 100%)', padding: '32px 44px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '4px solid #1d4ed8' }}>
+        <div className="orden-header" style={{ background: 'linear-gradient(135deg, #000814 0%, #0d36a9 55%, #2563eb 100%)', padding: '32px 44px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '4px solid #1d4ed8' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <img
               src="/medifibra_sin_fondo_1050.png"
