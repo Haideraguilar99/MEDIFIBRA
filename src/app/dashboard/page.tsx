@@ -446,9 +446,7 @@ export default function Dashboard() {
               <MetricCard label="Total Clientes"    value={stats.total}/>
               <MetricCard label="Activos"           value={stats.active}/>
               <MetricCard label="Suspendidos"       value={stats.suspended}/>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-              <MetricCard label="Ingresos / Mes" value={formatCurrency(stats.monthly_income??0)}/>
+              <MetricCard label="Ingresos / Mes"    value={formatCurrency(stats.monthly_income??0)}/>
             </div>
 
             {classStats.length>0&&(
