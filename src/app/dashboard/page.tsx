@@ -446,7 +446,7 @@ export default function Dashboard() {
               <MetricCard label="Total Clientes"    value={stats.total}/>
               <MetricCard label="Activos"           value={stats.active}/>
               <MetricCard label="Suspendidos"       value={stats.suspended}/>
-              <MetricCard label="Ingresos / Mes"    value={formatCurrency(stats.monthly_income??0)}/>
+              <MetricCard label="Ingresos / Mes"    value={`$${((stats.monthly_income??0)/1000000).toFixed(1)}M`}/>
             </div>
 
             {classStats.length>0&&(
