@@ -14,7 +14,7 @@ export const CLASSIFICATIONS = [
   'SUSPENDIDO',
   'RECOGER_EQUIPO',
   'USUARIO_PERDIDO',
-  'CLIENTE_NUEVO',
+  'SIN_FECHA',
 ] as const
 
 export type Classification = typeof CLASSIFICATIONS[number]
@@ -32,7 +32,7 @@ export const CLASS_CONFIG: Record<Classification, {
   SUSPENDIDO:         { bg:'#1c1714', text:'#d6bcaa', border:'#78716c', label:'Suspendido'           },
   RECOGER_EQUIPO:     { bg:'#1a0808', text:'#fca5a5', border:'#991b1b', label:'Recoger equipo'       },
   USUARIO_PERDIDO:    { bg:'#111827', text:'#6b7280', border:'#374151', label:'Usuario perdido'      },
-  CLIENTE_NUEVO:      { bg:'#1a0d17', text:'#f9a8d4', border:'#9d174d', label:'Cliente nuevo'       },
+  SIN_FECHA:          { bg:'#0d1a2e', text:'#60a5fa', border:'#1d4ed8', label:'Sin fecha'            },
 }
 
 // Estados que NUNCA se cambian automaticamente por logica de fechas
@@ -43,7 +43,7 @@ export const PROTECTED_CLASSIFICATIONS: readonly string[] = [
   'SUSPENDIDO',
   'RECOGER_EQUIPO',
   'USUARIO_PERDIDO',
-  'CLIENTE_NUEVO',
+  'SIN_FECHA',
 ]
 
 export function getCC(cls: string) {
@@ -77,7 +77,7 @@ export function computeAutoClassification(
 
   const payDay = parseInt(diaPago)
   if (!diaPago || isNaN(payDay) || payDay < 1 || payDay > 31) {
-    return currentClassification
+    return 'SIN_FECHA'
   }
 
   const today = new Date()

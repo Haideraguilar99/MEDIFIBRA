@@ -28,7 +28,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
               consumption_date=?,payment_date=?,plan=?,plan_value=?,reference=?,
               status=?,classification=?,notes=?,
               cedula=?,punto_referencia=?,foto_fachada=?,telefono_alternativo=?,
-              fecha_instalacion=?,incluye_tv=?,dia_pago=?,referido_nombre=?,referido_telefono=?
+              fecha_instalacion=?,incluye_tv=?,dia_pago=?,referido_nombre=?,referido_telefono=?,puntos_tv=?
             WHERE id=?`,
       args: [
         b.name             ?? c.name             ?? '',
@@ -56,6 +56,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         b.dia_pago         ?? c.dia_pago         ?? '30',
         b.referido_nombre     ?? c.referido_nombre     ?? '',
         b.referido_telefono   ?? c.referido_telefono   ?? '',
+        b.puntos_tv ?? c.puntos_tv ?? 0,
         id
       ]
     })

@@ -4,7 +4,7 @@ import { Plus, Pencil, Trash2, MessageCircle, FileText, Phone, Wrench, Search, X
 
 interface Technician { id:number; name:string; cedula:string; phone:string; cellphone:string; email:string; photo_url:string; role:string; specialty:string; status:string; notes:string; created_at:string; }
 interface ClientResult { id:number; name:string; address:string; neighborhood:string; commune:string; cellphone:string; plan:string; status:string; cedula:string; punto_referencia:string; }
-interface WorkOrder { id:number; order_number:string; technician_id:number; client_id:number; task_type:string; task_description:string; priority:string; scheduled_date:string; scheduled_time:string; status:string; notes:string; created_by:string; whatsapp_tech_sent:number; whatsapp_client_sent:number; created_at:string; technician_name?:string; technician_phone?:string; technician_role?:string; client_name?:string; client_address?:string; client_phone?:string; client_plan?:string; client_status?:string; client_neighborhood?:string; client_punto_referencia?:string; completion_notes?:string; started_at?:string; completed_at?:string; duration_minutes?:number; after_photos?:string; }
+interface WorkOrder { id:number; order_number:string; technician_id:number; client_id:number; task_type:string; task_description:string; priority:string; scheduled_date:string; scheduled_time:string; status:string; notes:string; created_by:string; whatsapp_tech_sent:number; whatsapp_client_sent:number; created_at:string; technician_name?:string; technician_phone?:string; technician_role?:string; client_name?:string; client_address?:string; client_phone?:string; client_plan?:string; client_status?:string; client_neighborhood?:string; client_punto_referencia?:string; completion_notes?:string; started_at?:string; completed_at?:string; duration_minutes?:number; after_photos?:string; tech_resultado?:string; }
 
 const TASK_TYPES = [
   { value:'INSTALACION_SERVICIO',  label:'Instalacion de Servicio', color:'#16a34a' },
@@ -116,7 +116,9 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
       const extraIds = ids.slice(1);
       const primaryTech = technicians.find(x=>x.id===primaryId);
       const extraTechs = extraIds.map(tid=>{ const t=technicians.find(x=>x.id===tid); return t?t.name:''; }).filter(Boolean);
-      let notesVal = oForm.notes??'';
+      // Limpiar 'Tecnicos adicionales:...' previo para no duplicar al editar
+      let baseNotes = (oForm.notes??'').split('|').map((s:string)=>s.trim()).filter((s:string)=>!s.startsWith('Tecnicos adicionales:')).join(' | ').trim();
+      let notesVal = baseNotes;
       if(extraTechs.length>0){
         const extraLine = 'Tecnicos adicionales: '+extraTechs.join(', ');
         notesVal = notesVal ? notesVal+' | '+extraLine : extraLine;
@@ -144,8 +146,8 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
   async function delO(id:number,num:string){ if(!confirm(`Eliminar orden ${num}?`))return; await fetch(`/api/work-orders/${id}`,{method:'DELETE'}); fetchO(); }
   async function chgStatus(id:number,status:string,o:WorkOrder){ await fetch(`/api/work-orders/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,status})}); fetchO(); }
 
-  async function waT(o:WorkOrder){ const t=tCfg(o.task_type); const msg=[`ORDEN DE SERVICIO - MEDIFIBRA S.A.S`,`Orden: ${o.order_number}`,``,`Tecnicos: ${o.technician_name}${o.notes&&o.notes.includes('Tecnicos adicionales:')?', '+o.notes.split('Tecnicos adicionales:')[1].trim():''}`,`Tarea: ${t?.label??o.task_type}`,`Fecha: ${o.scheduled_date||'Por definir'}${o.scheduled_time?' a las '+o.scheduled_time:''}`,``,`CLIENTE:`,`Nombre: ${o.client_name}`,`Direccion: ${o.client_address??''}${o.client_neighborhood?', '+o.client_neighborhood:''}`,o.client_punto_referencia?`Referencia: ${o.client_punto_referencia}`:'',`Telefono: ${o.client_phone}`,`Plan: ${o.client_plan}`,o.task_description?`\nDescripcion: ${o.task_description}`:'',o.notes?`\nNovedades: ${o.notes}`:'',``,`Confirme recibido.`,`Mariana - Medifibra S.A.S`].filter(Boolean).join('\n').trim(); window.open(`https://wa.me/57${o.technician_phone}?text=${encodeURIComponent(msg)}`,'_blank'); await fetch(`/api/work-orders/${o.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,whatsapp_tech_sent:1})}); fetchO(); }
-  async function waC(o:WorkOrder){ const t=tCfg(o.task_type); const msg=[`MEDIFIBRA S.A.S - Agendamiento de Visita Tecnica`,`Orden: ${o.order_number}`,``,`Estimado(a) ${o.client_name},`,``,`Le informamos que hemos programado una visita tecnica:`,`Servicio: ${t?.label??o.task_type}`,`Fecha: ${o.scheduled_date||'Por definir'}${o.scheduled_time?' a las '+o.scheduled_time+' hrs':''}`,`Tecnicos asignados: ${o.technician_name}${o.notes&&o.notes.includes('Tecnicos adicionales:')?', '+o.notes.split('Tecnicos adicionales:')[1].trim():''}`,``,`Direccion registrada: ${o.client_address??''}`,``,`Para dudas comuniquese al 333 728 8745`,``,`Medifibra S.A.S - "Conectate con velocidad real"`].join('\n'); window.open(`https://wa.me/57${o.client_phone}?text=${encodeURIComponent(msg)}`,'_blank'); await fetch(`/api/work-orders/${o.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,whatsapp_client_sent:1})}); fetchO(); }
+  async function waT(o:WorkOrder){ const t=tCfg(o.task_type); const msg=[`ORDEN DE SERVICIO - MEDIFIBRA S.A.S`,`Orden: ${o.order_number}`,``,`Tecnicos: ${o.technician_name}${o.notes&&o.notes.includes('Tecnicos adicionales:')?', '+o.notes.split('Tecnicos adicionales:')[1].split('|')[0].trim():''}`,`Tarea: ${t?.label??o.task_type}`,`Fecha: ${o.scheduled_date||'Por definir'}${o.scheduled_time?' a las '+o.scheduled_time:''}`,``,`CLIENTE:`,`Nombre: ${o.client_name}`,`Direccion: ${o.client_address??''}${o.client_neighborhood?', '+o.client_neighborhood:''}`,o.client_punto_referencia?`Referencia: ${o.client_punto_referencia}`:'',`Telefono: ${o.client_phone}`,`Plan: ${o.client_plan}`,o.task_description?`\nDescripcion: ${o.task_description}`:'',o.notes?`\nNovedades: ${o.notes}`:'',``,`Confirme recibido.`,`Mariana - Medifibra S.A.S`].filter(Boolean).join('\n').trim(); window.open(`https://wa.me/57${o.technician_phone}?text=${encodeURIComponent(msg)}`,'_blank'); await fetch(`/api/work-orders/${o.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,whatsapp_tech_sent:1})}); fetchO(); }
+  async function waC(o:WorkOrder){ const t=tCfg(o.task_type); const msg=[`MEDIFIBRA S.A.S - Agendamiento de Visita Tecnica`,`Orden: ${o.order_number}`,``,`Estimado(a) ${o.client_name},`,``,`Le informamos que hemos programado una visita tecnica:`,`Servicio: ${t?.label??o.task_type}`,`Fecha: ${o.scheduled_date||'Por definir'}${o.scheduled_time?' a las '+o.scheduled_time+' hrs':''}`,`Tecnicos asignados: ${o.technician_name}${o.notes&&o.notes.includes('Tecnicos adicionales:')?', '+o.notes.split('Tecnicos adicionales:')[1].split('|')[0].trim():''}`,``,`Direccion registrada: ${o.client_address??''}`,``,`Para dudas comuniquese al 333 728 8745`,``,`Medifibra S.A.S - "Conectate con velocidad real"`].join('\n'); window.open(`https://wa.me/57${o.client_phone}?text=${encodeURIComponent(msg)}`,'_blank'); await fetch(`/api/work-orders/${o.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,whatsapp_client_sent:1})}); fetchO(); }
 
   const filtered=workOrders.filter(o=>oTab==='all'||o.status===oTab);
   const stats={ total:workOrders.length, pending:workOrders.filter(o=>o.status==='pending').length, in_progress:workOrders.filter(o=>o.status==='in_progress').length, completed:workOrders.filter(o=>o.status==='completed').length };
@@ -528,6 +530,23 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
                 {viewOrder.scheduled_date && <div style={{ color:'#9ca3af', fontSize:13, marginTop:8 }}>Fecha: {viewOrder.scheduled_date}{viewOrder.scheduled_time ? ' a las '+viewOrder.scheduled_time : ''}</div>}
                 {viewOrder.notes && <div style={{ background:'#92400e22', border:'1px solid #92400e44', borderRadius:6, padding:'8px 12px', marginTop:10, color:'#fbbf24', fontSize:13 }}>{viewOrder.notes}</div>}
               </div>
+              {viewOrder.tech_resultado && (()=>{
+                const RES_CFG: Record<string,{label:string;color:string}> = {
+                  COMPLETADA:          { label:'Orden completada',               color:'#10b981' },
+                  COMPLETADA_DETALLES: { label:'Orden completada con detalles',  color:'#f59e0b' },
+                  NO_REALIZADA:        { label:'Orden no realizada por novedad', color:'#f87171' },
+                }
+                const r = RES_CFG[viewOrder.tech_resultado] ?? { label: viewOrder.tech_resultado, color:'#9ca3af' }
+                return (
+                  <div style={{ background:r.color+'18', borderRadius:10, padding:'10px 16px', marginBottom:12, border:'1px solid '+r.color+'44', display:'flex', alignItems:'center', gap:10 }}>
+                    <div style={{ width:8, height:8, borderRadius:'50%', background:r.color, flexShrink:0 }}/>
+                    <div>
+                      <div style={{ color:'#9ca3af', fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:1 }}>Resultado del tecnico</div>
+                      <div style={{ color:r.color, fontSize:14, fontWeight:700, marginTop:2 }}>{r.label}</div>
+                    </div>
+                  </div>
+                )
+              })()}
               {(viewOrder.completion_notes || viewOrder.duration_minutes) && (
                 <div style={{ background:'#064e3b22', borderRadius:10, padding:'14px 16px', marginBottom:12, border:'1px solid #10b98144' }}>
                   <div style={{ color:'#10b981', fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>Trabajo realizado</div>

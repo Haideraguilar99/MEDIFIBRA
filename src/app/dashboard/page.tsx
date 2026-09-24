@@ -28,6 +28,7 @@ type Client = {
   telefono_alternativo: string; fecha_instalacion: string
   incluye_tv: number; dia_pago: string
   referido_nombre: string; referido_telefono: string
+  puntos_tv: number
 }
 type Payment = {
   id: number; client_id: number; amount: number; period: string
@@ -80,7 +81,7 @@ const EMPTY_CLIENT = {
   plan:'', plan_value:0, reference:'', status:'active', classification:'SIN_FECHA', notes:'',
   cedula:'', punto_referencia:'', foto_fachada:'', telefono_alternativo:'',
   fecha_instalacion:'', incluye_tv:0, dia_pago:'',
-  referido_nombre:'', referido_telefono:'',
+  referido_nombre:'', referido_telefono:'', puntos_tv:0,
 }
 const METHODS = ['efectivo','bancolombia','bre-b','transferencia']
 
@@ -1062,6 +1063,17 @@ export default function Dashboard() {
                       <input type="radio" checked={form.incluye_tv===opt.v} onChange={()=>setForm(p=>{const base=plans.find(x=>x.name===p.plan)?.value??(Number(p.plan_value)-Number(p.incluye_tv));return {...p,incluye_tv:opt.v,plan_value:base+opt.v}})}
                         className="accent-blue-500"/>
                       <span className="text-sm" style={{color:form.incluye_tv===opt.v?'white':MUTED}}>{opt.l}</span>
+                    </label>
+                  ))}
+                </div>
+              </F>
+              <F muted={MUTED} label="Puntos de TV (suscripciones activas)">
+                <div className="flex items-center gap-3 mt-1">
+                  {[0,1,2,3,4,5].map(n=>(
+                    <label key={n} className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" checked={form.puntos_tv===n} onChange={()=>setForm(p=>({...p,puntos_tv:n}))}
+                        className="accent-blue-500"/>
+                      <span className="text-sm" style={{color:form.puntos_tv===n?'white':MUTED}}>{n===0?'Ninguno':n}</span>
                     </label>
                   ))}
                 </div>

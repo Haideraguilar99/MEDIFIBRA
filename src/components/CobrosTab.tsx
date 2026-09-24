@@ -232,14 +232,22 @@ export default function CobrosTab({
                                   : <Send className="w-3.5 h-3.5"/>}
                                 <span className="hidden sm:inline">{recentlySent ? 'Reenviar' : 'Enviar'}</span>
                               </button>
-                              <button
-                                onClick={() => markPaid(c.id, c.plan_value)}
-                                title="Marcar como pagado"
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                                style={{ backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }}>
-                                <CheckCircle className="w-3.5 h-3.5"/>
-                                <span className="hidden sm:inline">Cobrado</span>
-                              </button>
+                              {recentlySent ? (
+                                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                                  style={{ color: '#16a34a', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                                  <CheckCircle className="w-3.5 h-3.5"/>
+                                  <span className="hidden sm:inline">Cliente cobrado</span>
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => markPaid(c.id, c.plan_value)}
+                                  title="Marcar como pagado"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                                  style={{ backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }}>
+                                  <CheckCircle className="w-3.5 h-3.5"/>
+                                  <span className="hidden sm:inline">Cobrado</span>
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}
