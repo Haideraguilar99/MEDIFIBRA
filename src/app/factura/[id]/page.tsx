@@ -41,7 +41,6 @@ export default function FacturaPage() {
   const [mobileScale, setMobileScale]     = useState(1)
   const [isCapturing, setIsCapturing]     = useState(false)
   const invoiceRef = useRef<HTMLDivElement>(null)
-  const barcodeRef = useRef<SVGSVGElement>(null)
 
   const now         = new Date()
   // Periodo = mes ANTERIOR al dia actual
@@ -77,16 +76,7 @@ export default function FacturaPage() {
     }).catch(() => setLoading(false))
   }, [id])
 
-  useEffect(() => {
-    if (!client || !barcodeRef.current) return
-    import('jsbarcode').then(({ default: JsBarcode }) => {
-      JsBarcode(barcodeRef.current!, invoiceNum, {
-        format: 'CODE128', width: 1.4, height: 36,
-        displayValue: false, background: 'transparent',
-        lineColor: '#ffffff', margin: 0,
-      })
-    }).catch(err => console.error('[Barcode]', err))
-  }, [client, invoiceNum])
+
 
   const handleDownload = useCallback(async () => {
     if (!invoiceRef.current || downloading || !client) return
@@ -187,9 +177,7 @@ export default function FacturaPage() {
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ color: '#bbdefb', fontSize: 11, letterSpacing: 2.5, textTransform: 'uppercase', marginBottom: 2 }}>Factura de Servicio</div>
                   <div style={{ color: 'white', fontSize: 26, fontWeight: 900, letterSpacing: 1, fontFamily: 'Arial Black, Arial' }}>{invoiceNum}</div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '4px 0' }}>
-                    <svg ref={barcodeRef} style={{ display: 'block', maxWidth: 200 }} />
-                  </div>
+
                   <div style={{ color: '#90caf9', fontSize: 13, marginTop: 2 }}>Emision: {dateStr}</div>
                   <div style={{ color: '#90caf9', fontSize: 13, marginTop: 1 }}>Periodo facturado: {periodLabel}</div>
                   <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: client.status === 'active' ? '#2e7d32' : '#b71c1c', color: 'white', borderRadius: 4, height: 30, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, width: '100%', lineHeight: 1 }}>
@@ -200,7 +188,7 @@ export default function FacturaPage() {
             </div>
 
             {/* ═══ FILA: CLIENTE | COBRO | QR ═══ */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 190px', borderBottom: '2px solid #e8eaf6' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '2px solid #e8eaf6' }}>
               {/* Cliente */}
               <div style={{ padding: '14px 20px', borderRight: '1px solid #e8eaf6' }}>
                 <div style={lbl}>Informacion del Cliente</div>
@@ -258,15 +246,7 @@ export default function FacturaPage() {
                 ))}
               </div>
 
-              {/* QR */}
-              <div style={{ padding: '12px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8faff', borderLeft: '2px solid #1565c0' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: '#1565c0', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 4, textAlign: 'center' }}>Paga Aqui</div>
-                <div style={{ fontSize: 11, color: '#888', marginBottom: 6, textAlign: 'center' }}>Escanea con tu banco</div>
-                <img src="/QR.jpg" alt="QR Bancolombia" crossOrigin="anonymous"
-                  style={{ width: 160, height: 160, objectFit: 'cover', borderRadius: 8, border: '2px solid #1565c0' }} />
-                <div style={{ fontSize: 15, fontWeight: 900, color: '#0d1b3e', marginTop: 6, letterSpacing: 1, textAlign: 'center' }}>{CUENTA}</div>
-                <div style={{ fontSize: 11, color: '#888', marginTop: 2, textAlign: 'center' }}>Bancolombia · Bre-B</div>
-              </div>
+              {/* QR_PENDIENTE: ver git para restaurar bloque QR cuando llegue imagen */}
             </div>
 
             {/* ═══ SERVICIOS ═══ */}

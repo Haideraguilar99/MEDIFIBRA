@@ -34,9 +34,9 @@ function fmt(v: number) {
   return '$' + v.toLocaleString('es-CO')
 }
 
-function minutesAgo(isoStr: string): number {
-  const sent = new Date(isoStr + 'Z').getTime()
-  return Math.floor((Date.now() - sent) / 60000)
+function hoursAgo(isoStr: string): number {
+  const sent = new Date(isoStr + (isoStr.endsWith('Z') ? '' : 'Z')).getTime()
+  return (Date.now() - sent) / 3600000
 }
 
 export default function CobrosTab({
@@ -182,8 +182,8 @@ export default function CobrosTab({
                   const isProt = PROTECTED.includes(c.classification)
                   const isSending = sending === c.id
                   const ts = cobradoTs[c.id]
-                  const mins = ts ? minutesAgo(ts) : null
-                  const recentlySent = mins !== null && mins < 120
+                  const hrs = ts ? hoursAgo(ts) : null
+                  const recentlySent = hrs !== null && hrs < 12
 
                   return (
                     <div key={c.id} className="flex items-center gap-3 px-4 py-3 text-sm"
@@ -213,39 +213,27 @@ export default function CobrosTab({
                             {recentlySent && (
                               <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
                                 style={{ backgroundColor: '#25d36618', color: '#25d366', border: '1px solid #25d36640' }}>
-                                Cobro enviado hace {mins}m
+                                Cobro enviado
                               </span>
                             )}
                             <div className="flex items-center gap-1.5">
-                              <button
-                                onClick={() => enviarCobro(c)}
-                                disabled={isSending}
-                                title="Enviar cobro por WhatsApp"
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
-                                style={{
-                                  backgroundColor: recentlySent ? '#25d36618' : '#dcfce7',
-                                  color: '#16a34a',
-                                  border: `1px solid ${recentlySent ? '#25d36660' : '#bbf7d0'}`,
-                                }}>
-                                {isSending
-                                  ? <div className="w-3.5 h-3.5 border border-green-600 border-t-transparent rounded-full animate-spin"/>
-                                  : <Send className="w-3.5 h-3.5"/>}
-                                <span className="hidden sm:inline">{recentlySent ? 'Reenviar' : 'Enviar'}</span>
-                              </button>
                               {recentlySent ? (
                                 <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                                  style={{ color: '#16a34a', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                                  style={{ backgroundColor: CARD2, color: MUTED, border: `1px solid ${BORDER}`, cursor: 'default' }}>
                                   <CheckCircle className="w-3.5 h-3.5"/>
-                                  <span className="hidden sm:inline">Cliente cobrado</span>
+                                  <span className="hidden sm:inline">Cobro enviado</span>
                                 </span>
                               ) : (
                                 <button
-                                  onClick={() => markPaid(c.id, c.plan_value)}
-                                  title="Marcar como pagado"
-                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                                  style={{ backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }}>
-                                  <CheckCircle className="w-3.5 h-3.5"/>
-                                  <span className="hidden sm:inline">Cobrado</span>
+                                  onClick={() => enviarCobro(c)}
+                                  disabled={isSending}
+                                  title="Enviar cobro por WhatsApp"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                                  style={{ backgroundColor: '#dcfce7', color: '#16a34a', border: '1px solid #bbf7d0' }}>
+                                  {isSending
+                                    ? <div className="w-3.5 h-3.5 border border-green-600 border-t-transparent rounded-full animate-spin"/>
+                                    : <Send className="w-3.5 h-3.5"/>}
+                                  <span className="hidden sm:inline">Enviar</span>
                                 </button>
                               )}
                             </div>
