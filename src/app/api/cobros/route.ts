@@ -13,7 +13,7 @@ export async function GET() {
         SELECT client_id, MAX(sent_at) as sent_at
         FROM notifications_log
         WHERE type = 'cobro_enviado'
-          AND sent_at >= datetime('now', '-2 hours')
+          AND sent_at >= datetime('now', '-12 hours')
         GROUP BY client_id
       ) nl ON nl.client_id = c.id
       WHERE c.status = 'active'

@@ -48,23 +48,21 @@ export default function PagosTab({
   const loadInit = useCallback(async () => {
     setLoadingInit(true)
     try {
-      const [rd, rp, rr] = await Promise.all([
+      const [rd, rp] = await Promise.all([
         fetch('/api/cobros'),
-        fetch('/api/payments'),
         fetch('/api/payments')
       ])
       const dd = await rd.json()
       const dp = await rp.json()
-      const dr = await rr.json()
       const todos: Cliente[] = dd.clients || []
       setDeudores(todos.filter(c => CLS_URGENTE.includes(c.classification)))
       setProximos(todos.filter(c => CLS_PROXIMO.includes(c.classification)))
       const pagos: PagoReciente[] = (dp.payments || []).slice(0, 20)
       setRecientes(pagos)
-      const stats = dr.stats || {}
+      const cobradoMes = pagos.reduce((sum, p) => sum + (p.amount || 0), 0)
       setStatsHoy({
-        cobradoMes: stats.paid_amount || 0,
-        totalPagos: stats.total || 0
+        cobradoMes,
+        totalPagos: pagos.length
       })
       // Pre-llenar formularios
       const f: Record<number,{amount:number;method:string;notes:string}> = {}

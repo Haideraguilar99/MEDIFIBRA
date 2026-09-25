@@ -11,6 +11,7 @@ type CobrosClient = {
   classification: string
   dia_pago: string
   incluye_tv: number
+  cobro_enviado_at?: string
 }
 
 type GroupState = {
@@ -59,6 +60,16 @@ export default function CobrosTab({
         (c: CobrosClient) => c.classification !== 'AL_DIA'
       )
       setClients(list)
+
+      // P1 — Restaurar cobradoTs desde DB al recargar
+      const ts: Record<number, string> = {}
+      for (const cl of list) {
+        if (cl.cobro_enviado_at) {
+          const hrs = (Date.now() - new Date(cl.cobro_enviado_at).getTime()) / 3_600_000
+          if (hrs < 12) ts[cl.id] = cl.cobro_enviado_at
+        }
+      }
+      setCobradoTs(ts)
 
       const g: Record<string, GroupState> = {}
       for (const dia of ['5','10','12','15','20','25','30']) {
