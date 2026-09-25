@@ -1030,29 +1030,6 @@ export default function Dashboard() {
                 <input type="text" value={form.city} onChange={e=>setForm(p=>({...p,city:e.target.value}))} style={iStyle} className={iCls} placeholder="Medellín"/>
               </F>
 
-              {/* ── Foto de ubicación ── */}
-              <SectionHeader title="Foto de Ubicación"/>
-              <F muted={MUTED} label="URL Foto Fachada / Cuadra" span2>
-                <input type="text" value={form.foto_fachada} onChange={e=>setForm(p=>({...p,foto_fachada:e.target.value}))} style={iStyle} className={iCls} placeholder="https://... (link de Google Photos, Drive, etc.)"/>
-              </F>
-              {form.foto_fachada&&(
-                <div className="md:col-span-2">
-                  <a href={form.foto_fachada} target="_blank" rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors"
-                    style={{backgroundColor:dark?'#1f1f1f':'#f1f5f9',border:`1px solid ${dark?'#222222':'#e2e8f0'}`,color:dark?'#f1f5f9':'#0f172a'}}>
-                    <Image className="w-3.5 h-3.5"/> Ver foto
-                  </a>
-                </div>
-              )}
-
-              {/* ── Servicio ── */}
-              <SectionHeader title="Plan y Servicio"/>
-              <F muted={MUTED} label="Plan de Internet *">
-                <select value={form.plan} onChange={e=>{const p=plans.find(x=>x.name===e.target.value);setForm(prev=>({...prev,plan:e.target.value,plan_value:(p?.value??0)+Number(prev.incluye_tv)}))}} style={iStyle} className={iCls}>
-                  <option value="">Seleccionar plan...</option>
-                  {plans.map(p=><option key={p.id} value={p.name}>{p.name} — {formatCurrency(p.value)}/mes</option>)}
-                </select>
-              </F>
               <F muted={MUTED} label="Valor Mensual ($)">
                 <input type="number" value={form.plan_value} onChange={e=>setForm(p=>({...p,plan_value:Number(e.target.value)}))} style={iStyle} className={iCls}/>
               </F>
@@ -1099,9 +1076,7 @@ export default function Dashboard() {
               <F muted={MUTED} label="Referencia / Llave BRE-B">
                 <input type="text" value={form.reference} onChange={e=>setForm(p=>({...p,reference:e.target.value}))} style={iStyle} className={iCls} placeholder="Código de referencia"/>
               </F>
-              <F muted={MUTED} label="Fecha Consumo">
-                <input type="date" value={form.consumption_date} onChange={e=>setForm(p=>({...p,consumption_date:e.target.value}))} style={iStyle} className={iCls}/>
-              </F>
+              <F muted={MUTED} label="Fecha Consumo">              </F>
               <F muted={MUTED} label="Fecha Pago (sistema)">
                 <input type="date" value={form.payment_date} onChange={e=>setForm(p=>({...p,payment_date:e.target.value}))} style={iStyle} className={iCls}/>
               </F>

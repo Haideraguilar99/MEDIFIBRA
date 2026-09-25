@@ -24,21 +24,25 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || req.headers.get('x-real-ip')
+      || ''
+
     const result = await db.execute({
       sql: `INSERT INTO clients
               (name, email, phone, cellphone, address, city, neighborhood, commune,
                consumption_date, payment_date, plan, plan_value, reference, status,
                classification, notes, cedula, punto_referencia, foto_fachada,
                telefono_alternativo, fecha_instalacion, incluye_tv, dia_pago,
-               referido_nombre, referido_telefono, puntos_tv)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+               referido_nombre, referido_telefono, puntos_tv, ip_address)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       args: [
         b.name.trim(), b.email ?? '', b.phone ?? '', b.cellphone.trim(),
         b.address.trim(), b.city ?? 'Medellín', b.neighborhood ?? '', b.commune ?? '',
         '', '', '', 0, '', 'active',
         'SIN_FECHA', 'Registro via formulario público', b.cedula.trim(),
         b.punto_referencia ?? '', '', b.telefono_alternativo ?? '',
-        '', 0, '', '', '', 0,
+        '', 0, '', '', '', 0, ip,
       ],
     })
 
