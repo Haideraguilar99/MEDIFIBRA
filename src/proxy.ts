@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET ?? 'fallback-dev-secret')
+if (!process.env.JWT_SECRET) throw new Error('[proxy] JWT_SECRET no configurado')
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 
 const PUBLIC = [
   '/login',
   '/api/auth/login',
+  '/registro',
+  '/api/registro',
   '/api/auth/seed',
   '/api/init',
   '/api/sse',
   '/api/push',
   '/api/webhook',
-  '/api/notifications',
   '/tecnico',
   '/api/tecnico/',
 ]
