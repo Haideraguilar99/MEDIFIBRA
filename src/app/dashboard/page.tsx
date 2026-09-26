@@ -29,6 +29,7 @@ type Client = {
   incluye_tv: number; dia_pago: string
   referido_nombre: string; referido_telefono: string
   puntos_tv: number
+  ip_address: string
 }
 type Payment = {
   id: number; client_id: number; amount: number; period: string
@@ -75,13 +76,14 @@ const SectionHeader = ({ icon, title }:{ icon?:React.ReactNode; title:string }) 
   </div>
 )
 
-const EMPTY_CLIENT = {
-  name:'', email:'', phone:'', cellphone:'', address:'', city:'',
+const EMPTY_CLIENT: Client = {
+  id:0, name:'', email:'', phone:'', cellphone:'', address:'', city:'',
   neighborhood:'', commune:'', consumption_date:'', payment_date:'',
   plan:'', plan_value:0, reference:'', status:'active', classification:'SIN_FECHA', notes:'',
   cedula:'', punto_referencia:'', foto_fachada:'', telefono_alternativo:'',
   fecha_instalacion:'', incluye_tv:0, dia_pago:'',
   referido_nombre:'', referido_telefono:'', puntos_tv:0,
+  ip_address:'', created_at:'',
 }
 const METHODS = ['efectivo','bancolombia','bre-b','transferencia']
 
@@ -1076,9 +1078,8 @@ export default function Dashboard() {
               <F muted={MUTED} label="Referencia / Llave BRE-B">
                 <input type="text" value={form.reference} onChange={e=>setForm(p=>({...p,reference:e.target.value}))} style={iStyle} className={iCls} placeholder="Código de referencia"/>
               </F>
-              <F muted={MUTED} label="Fecha Consumo">              </F>
-              <F muted={MUTED} label="Fecha Pago (sistema)">
-                <input type="date" value={form.payment_date} onChange={e=>setForm(p=>({...p,payment_date:e.target.value}))} style={iStyle} className={iCls}/>
+              <F muted={MUTED} label="IP Asignada">
+                <input type="text" value={form.ip_address||''} onChange={e=>setForm(p=>({...p,ip_address:e.target.value}))} style={iStyle} className={iCls} placeholder="Ej: 192.168.1.100"/>
               </F>
 
               {/* ── Clasificación ── */}
