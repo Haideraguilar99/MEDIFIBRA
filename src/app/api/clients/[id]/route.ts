@@ -26,7 +26,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       sql: `UPDATE clients SET
               name=?,email=?,phone=?,cellphone=?,address=?,city=?,neighborhood=?,commune=?,
               consumption_date=?,payment_date=?,plan=?,plan_value=?,reference=?,
-              status=?,classification=?,notes=?,
+              status=?,classification=?,notes=?,suspension_reason=?,
               cedula=?,punto_referencia=?,foto_fachada=?,telefono_alternativo=?,
               fecha_instalacion=?,incluye_tv=?,dia_pago=?,referido_nombre=?,referido_telefono=?,puntos_tv=?,ip_address=?
             WHERE id=?`,
@@ -47,6 +47,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         b.status           ?? c.status           ?? 'active',
         b.classification   ?? c.classification   ?? 'AL_DIA',
         b.notes            ?? c.notes            ?? '',
+        b.suspension_reason ?? c.suspension_reason ?? '',
         b.cedula           ?? c.cedula           ?? '',
         b.punto_referencia     ?? c.punto_referencia     ?? '',
         b.foto_fachada         ?? c.foto_fachada         ?? '',

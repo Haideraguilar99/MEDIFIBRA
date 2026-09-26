@@ -2,7 +2,8 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { pbkdf2Sync, randomBytes } from 'crypto'
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET ?? 'fallback-dev-secret')
+if (!process.env.JWT_SECRET) throw new Error('[auth] JWT_SECRET no configurado')
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 export const COOKIE_NAME = 'mf_token'
 
 // ── JWT ────────────────────────────────────────────────────────────
@@ -10,7 +11,7 @@ export async function signToken(payload: { id: number; username: string; role: s
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('7d')
+    .setExpirationTime('48h')
     .sign(SECRET)
 }
 

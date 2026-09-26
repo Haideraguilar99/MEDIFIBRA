@@ -30,6 +30,7 @@ type Client = {
   referido_nombre: string; referido_telefono: string
   puntos_tv: number
   ip_address: string
+  suspension_reason: string
 }
 type Payment = {
   id: number; client_id: number; amount: number; period: string
@@ -83,7 +84,7 @@ const EMPTY_CLIENT: Client = {
   cedula:'', punto_referencia:'', foto_fachada:'', telefono_alternativo:'',
   fecha_instalacion:'', incluye_tv:0, dia_pago:'',
   referido_nombre:'', referido_telefono:'', puntos_tv:0,
-  ip_address:'', created_at:'',
+  ip_address:'', suspension_reason:'', created_at:'',
 }
 const METHODS = ['efectivo','bancolombia','bre-b','transferencia']
 
@@ -976,6 +977,12 @@ export default function Dashboard() {
                   <p className="text-sm" style={{color:LIGHT}}>{viewClient.notes}</p>
                 </div>
               )}
+              {(viewClient.status==='suspended'||viewClient.status==='disabled')&&!!viewClient.suspension_reason&&(
+                <div className="rounded-xl p-4" style={{backgroundColor:'#1c0a0a',border:'1px solid #7f1d1d'}}>
+                  <p className="text-xs font-semibold uppercase tracking-wider mb-1.5" style={{color:'#f87171'}}>{viewClient.status==='suspended'?'Razon de suspension':'Razon de inhabilitacion'}</p>
+                  <p className="text-sm" style={{color:'#fca5a5'}}>{viewClient.suspension_reason}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1096,11 +1103,17 @@ export default function Dashboard() {
               {/* ── Clasificación ── */}
               <SectionHeader title="Estado y Clasificación"/>
               <F muted={MUTED} label="Estado del sistema">
-                <select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))} style={iStyle} className={iCls}>
+                <select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value,suspension_reason:['suspended','disabled'].includes(e.target.value)?p.suspension_reason:''}))} style={iStyle} className={iCls}>
                   <option value="active">Activo</option>
                   <option value="suspended">Suspendido</option>
+                  <option value="disabled">Inhabilitado</option>
                 </select>
               </F>
+              {(form.status==='suspended'||form.status==='disabled')&&(
+                <F muted={MUTED} label={form.status==='suspended'?'Razon de suspension':'Razon de inhabilitacion'}>
+                  <input type="text" value={form.suspension_reason} onChange={e=>setForm(p=>({...p,suspension_reason:e.target.value}))} style={iStyle} className={iCls} placeholder={form.status==='suspended'?'Ej: Falta de pago, mudanza...':'Ej: Fraude, incumplimiento contrato...'}/>
+                </F>
+              )}
               <F muted={MUTED} label="Clasificación de cobro">
                 <select value={form.classification} onChange={e=>setForm(p=>({...p,classification:e.target.value}))} style={iStyle} className={iCls}>
                   {CLASSIFICATIONS.map(c=><option key={c} value={c}>{getCC(c).label}</option>)}

@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
               (name,email,phone,cellphone,address,city,neighborhood,commune,
                consumption_date,payment_date,plan,plan_value,reference,status,classification,notes,
                cedula,punto_referencia,foto_fachada,telefono_alternativo,
-               fecha_instalacion,incluye_tv,dia_pago,referido_nombre,referido_telefono,puntos_tv)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+               fecha_instalacion,incluye_tv,dia_pago,referido_nombre,referido_telefono,puntos_tv,suspension_reason)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       args: [
         b.name, b.email??'', b.phone??'', b.cellphone ?? '',
         b.address??'', b.city??'', b.neighborhood??'', b.commune??'',
@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
         b.incluye_tv ?? 0, b.dia_pago??'',
         b.referido_nombre??'', b.referido_telefono??'',
         b.puntos_tv ?? 0,
+        b.suspension_reason ?? '',
       ]
     })
     const rowId = result.lastInsertRowid?.toString() ?? '0'
