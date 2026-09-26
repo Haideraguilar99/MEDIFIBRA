@@ -15,6 +15,7 @@ export const CLASSIFICATIONS = [
   'RECOGER_EQUIPO',
   'USUARIO_PERDIDO',
   'SIN_FECHA',
+  'INHABILITADO',
 ] as const
 
 export type Classification = typeof CLASSIFICATIONS[number]
@@ -33,6 +34,7 @@ export const CLASS_CONFIG: Record<Classification, {
   RECOGER_EQUIPO:     { bg:'#1a0808', text:'#fca5a5', border:'#991b1b', label:'Recoger equipo'       },
   USUARIO_PERDIDO:    { bg:'#111827', text:'#6b7280', border:'#374151', label:'Usuario perdido'      },
   SIN_FECHA:          { bg:'#0d1a2e', text:'#60a5fa', border:'#1d4ed8', label:'Sin fecha'            },
+  INHABILITADO:       { bg:'#1a0a1a', text:'#e879f9', border:'#86198f', label:'Inhabilitado'         },
 }
 
 // Estados que NUNCA se cambian automaticamente por logica de fechas
@@ -44,6 +46,7 @@ export const PROTECTED_CLASSIFICATIONS: readonly string[] = [
   'RECOGER_EQUIPO',
   'USUARIO_PERDIDO',
   'SIN_FECHA',
+  'INHABILITADO',
 ]
 
 export function getCC(cls: string) {
