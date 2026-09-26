@@ -1032,8 +1032,17 @@ export default function Dashboard() {
                 <input type="text" value={form.city} onChange={e=>setForm(p=>({...p,city:e.target.value}))} style={iStyle} className={iCls} placeholder="Medellín"/>
               </F>
 
+              <F muted={MUTED} label="Plan de Internet">
+                <select value={form.plan} onChange={e=>{
+                  const selected = plans.find(p=>p.name===e.target.value)
+                  setForm(p=>({...p, plan:e.target.value, plan_value: selected ? selected.value : p.plan_value}))
+                }} style={iStyle} className={iCls}>
+                  <option value="">Sin asignar</option>
+                  {plans.map(p=><option key={p.id} value={p.name}>{p.name} — ${p.value.toLocaleString('es-CO')}</option>)}
+                </select>
+              </F>
               <F muted={MUTED} label="Valor Mensual ($)">
-                <input type="number" value={form.plan_value} onChange={e=>setForm(p=>({...p,plan_value:Number(e.target.value)}))} style={iStyle} className={iCls}/>
+                <input type="number" value={form.plan_value===0?'':form.plan_value} onChange={e=>setForm(p=>({...p,plan_value:e.target.value===''?0:Number(e.target.value)}))} style={iStyle} className={iCls} placeholder="Se asigna al elegir plan"/>
               </F>
               <F muted={MUTED} label="¿Incluye MediTV (TV satelital)?">
                 <div className="flex items-center gap-3 mt-1">
