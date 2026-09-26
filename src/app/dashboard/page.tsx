@@ -135,6 +135,7 @@ export default function Dashboard() {
   const [search,       setSearch]       = useState('')
   const [filterPlan,   setFilterPlan]   = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [filterDia,    setFilterDia]    = useState('')
   const [filterClass,  setFilterClass]  = useState('')
 
   const fetchClients = useCallback(async () => {
@@ -286,7 +287,8 @@ export default function Dashboard() {
     const mp = !filterPlan   || c.plan   === filterPlan
     const mst= !filterStatus || c.status === filterStatus
     const mc = !filterClass  || c.classification === filterClass
-    return ms && mp && mst && mc
+    const md = !filterDia || (filterDia==='sin_definir' ? !c.dia_pago : c.dia_pago===filterDia)
+    return ms && mp && mst && mc && md
   })
 
   const handleLogout = async () => { await fetch('/api/auth/logout',{method:'POST'}); router.push('/login'); router.refresh() }
