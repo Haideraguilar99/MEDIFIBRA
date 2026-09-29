@@ -42,5 +42,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|logo.png|icons|fondoM.png|QR.jpg|bancolombia.png|bre-b.png|logofact.jpeg|medifibrasas.png).*)']
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|logo.png|icons|fondoM.png|QR.jpg|bancolombia.png|bre-b.png|logofact.jpeg|medifibrasas.png|medifibra_sin_fondo_1050.png).*)']
 }
