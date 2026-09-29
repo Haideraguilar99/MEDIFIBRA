@@ -18,6 +18,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import NotificationBell from '@/components/NotificationBell'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { buildWAMessage as buildWATemplate } from '@/lib/wa-templates'
 
 type Client = {
   id: number; name: string; email: string; phone: string; cellphone: string
@@ -211,45 +212,7 @@ export default function Dashboard() {
   const openEditClient = (c:Client) => { setEditClient(c); setForm({...c, incluye_tv: Number(c.incluye_tv)}); setShowModal(true) }
   const getPlanColor = (n:string) => plans.find(p=>p.name===n)?.color ?? '#64748b'
   // ── Plantillas WhatsApp por clasificacion ─────────────────────────────────
-  const buildWAMessage = (cl: Client): string => {
-    const nombre  = cl.name || 'Cliente'
-    const plan    = cl.plan || 'su plan'
-    const monto   = formatCurrency(cl.plan_value)
-    const dia     = cl.dia_pago ? `dia ${cl.dia_pago} de cada mes` : 'la fecha acordada'
-    const cls     = cl.classification || 'AL_DIA'
-    const empresa = 'Medifibra S.A.S'
-    const wa      = '333 728 8745'
-    const cuenta  = '00995202514'
-
-    const firma = `\n-- ${empresa} | ${wa}`
-
-    const tpl: Record<string, string> = {
-      AL_DIA: `${empresa} -- Pago Confirmado\n\nHola ${nombre},\n\nTu pago ha sido recibido y verificado con exito. Tu servicio de internet se encuentra AL DIA.\n\nPlan: ${plan}\nProximo pago: ${dia}\nValor: ${monto}\n\nRecuerda enviar tu comprobante a este WhatsApp cuando realices tu proximo pago. Gracias por tu puntualidad.${firma}`,
-
-      PROXIMO_PAGAR: `${empresa} -- Recordatorio de Pago\n\nHola ${nombre},\n\nTe recordamos que tu fecha de pago es el ${dia}, que se aproxima en los proximos dias.\n\nPlan: ${plan}\nValor a pagar: ${monto}\n\nUna vez realices tu pago, envianos el comprobante directamente a este numero para registrarlo.\n\nGracias por estar al dia con nosotros.${firma}`,
-
-      RECORDAR_RECIBO: `${empresa} -- Comprobante Pendiente\n\nHola ${nombre},\n\nHemos verificado que aun no hemos recibido tu comprobante de pago.\n\nAccion requerida: Por favor envianos la foto o captura de tu comprobante de pago directamente a este WhatsApp para actualizar tu cuenta de forma inmediata. Una vez recibido, confirmamos tu estado en minutos.${firma}`,
-
-      DEUDA_PENDIENTE: `${empresa} -- Deuda Pendiente\n\nHola ${nombre},\n\nTe informamos que tu fecha de pago (${dia}) ya vencio y aun no hemos recibido tu pago.\n\nValor adeudado: ${monto}\n\nImportante: Si no regularizas tu pago pronto, tu servicio sera suspendido automaticamente. Realiza tu pago y envia el comprobante a este numero.\n\nEstamos aqui para ayudarte.${firma}`,
-
-      NOVEDAD_PAGO: `${empresa} -- Novedad en tu Pago\n\nHola ${nombre},\n\nHemos identificado una novedad relacionada con tu pago que requiere ser atendida. Tu cuenta esta siendo revisada por nuestro equipo de cartera.\n\nSi ya realizaste algun pago, por favor envianos el comprobante a este numero. Si tienes alguna duda, puedes comunicarte directamente aqui.${firma}`,
-
-      NO_PAGA_AUTORIZADO: `${empresa} -- Confirmacion de Acuerdo\n\nHola ${nombre},\n\nTe confirmamos que hemos registrado en tu cuenta un acuerdo especial de pago previamente autorizado.\n\nPlan: ${plan}\nValor: ${monto}\n\nTu servicio continua activo con total normalidad. Cuando llegue la fecha acordada, recuerda enviar tu comprobante a este numero.${firma}`,
-
-      SUSPENDIDO_TEMP: `${empresa} -- Servicio Suspendido Temporalmente\n\nHola ${nombre},\n\nTu servicio se encuentra suspendido temporalmente por una situacion registrada en tu cuenta.\n\nCuando estes listo para retomar el servicio, contactanos directamente aqui para coordinar la reactivacion.\n\nValor del plan: ${monto}${firma}`,
-
-      SUSPENDIDO: `${empresa} -- Servicio Suspendido\n\nHola ${nombre},\n\nTu servicio de internet ha sido SUSPENDIDO por falta de pago.\n\nTotal a pagar para reactivar: ${monto}\n\nComo reactivar tu servicio:\n1. Realiza tu pago por el valor indicado.\n2. Envia el comprobante a este WhatsApp: ${wa}\n3. Tu servicio sera reactivado en maximo 2 horas habiles.\n\nRecuerda que a los 60 dias de suspension se procede al retiro de los equipos instalados.${firma}`,
-
-      RECOGER_EQUIPO: `${empresa} -- Aviso de Retiro de Equipos\n\nEstimado(a) ${nombre},\n\nHan transcurrido mas de 60 dias desde la suspension de tu servicio sin que se haya regularizado el pago pendiente.\n\nDe acuerdo con nuestra politica de servicio, procederemos al RETIRO DE LOS EQUIPOS instalados en tu domicilio.\n\nImportante: La no entrega de los equipos en la visita tecnica generara multas y sobrecargos adicionales.\n\nDeuda total actual: ${monto}\n\nSi deseas regularizar tu situacion antes de la visita, contactanos urgente a este numero.${firma}`,
-
-      USUARIO_PERDIDO: `${empresa} -- Cierre de Cuenta\n\nEstimado(a) ${nombre},\n\nTe informamos que tu cuenta de servicio con nosotros ha sido oficialmente cerrada. Lamentamos no haber podido continuar brindandote nuestro servicio.\n\nSi en algun momento deseas volver a contratar nuestros servicios, estaremos disponibles para atenderte con gusto.\n\nHasta pronto.${firma}`,
-          SIN_FECHA: `${empresa} -- Falta tu fecha de pago\n\nHola ${nombre},\n\nTu cuenta esta activa pero no tenemos registrada tu fecha de pago mensual.\n\nPlan: ${plan}\nValor: ${monto}\n\nComunicate con nosotros para definir tu dia de pago y mantener tu servicio al dia.${firma}`,
-
-      CLIENTE_NUEVO: `${empresa} -- Bienvenido\n\nHola ${nombre},\n\nBienvenido(a) a ${empresa}. Es un gusto tenerte como nuevo cliente. Tu servicio de internet ya esta activo.\n\nPlan: ${plan}\nValor mensual: ${monto}\nFecha de pago: ${dia}\n\nMedios de pago:\nBancolombia - Cuenta Ahorros: ${cuenta}\nBre-B - Llave: ${cuenta}\n\nPara cualquier consulta, contactanos por este WhatsApp.${firma}`,
-    }
-
-    return tpl[cls] ?? tpl['AL_DIA']
-  }
+  const buildWAMessage = (cl: Client): string => buildWATemplate(cl, formatCurrency(cl.plan_value))
 
   const openWAModal = (cl: Client) => {
     setWAClient(cl)
