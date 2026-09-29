@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { CheckCircle, ChevronDown, ChevronRight, Phone, Send } from 'lucide-react'
+import { mensajeCobro } from '@/lib/wa-templates'
 
 type CobrosClient = {
   id: number
@@ -88,9 +89,7 @@ export default function CobrosTab({
     try {
       const phone = (c.cellphone ?? '').replace(/\D/g, '')
       const monto = fmt(c.plan_value + (c.incluye_tv || 0))
-      const msg = encodeURIComponent(
-        `Medifibra S.A.S -- Cobro\n\nHola ${c.name},\n\nTe recordamos que tienes un pago pendiente.\n\nPlan: ${c.plan}\nValor: ${monto}\n\nEnvianos tu comprobante a este WhatsApp una vez realices el pago.\n-- Medifibra S.A.S | 333 728 8745`
-      )
+      const msg = encodeURIComponent(mensajeCobro(c.name, c.plan, monto))
       window.open(`https://wa.me/57${phone}?text=${msg}`, '_blank')
 
       await fetch('/api/notifications/log', {

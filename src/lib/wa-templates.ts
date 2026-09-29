@@ -219,3 +219,54 @@ export function buildWAMessage(cl: WAClient, monto: string): string {
   partes.push('', `${EMPRESA} | ${WHATSAPP}`)
   return partes.join('\n')
 }
+
+// ---- Mensajes de Cobros y Facturas (misma marca, medios de pago y observacion) ----
+function cierreComun(): string[] {
+  const out: string[] = []
+  if (OBSERVACION_ACTIVA) out.push('', OBSERVACION)
+  out.push('', `${EMPRESA} | ${WHATSAPP}`)
+  return out
+}
+
+export function mensajeCobro(nombre?: string | null, plan?: string | null, monto?: string): string {
+  return [
+    `*${EMPRESA.toUpperCase()}* | Recordatorio de cobro`,
+    '',
+    `Hola ${nombreLimpio(nombre)},`,
+    '',
+    'Te recordamos que tienes un pago pendiente en tu servicio de internet.',
+    '',
+    `Plan: ${plan || 'tu plan'}`,
+    `Valor: ${monto ?? ''}`,
+    '',
+    MEDIOS,
+    'Envianos el comprobante a este WhatsApp una vez realices el pago.',
+    ...cierreComun(),
+  ].join('\n')
+}
+
+export function mensajeFactura(
+  nombre: string | null | undefined,
+  plan: string | null | undefined,
+  monto: string,
+  periodo: string,
+  linkFactura: string,
+  diaPago?: string | number | null,
+): string {
+  return [
+    `*${EMPRESA.toUpperCase()}* | Factura de servicio`,
+    '',
+    `Hola ${nombreLimpio(nombre)},`,
+    '',
+    `Te enviamos tu factura correspondiente al periodo ${periodo}.`,
+    '',
+    `Plan: ${plan || 'tu plan'}`,
+    `Valor: ${monto}`,
+    '',
+    `Ver factura: ${linkFactura}`,
+    '',
+    diaPago ? `Realiza tu pago antes del dia ${diaPago} de este mes.` : 'Realiza tu pago en la fecha acordada.',
+    MEDIOS,
+    ...cierreComun(),
+  ].join('\n')
+}

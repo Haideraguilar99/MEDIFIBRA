@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { FileText, MessageCircle, CheckCircle, Calendar } from 'lucide-react'
+import { mensajeFactura } from '@/lib/wa-templates'
 
 type FacturaClient = {
   id: number
@@ -83,9 +84,7 @@ export default function FacturasTab({
       const phone = (c.cellphone ?? '').replace(/\D/g, '')
       const monto = fmt(c.plan_value + (c.incluye_tv || 0))
       const linkFactura = `${window.location.origin}/factura/${c.id}`
-      const msg = encodeURIComponent(
-        `Medifibra S.A.S -- Factura de Servicio\n\nHola ${c.name},\n\nTe enviamos tu factura correspondiente al periodo ${period}.\n\nPlan: ${c.plan}\nValor: ${monto}\n\nVer factura: ${linkFactura}\n\nRealiza tu pago antes del dia ${c.dia_pago} de este mes.\n-- Medifibra S.A.S | 333 728 8745`
-      )
+      const msg = encodeURIComponent(mensajeFactura(c.name, c.plan, monto, period, linkFactura, c.dia_pago))
       window.open(`https://wa.me/57${phone}?text=${msg}`, '_blank')
 
       setEnviadoTs(prev => ({ ...prev, [c.id]: new Date().toISOString() }))
