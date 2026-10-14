@@ -401,7 +401,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-2">
             <div className="hidden lg:flex items-center gap-2 text-xs" style={{color:MUTED}}>
               <span>NIT 902060057-8</span><span style={{color:BORDER}}>·</span>
-              <span>Mariana Lujan</span><span style={{color:BORDER}}>·</span>
+              <span>Ana María</span><span style={{color:BORDER}}>·</span>
               <span>Blanquizal, Medellín</span>
             </div>
             <div style={{width:1,height:16,backgroundColor:BORDER}} className="hidden lg:block"/>

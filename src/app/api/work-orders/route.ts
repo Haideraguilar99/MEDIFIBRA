@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
         technician_id, client_id, task_type,
         task_description || '', priority || 'normal',
         scheduled_date || '', scheduled_time || '',
-        notes || '', created_by || 'Mariana'
+        notes || '', created_by || 'Ana María'
       ]
     });
 
