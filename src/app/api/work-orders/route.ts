@@ -73,16 +73,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const is_secondary = body.is_secondary ? 1 : 0;
+
     const result = await db.execute({
       sql: `INSERT INTO work_orders
               (technician_id, client_id, task_type, task_description,
-               priority, scheduled_date, scheduled_time, notes, created_by, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+               priority, scheduled_date, scheduled_time, notes, created_by, status, is_secondary)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
       args: [
         technician_id, client_id, task_type,
         task_description || '', priority || 'normal',
         scheduled_date || '', scheduled_time || '',
-        notes || '', created_by || 'Ana María'
+        notes || '', created_by || 'Ana María',
+        is_secondary
       ]
     });
 
