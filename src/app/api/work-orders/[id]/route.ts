@@ -55,6 +55,7 @@ export async function PUT(
       priority, scheduled_date, scheduled_time,
       status, notes, whatsapp_tech_sent, whatsapp_client_sent
     } = body;
+    // tech_resultado NO se toca aqui — solo el portal tecnico lo escribe
 
     await db.execute({
       sql: `UPDATE work_orders
