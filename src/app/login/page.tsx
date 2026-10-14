@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Lock } from 'lucide-react'
 
 const NAME_MAP: Record<string, string> = {
-  'MDF.Admin26':   'Ana María',
+  'MDF.Admin26':   'Ana María Ibarguen',
   'medardo':       'Medardo Mosquera',
   'haider':        'Haider Aguilar',
 }
