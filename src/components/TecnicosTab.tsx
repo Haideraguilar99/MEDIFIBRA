@@ -132,6 +132,13 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
         const body={...oForm,technician_id:primaryId,notes:notesVal};
         const r=await fetch('/api/work-orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         if(!r.ok){const e=await r.json();alert(e.error??'Error');return;}
+        // Notificacion push al tecnico principal
+        const rData=await r.json();
+        fetch('/api/push/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+          title:'Nueva orden asignada',
+          body:'Orden '+rData.order_number+' - Cliente: '+(clients.find((x:Client)=>x.id===oForm.client_id)?.name??''),
+          technician_id:primaryId
+        })}).catch(()=>null);
         for(const tid of extraIds){
           const tName = technicians.find(x=>x.id===tid)?.name??'Tecnico';
           const secNotes = 'ACOMPANAMIENTO | Tecnico principal: '+(primaryTech?primaryTech.name:'')+(oForm.notes?' | '+oForm.notes:'');
