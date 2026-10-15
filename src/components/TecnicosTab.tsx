@@ -136,7 +136,7 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
         const rData=await r.json();
         fetch('/api/push/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
           title:'Nueva orden asignada',
-          body:'Orden '+rData.order_number+' - Cliente: '+(clients.find((x:Client)=>x.id===oForm.client_id)?.name??''),
+          body:'Orden '+rData.order_number+' - Cliente: '+(selC?.name??''),
           technician_id:primaryId
         })}).catch(()=>null);
         for(const tid of extraIds){
