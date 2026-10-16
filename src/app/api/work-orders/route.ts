@@ -9,6 +9,45 @@ function buildOrderNumber(id: bigint | number): string {
   return `OS-${y}${m}${day}-${String(id).padStart(4, '0')}`;
 }
 
+async function sendPushToTechnician(
+  technicianId: number,
+  orderId: string,
+  orderNumber: string,
+  clientName: string
+): Promise<void> {
+  const url = 'https://medifibra-tecnico.vercel.app/api/push/send';
+  const payload = {
+    title: 'Nueva orden asignada',
+    body: `Orden #${orderNumber} - ${clientName}`,
+    technician_id: technicianId,
+    order_id: orderId,
+    order_number: orderNumber
+  };
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json() as { ok?: boolean; sent?: number; failed?: number; error?: string };
+
+    if (!res.ok) {
+      console.error(`[push] HTTP ${res.status} — ${data.error ?? 'sin detalle'}`);
+      return;
+    }
+
+    if (data.sent === 0) {
+      console.warn(`[push] tecnico ${technicianId} sin suscripcion activa`);
+    } else {
+      console.log(`[push] OK — tecnico ${technicianId} orden ${orderNumber} sent:${data.sent}`);
+    }
+  } catch (err) {
+    console.error(`[push] fetch error para tecnico ${technicianId}:`, err);
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const db = getDb();
@@ -41,17 +80,17 @@ export async function GET(req: NextRequest) {
     `;
     const args: (string | number)[] = [];
 
-    if (techId)  { sql += ' AND wo.technician_id = ?'; args.push(techId); }
-    if (status)  { sql += ' AND wo.status = ?';        args.push(status); }
+    if (techId) { sql += ' AND wo.technician_id = ?'; args.push(techId); }
+    if (status) { sql += ' AND wo.status = ?';        args.push(status); }
 
-    sql += ` ORDER BY wo.created_at DESC LIMIT ?`;
+    sql += ' ORDER BY wo.created_at DESC LIMIT ?';
     args.push(limit);
 
     const result = await db.execute({ sql, args });
     return NextResponse.json({ workOrders: result.rows });
   } catch (e) {
     console.error('[GET /api/work-orders]', e);
-    return NextResponse.json({ error: 'Error al obtener órdenes' }, { status: 500 });
+    return NextResponse.json({ error: 'Error al obtener ordenes' }, { status: 500 });
   }
 }
 
@@ -75,6 +114,13 @@ export async function POST(req: NextRequest) {
 
     const is_secondary = body.is_secondary ? 1 : 0;
 
+    // Obtener nombre del cliente para el push
+    const clientResult = await db.execute({
+      sql: 'SELECT name FROM clients WHERE id = ?',
+      args: [client_id]
+    });
+    const clientName = (clientResult.rows[0]?.name as string) ?? 'Cliente';
+
     const result = await db.execute({
       sql: `INSERT INTO work_orders
               (technician_id, client_id, task_type, task_description,
@@ -84,7 +130,7 @@ export async function POST(req: NextRequest) {
         technician_id, client_id, task_type,
         task_description || '', priority || 'normal',
         scheduled_date || '', scheduled_time || '',
-        notes || '', created_by || 'Ana María Ibarguen',
+        notes || '', created_by || 'Ana Maria Ibarguen',
         is_secondary
       ]
     });
@@ -97,11 +143,22 @@ export async function POST(req: NextRequest) {
       args: [orderNumber, newId.toString()]
     });
 
+    // Push server-to-server — solo para orden principal
+    if (!is_secondary) {
+      await sendPushToTechnician(
+        Number(technician_id),
+        newId.toString(),
+        orderNumber,
+        clientName
+      );
+    }
+
     return NextResponse.json({
       id: newId.toString(),
       order_number: orderNumber,
       message: 'Orden creada exitosamente'
     }, { status: 201 });
+
   } catch (e) {
     console.error('[POST /api/work-orders]', e);
     return NextResponse.json({ error: 'Error al crear orden' }, { status: 500 });
