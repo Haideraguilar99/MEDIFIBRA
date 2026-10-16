@@ -134,10 +134,12 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
         if(!r.ok){const e=await r.json();alert(e.error??'Error');return;}
         // Notificacion push al tecnico principal
         const rData=await r.json();
-        fetch('/api/push/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        fetch('https://medifibra-tecnico.vercel.app/api/push/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
           title:'Nueva orden asignada',
-          body:'Orden '+rData.order_number+' - Cliente: '+(selC?.name??''),
-          technician_id:primaryId
+          body:'Orden #'+rData.order_number+' - '+(selC?.name??'Cliente'),
+          technician_id:primaryId,
+          order_id:rData.id,
+          order_number:rData.order_number
         })}).catch(()=>null);
         for(const tid of extraIds){
           const tName = technicians.find(x=>x.id===tid)?.name??'Tecnico';
