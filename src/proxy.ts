@@ -18,6 +18,7 @@ const PUBLIC = [
   '/api/tecnico/',
   '/orden-publica',
   '/api/orden-publica',
+  '/api/cron',
 ]
 
 export async function proxy(req: NextRequest) {
