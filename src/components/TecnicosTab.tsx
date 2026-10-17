@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Pencil, Trash2, MessageCircle, FileText, Phone, Wrench, Search, X, Calendar, RefreshCw, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash2, MessageCircle, Phone, Search, X, Calendar, RefreshCw, Eye } from 'lucide-react';
 
 interface Technician { id:number; name:string; cedula:string; phone:string; cellphone:string; email:string; photo_url:string; role:string; specialty:string; status:string; notes:string; created_at:string; }
 interface ClientResult { id:number; name:string; address:string; neighborhood:string; commune:string; cellphone:string; plan:string; status:string; cedula:string; punto_referencia:string; }
@@ -149,8 +149,7 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
   async function delO(id:number,num:string){ if(!confirm(`Eliminar orden ${num}?`))return; await fetch(`/api/work-orders/${id}`,{method:'DELETE'}); fetchO(); }
   async function chgStatus(id:number,status:string,o:WorkOrder){ await fetch(`/api/work-orders/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,status})}); fetchO(); }
 
-  async function waT(o:WorkOrder){ const t=tCfg(o.task_type); const msg=[`ORDEN DE SERVICIO - MEDIFIBRA S.A.S`,`Orden: ${o.order_number}`,``,`Tecnicos: ${o.technician_name}${o.notes&&o.notes.includes('Tecnicos adicionales:')?', '+o.notes.split('Tecnicos adicionales:')[1].split('|')[0].trim():''}`,`Tarea: ${t?.label??o.task_type}`,`Fecha: ${o.scheduled_date||'Por definir'}${o.scheduled_time?' a las '+o.scheduled_time:''}`,``,`CLIENTE:`,`Nombre: ${o.client_name}`,`Direccion: ${o.client_address??''}${o.client_neighborhood?', '+o.client_neighborhood:''}`,o.client_punto_referencia?`Referencia: ${o.client_punto_referencia}`:'',`Telefono: ${o.client_phone}`,`Plan: ${o.client_plan}`,o.task_description?`\nDescripcion: ${o.task_description}`:'',o.notes?`\nNovedades: ${o.notes}`:'',``,`Confirme recibido.`,`Ana María Ibarguen - Medifibra S.A.S`].filter(Boolean).join('\n').trim(); window.open(`https://wa.me/57${o.technician_phone}?text=${encodeURIComponent(msg)}`,'_blank'); await fetch(`/api/work-orders/${o.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,whatsapp_tech_sent:1})}); fetchO(); }
-  async function waC(o:WorkOrder){ const t=tCfg(o.task_type); const msg=[`MEDIFIBRA S.A.S - Agendamiento de Visita Tecnica`,`Orden: ${o.order_number}`,``,`Estimado(a) ${o.client_name},`,``,`Le informamos que hemos programado una visita tecnica:`,`Servicio: ${t?.label??o.task_type}`,`Fecha: ${o.scheduled_date||'Por definir'}${o.scheduled_time?' a las '+o.scheduled_time+' hrs':''}`,`Tecnicos asignados: ${o.technician_name}${o.notes&&o.notes.includes('Tecnicos adicionales:')?', '+o.notes.split('Tecnicos adicionales:')[1].split('|')[0].trim():''}`,``,`Direccion registrada: ${o.client_address??''}`,``,`Para dudas comuniquese al 333 728 8745`,``,`Medifibra S.A.S - "Conectate con velocidad real"`].join('\n'); window.open(`https://wa.me/57${o.client_phone}?text=${encodeURIComponent(msg)}`,'_blank'); await fetch(`/api/work-orders/${o.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,whatsapp_client_sent:1})}); fetchO(); }
+  async function waC(o:WorkOrder){ const t=tCfg(o.task_type); const msg=[`MEDIFIBRA S.A.S - Agendamiento de Visita Tecnica`,`Orden: ${o.order_number}`,``,`Estimado(a) ${o.client_name},`,``,`Le informamos que hemos programado una visita tecnica:`,`Servicio: ${t?.label??o.task_type}`,`Fecha: ${o.scheduled_date||'Por definir'}${o.scheduled_time?' a las '+o.scheduled_time+' hrs':''}`,`Tecnicos asignados: ${o.technician_name}${o.notes&&o.notes.includes('Tecnicos adicionales:')?', '+o.notes.split('Tecnicos adicionales:')[1].split('|')[0].trim():''}`,``,`Direccion registrada: ${o.client_address??''}`,``,`Para dudas comuniquese al 333 728 8745`,``,`Ver detalle de su orden en:`,`https://medifibra-filc.vercel.app/orden-publica/${o.id}`,``,`Medifibra S.A.S - "Conectate con velocidad real"`].join('\n'); window.open(`https://wa.me/57${o.client_phone}?text=${encodeURIComponent(msg)}`,'_blank'); await fetch(`/api/work-orders/${o.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...o,whatsapp_client_sent:1})}); fetchO(); }
 
   const filtered=workOrders.filter(o=>oTab==='all'||o.status===oTab);
   const stats={ total:workOrders.length, pending:workOrders.filter(o=>o.status==='pending').length, in_progress:workOrders.filter(o=>o.status==='in_progress').length, completed:workOrders.filter(o=>o.status==='completed').length };
@@ -178,7 +177,7 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
           ? <div style={{ color:MUTED, textAlign:'center', padding:40 }}>Cargando...</div>
           : technicians.length===0
             ? <div style={{ background:CARD, borderRadius:12, padding:48, textAlign:'center', border:`1px solid ${BORDER}` }}>
-                <Wrench size={32} color={MUTED} style={{ marginBottom:12 }}/>
+                <Calendar size={32} color={MUTED} style={{ marginBottom:12 }}/>
                 <div style={{ color:MUTED, fontSize:15 }}>No hay técnicos registrados.</div>
               </div>
             : <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:20 }}>
@@ -352,8 +351,6 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
                             <td style={{ padding:'14px 16px' }}>
                               <div style={{ display:'flex', gap:5, alignItems:'center', flexWrap:'nowrap' }}>
                                 <Btn onClick={()=>setViewOrder(o)} title="Ver detalle" color="#6b7280" bg="transparent"><Eye size={14}/></Btn>
-                                <Btn onClick={()=>window.open(`/orden/${o.id}`,'_blank')} title="Ver PDF" color="#6b7280" bg="transparent"><FileText size={13}/></Btn>
-                                <Btn onClick={()=>waT(o)} title={`WhatsApp Técnico${o.whatsapp_tech_sent?' ✓':''}`} color="#6b7280" bg="transparent"><Wrench size={13}/></Btn>
                                 <Btn onClick={()=>waC(o)} title={`WhatsApp Cliente${o.whatsapp_client_sent?' ✓':''}`} color="#6b7280" bg="transparent"><MessageCircle size={13}/></Btn>
                                 <Btn onClick={()=>openEO(o)} title="Editar" color={ACCENT} bg={ACCENT+'15'}><Pencil size={13}/></Btn>
                                 <Btn onClick={()=>delO(o.id,o.order_number)} title="Eliminar" color="#DC2626" bg="#FEF2F2"><Trash2 size={13}/></Btn>
