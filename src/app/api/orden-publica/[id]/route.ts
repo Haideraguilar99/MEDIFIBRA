@@ -17,10 +17,16 @@ export async function GET(
               t.name         AS technician_name,
               t.role         AS technician_role,
               t.phone        AS technician_phone,
+              t.cedula       AS technician_cedula,
+              t.photo_url    AS technician_photo,
               c.name         AS client_name,
+              c.cedula       AS client_cedula,
               c.address      AS client_address,
+              c.cellphone    AS client_phone,
               c.neighborhood AS client_neighborhood,
+              c.commune      AS client_commune,
               c.plan         AS client_plan,
+              c.status       AS client_status,
               c.punto_referencia AS client_punto_referencia
             FROM work_orders wo
             LEFT JOIN technicians t ON wo.technician_id = t.id
