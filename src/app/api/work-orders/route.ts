@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
       args: [orderNumber, newId.toString()]
     });
 
-    // Push server-to-server — solo para orden principal
+    // Push server-to-server — orden principal
     if (!is_secondary) {
       await sendPushToTechnician(
         Number(technician_id),
@@ -151,6 +151,36 @@ export async function POST(req: NextRequest) {
         orderNumber,
         clientName
       );
+    }
+
+    // Push para técnicos adicionales (is_secondary=1)
+    // body.extra_technician_ids es un array de IDs enviado desde TecnicosTab
+    const extraIds: number[] = Array.isArray(body.extra_technician_ids)
+      ? body.extra_technician_ids.map(Number).filter((n: number) => !isNaN(n) && n > 0)
+      : [];
+
+    for (const extraId of extraIds) {
+      // Crear orden secundaria para el técnico adicional
+      const secResult = await db.execute({
+        sql: `INSERT INTO work_orders
+                (technician_id, client_id, task_type, task_description,
+                 priority, scheduled_date, scheduled_time, notes, created_by, status, is_secondary)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 1)`,
+        args: [
+          extraId, client_id, task_type,
+          task_description || '', priority || 'normal',
+          scheduled_date || '', scheduled_time || '',
+          notes || '', created_by || 'Ana Maria Ibarguen'
+        ]
+      });
+      const secId = secResult.lastInsertRowid ?? BigInt(0);
+      const secNumber = buildOrderNumber(secId);
+      await db.execute({
+        sql: 'UPDATE work_orders SET order_number=? WHERE id=?',
+        args: [secNumber, secId.toString()]
+      });
+      // Push al técnico secundario con su propia orden
+      await sendPushToTechnician(extraId, secId.toString(), secNumber, clientName);
     }
 
     return NextResponse.json({
