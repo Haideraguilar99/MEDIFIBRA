@@ -2,7 +2,8 @@
 import TecnicosTab from '@/components/TecnicosTab';
 import PagosTab from '@/components/PagosTab';
 import ResultadosTab from '@/components/ResultadosTab';
-import CobrosTab from '@/components/CobrosTab';
+import CobrosTab from '@/components/CobrosTab'
+import CobranzasTab from '@/components/CobranzasTab';
 import PorConfirmarTab from '@/components/PorConfirmarTab';
 import FacturasTab from '@/components/FacturasTab';
 import { useEffect, useState, useCallback, useMemo, memo } from 'react'
@@ -133,7 +134,7 @@ export default function Dashboard() {
   const [form,         setForm]         = useState(EMPTY_CLIENT)
 
   const [dbStatus,     setDbStatus]     = useState<'checking'|'ok'|'error'>('checking')
-  const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'|'tecnicos'|'resultados'|'cobros'|'facturas'|'sin_fecha'>('dashboard')
+  const [tab,          setTab]          = useState<'dashboard'|'plans'|'clients'|'payments'|'reports'|'tecnicos'|'resultados'|'cobranzas'|'sin_fecha'>('dashboard')
   const [search,       setSearch]       = useState('')
   const [filterPlan,   setFilterPlan]   = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -297,7 +298,7 @@ export default function Dashboard() {
 
   const navTabLabel: Record<string,string> = {
     dashboard:'Dashboard', plans:'Planes', clients:'Clientes',
-    payments:'Pagos', reports:'Reportes', tecnicos:'Técnicos', cobros:'Cobros', facturas:'Facturas', sin_fecha:'Sin Fecha',
+    payments:'Pagos', reports:'Reportes', tecnicos:'Técnicos', cobranzas:'Cobranzas', sin_fecha:'Sin Fecha',
   }
 
   return (
@@ -405,7 +406,7 @@ export default function Dashboard() {
               <span>Blanquizal, Medellín</span>
             </div>
             <div style={{width:1,height:16,backgroundColor:BORDER}} className="hidden lg:block"/>
-            <NotificationBell dark={dark} BG={BG} BG2={BG2} CARD={CARD} BORDER={BORDER} MUTED={MUTED} TEXT={TEXT} LIGHT={LIGHT} onGoToCobros={()=>setTab('cobros')}/>
+            <NotificationBell dark={dark} BG={BG} BG2={BG2} CARD={CARD} BORDER={BORDER} MUTED={MUTED} TEXT={TEXT} LIGHT={LIGHT} onGoToCobros={()=>setTab('cobranzas')}/>
             <button onClick={handleLogout} style={{backgroundColor:'#FEF2F2',border:'1px solid #FECACA',color:'#DC2626'}}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-80 transition-opacity">
               <LogOut className="w-3.5 h-3.5"/><span className="hidden sm:inline">Salir</span>
@@ -665,14 +666,9 @@ export default function Dashboard() {
         {tab==='resultados'&&(
           <ResultadosTab dark={dark} BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
         )}
-        {tab==='cobros'&&(
+        {tab==='cobranzas'&&(
           <div className="p-2">
-            <CobrosTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
-          </div>
-        )}
-        {tab==='facturas'&&(
-          <div className="p-2">
-            <FacturasTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
+            <CobranzasTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
           </div>
         )}
 
