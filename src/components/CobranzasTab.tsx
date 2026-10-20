@@ -44,7 +44,7 @@ function tabHabilitada(dia: string): boolean {
 
 function buildMensaje(c: CobranzaClient, linkFactura: string): string {
   const nombre = nombreLimpio(c.name)
-  const monto = fmt(c.plan_value + (c.incluye_tv || 0))
+  const monto = fmt(c.plan_value)
   const tv = c.incluye_tv > 0
   const puntos = c.puntos_tv || 0
   const partes: string[] = [

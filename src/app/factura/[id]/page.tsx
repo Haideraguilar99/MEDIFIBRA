@@ -10,6 +10,7 @@ type Client = {
   address: string; city: string; neighborhood: string; commune: string; punto_referencia: string
   consumption_date: string; payment_date: string; plan: string; plan_value: number
   reference: string; status: string; notes: string; created_at: string
+  incluye_tv: number; puntos_tv: number
 }
 
 type Invoice = {
@@ -169,7 +170,7 @@ export default function FacturaPage() {
                   <div>
                     <div style={{ color: 'white', fontSize: 30, fontWeight: 900, letterSpacing: 2, lineHeight: 1, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA <span style={{ fontSize: 30, fontWeight: 900, letterSpacing: 2, color: '#ffffff' }}>S.A.S</span></div>
                     <div style={{ color: '#90caf9', fontSize: 13, marginTop: 10 }}>NIT: 902060057-8</div>
-                    <div style={{ color: '#90caf9', fontSize: 14, marginTop: 2 }}>Proveedor de Internet Fibra Optica</div>
+                    <div style={{ color: '#90caf9', fontSize: 14, marginTop: 2 }}>Proveedor de Internet y Televisión</div>
                     <div style={{ color: '#90caf9', fontSize: 14, marginTop: 2 }}>Medellin, Antioquia, Colombia</div>
                   </div>
                 </div>
@@ -264,7 +265,12 @@ export default function FacturaPage() {
                 <tbody>
                   <tr style={{ backgroundColor: '#f8f9ff', borderBottom: '1px solid #e8eaf6' }}>
                     <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
-                      <div style={{ fontWeight: 800, color: '#0d1b3e', fontSize: 16, marginBottom: 3 }}>Internet Fibra Optica — {client.plan}</div>
+                      <div style={{ fontWeight: 800, color: '#0d1b3e', fontSize: 16, marginBottom: 3 }}>{client.plan}</div>
+                      {client.incluye_tv > 0 && (
+                        <div style={{ fontSize: 13, color: '#1565c0', fontWeight: 600, marginBottom: 2 }}>
+                          + {client.puntos_tv || 1} punto{(client.puntos_tv || 1) !== 1 ? 's' : ''} MediTV
+                        </div>
+                      )}
                       <div style={{ fontSize: 13, color: '#2e7d32', fontStyle: 'italic' }}>Exento de IVA (Art. 481, literal h, E.T.) — Estrato 1 y 2</div>
                     </td>
                     <td style={{ padding: '12px 14px', textAlign: 'center', color: '#333', fontWeight: 700, fontSize: 16, verticalAlign: 'middle' }}>{speedMbps}</td>
