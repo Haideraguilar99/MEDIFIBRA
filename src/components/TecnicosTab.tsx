@@ -4,7 +4,7 @@ import { Plus, Pencil, Trash2, MessageCircle, Phone, Search, X, Calendar, Refres
 
 interface Technician { id:number; name:string; cedula:string; phone:string; cellphone:string; email:string; photo_url:string; role:string; specialty:string; status:string; notes:string; created_at:string; }
 interface ClientResult { id:number; name:string; address:string; neighborhood:string; commune:string; cellphone:string; plan:string; status:string; cedula:string; punto_referencia:string; }
-interface WorkOrder { id:number; order_number:string; technician_id:number; client_id:number; task_type:string; task_description:string; priority:string; scheduled_date:string; scheduled_time:string; status:string; notes:string; created_by:string; whatsapp_tech_sent:number; whatsapp_client_sent:number; created_at:string; technician_name?:string; technician_phone?:string; technician_role?:string; client_name?:string; client_address?:string; client_phone?:string; client_plan?:string; client_status?:string; client_neighborhood?:string; client_punto_referencia?:string; completion_notes?:string; started_at?:string; completed_at?:string; duration_minutes?:number; after_photos?:string; tech_resultado?:string; }
+interface WorkOrder { id:number; order_number:string; technician_id:number; client_id:number; task_type:string; task_description:string; priority:string; scheduled_date:string; scheduled_time:string; status:string; notes:string; created_by:string; whatsapp_tech_sent:number; whatsapp_client_sent:number; created_at:string; technician_name?:string; technician_phone?:string; technician_role?:string; client_name?:string; client_address?:string; client_phone?:string; client_plan?:string; client_status?:string; client_neighborhood?:string; client_punto_referencia?:string; completion_notes?:string; started_at?:string; completed_at?:string; duration_minutes?:number; after_photos?:string; tech_resultado?:string; foto_referencia?:string; }
 
 const TASK_TYPES = [
   { value:'INSTALACION_SERVICIO',  label:'Instalacion de Servicio', color:'#16a34a' },
@@ -30,7 +30,7 @@ const ORDER_STATUSES = [
 ];
 const TECH_ROLES = ['Tecnico Lider','Tecnico','Auxiliar Tecnico','Instalador','Supervisor'];
 const EMPTY_T = { name:'',cedula:'',phone:'',cellphone:'',email:'',photo_url:'',role:'Tecnico',specialty:'',status:'active',notes:'' };
-const EMPTY_O = { technician_ids:[] as number[],technician_id:0,client_id:0,task_type:'',task_description:'',priority:'normal',scheduled_date:'',scheduled_time:'',notes:'',created_by:'Ana María Ibarguen' };
+const EMPTY_O = { technician_ids:[] as number[],technician_id:0,client_id:0,task_type:'',task_description:'',priority:'normal',scheduled_date:'',scheduled_time:'',notes:'',created_by:'Ana María Ibarguen',foto_referencia:'' };
 
 const tCfg = (v:string) => TASK_TYPES.find(t=>t.value===v);
 const pCfg = (v:string) => PRIORITIES.find(p=>p.value===v);
@@ -104,7 +104,7 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
   async function delT(id:number,name:string){ if(!confirm(`Eliminar a ${name}?`))return; const r=await fetch(`/api/technicians/${id}`,{method:'DELETE'}); if(!r.ok){const e=await r.json();alert(e.error??'Error');return;} fetchT(); }
 
   function openNO(){ setEditO(null); setOForm({...EMPTY_O}); setSelC(null); setCs(''); setShowOM(true); }
-  function openEO(o:WorkOrder){ setEditO(o); setOForm({technician_ids:[o.technician_id],technician_id:o.technician_id,client_id:o.client_id,task_type:o.task_type,task_description:o.task_description,priority:o.priority,scheduled_date:o.scheduled_date,scheduled_time:o.scheduled_time,notes:o.notes,created_by:o.created_by}); setSelC({id:o.client_id,name:o.client_name??'',address:o.client_address??'',neighborhood:o.client_neighborhood??'',commune:'',cellphone:o.client_phone??'',plan:o.client_plan??'',status:o.client_status??'',cedula:'',punto_referencia:o.client_punto_referencia??''}); setCs(o.client_name??'');setShowOM(true); }
+  function openEO(o:WorkOrder){ setEditO(o); setOForm({technician_ids:[o.technician_id],technician_id:o.technician_id,client_id:o.client_id,task_type:o.task_type,task_description:o.task_description,priority:o.priority,scheduled_date:o.scheduled_date,scheduled_time:o.scheduled_time,notes:o.notes,created_by:o.created_by,foto_referencia:o.foto_referencia??''}); setSelC({id:o.client_id,name:o.client_name??'',address:o.client_address??'',neighborhood:o.client_neighborhood??'',commune:'',cellphone:o.client_phone??'',plan:o.client_plan??'',status:o.client_status??'',cedula:'',punto_referencia:o.client_punto_referencia??''}); setCs(o.client_name??'');setShowOM(true); }
   async function saveO(){
     const ids=oForm.technician_ids??[];
     if(ids.length===0){alert('Selecciona al menos un tecnico');return;}
@@ -391,7 +391,74 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
                 <div><label style={{ color:MUTED, fontSize:12, fontWeight:700, display:'block', marginBottom:6, textTransform:'uppercase', letterSpacing:0.5 }}>Estado</label><select value={tForm.status} onChange={e=>setTForm(f=>({...f,status:e.target.value}))} style={iS}><option value="active">Activo</option><option value="inactive">Inactivo</option></select></div>
                 <div style={{ gridColumn:'1/-1' }}><label style={{ color:MUTED, fontSize:12, fontWeight:700, display:'block', marginBottom:6, textTransform:'uppercase', letterSpacing:0.5 }}>Notas</label><textarea value={tForm.notes} onChange={e=>setTForm(f=>({...f,notes:e.target.value}))} rows={2} style={{ ...iS, resize:'vertical' }}/></div>
               </div>
-              <div style={{ display:'flex', gap:10, justifyContent:'flex-end', paddingTop:12, borderTop:`1px solid ${BORDER}` }}>
+ 
+              {/* Foto de referencia del hogar */}
+              <div style={{ marginBottom:16 }}>
+                <label style={{ fontSize:13, fontWeight:600, color:TEXT, display:'block', marginBottom:8 }}>
+                  Foto de referencia del hogar (opcional)
+                </label>
+                <div
+                  onDragOver={e=>{ e.preventDefault(); e.currentTarget.style.borderColor='#2563eb' }}
+                  onDragLeave={e=>{ e.currentTarget.style.borderColor=BORDER }}
+                  onDrop={e=>{
+                    e.preventDefault()
+                    e.currentTarget.style.borderColor=BORDER
+                    const file = e.dataTransfer.files[0]
+                    if (!file || !file.type.startsWith('image/')) return
+                    const reader = new FileReader()
+                    reader.onload = ev => {
+                      const img = new window.Image()
+                      img.onload = () => {
+                        const MAX = 800
+                        const canvas = document.createElement('canvas')
+                        let w = img.width, h = img.height
+                        if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h*MAX/w); w=MAX } else { w=Math.round(w*MAX/h); h=MAX } }
+                        canvas.width=w; canvas.height=h
+                        canvas.getContext('2d')!.drawImage(img,0,0,w,h)
+                        const b64 = canvas.toDataURL('image/jpeg', 0.7)
+                        setOForm(prev=>({...prev, foto_referencia:b64}))
+                      }
+                      img.src = ev.target!.result as string
+                    }
+                    reader.readAsDataURL(file)
+                  }}
+                  style={{ border:`2px dashed ${BORDER}`, borderRadius:10, padding:16, textAlign:'center' as const, cursor:'pointer', position:'relative' as const, minHeight:90, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column' as const, gap:8 }}>
+                  {oForm.foto_referencia ? (
+                    <div style={{ position:'relative' as const, width:'100%' }}>
+                      <img src={oForm.foto_referencia} alt="Referencia" style={{ maxHeight:160, maxWidth:'100%', borderRadius:8, objectFit:'cover' as const }}/>
+                      <button onClick={e=>{ e.stopPropagation(); setOForm(prev=>({...prev,foto_referencia:''})) }}
+                        style={{ position:'absolute' as const, top:4, right:4, background:'#ef4444', border:'none', borderRadius:'50%', width:22, height:22, cursor:'pointer', color:'#fff', fontWeight:700, fontSize:12, display:'flex', alignItems:'center', justifyContent:'center' }}>x</button>
+                    </div>
+                  ) : (
+                    <>
+                      <span style={{ fontSize:28 }}>+</span>
+                      <span style={{ fontSize:12, color:MUTED }}>Arrastra una foto o haz clic para adjuntar</span>
+                      <input type="file" accept="image/*" style={{ position:'absolute' as const, inset:0, opacity:0, cursor:'pointer', width:'100%', height:'100%' }}
+                        onChange={e=>{
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          const reader = new FileReader()
+                          reader.onload = ev => {
+                            const img = new window.Image()
+                            img.onload = () => {
+                              const MAX = 800
+                              const canvas = document.createElement('canvas')
+                              let w = img.width, h = img.height
+                              if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h*MAX/w); w=MAX } else { w=Math.round(w*MAX/h); h=MAX } }
+                              canvas.width=w; canvas.height=h
+                              canvas.getContext('2d')!.drawImage(img,0,0,w,h)
+                              const b64 = canvas.toDataURL('image/jpeg', 0.7)
+                              setOForm(prev=>({...prev, foto_referencia:b64}))
+                            }
+                            img.src = ev.target!.result as string
+                          }
+                          reader.readAsDataURL(file)
+                        }}/>
+                    </>
+                  )}
+                </div>
+              </div>
+             <div style={{ display:'flex', gap:10, justifyContent:'flex-end', paddingTop:12, borderTop:`1px solid ${BORDER}` }}>
                 <button onClick={()=>setShowTM(false)} style={{ background:CARD2, color:MUTED, border:`1px solid ${BORDER}`, borderRadius:8, padding:'9px 18px', cursor:'pointer', fontSize:14, fontWeight:600 }}>Cancelar</button>
                 <button onClick={saveT} disabled={saving} style={{ background:ACCENT, color:'#fff', border:'none', borderRadius:8, padding:'9px 22px', cursor:saving?'not-allowed':'pointer', fontWeight:700, fontSize:14, opacity:saving?0.7:1 }}>{saving?'Guardando...':editT?'Actualizar':'Crear'}</button>
               </div>
@@ -478,7 +545,74 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
                 <div style={{ gridColumn:'1/-1' }}><label style={{ color:MUTED, fontSize:12, fontWeight:700, display:'block', marginBottom:6, textTransform:'uppercase', letterSpacing:0.5 }}>Descripción</label><textarea value={oForm.task_description} onChange={e=>setOForm(f=>({...f,task_description:e.target.value}))} rows={3} style={{ ...iS, resize:'vertical' }}/></div>
                 <div style={{ gridColumn:'1/-1' }}><label style={{ color:MUTED, fontSize:12, fontWeight:700, display:'block', marginBottom:6, textTransform:'uppercase', letterSpacing:0.5 }}>Novedades</label><textarea value={oForm.notes} onChange={e=>setOForm(f=>({...f,notes:e.target.value}))} rows={2} style={{ ...iS, resize:'vertical' }}/></div>
               </div>
-              <div style={{ display:'flex', gap:10, justifyContent:'flex-end', paddingTop:12, borderTop:`1px solid ${BORDER}` }}>
+ 
+              {/* Foto de referencia del hogar */}
+              <div style={{ marginBottom:16 }}>
+                <label style={{ fontSize:13, fontWeight:600, color:TEXT, display:'block', marginBottom:8 }}>
+                  Foto de referencia del hogar (opcional)
+                </label>
+                <div
+                  onDragOver={e=>{ e.preventDefault(); e.currentTarget.style.borderColor='#2563eb' }}
+                  onDragLeave={e=>{ e.currentTarget.style.borderColor=BORDER }}
+                  onDrop={e=>{
+                    e.preventDefault()
+                    e.currentTarget.style.borderColor=BORDER
+                    const file = e.dataTransfer.files[0]
+                    if (!file || !file.type.startsWith('image/')) return
+                    const reader = new FileReader()
+                    reader.onload = ev => {
+                      const img = new window.Image()
+                      img.onload = () => {
+                        const MAX = 800
+                        const canvas = document.createElement('canvas')
+                        let w = img.width, h = img.height
+                        if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h*MAX/w); w=MAX } else { w=Math.round(w*MAX/h); h=MAX } }
+                        canvas.width=w; canvas.height=h
+                        canvas.getContext('2d')!.drawImage(img,0,0,w,h)
+                        const b64 = canvas.toDataURL('image/jpeg', 0.7)
+                        setOForm(prev=>({...prev, foto_referencia:b64}))
+                      }
+                      img.src = ev.target!.result as string
+                    }
+                    reader.readAsDataURL(file)
+                  }}
+                  style={{ border:`2px dashed ${BORDER}`, borderRadius:10, padding:16, textAlign:'center' as const, cursor:'pointer', position:'relative' as const, minHeight:90, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column' as const, gap:8 }}>
+                  {oForm.foto_referencia ? (
+                    <div style={{ position:'relative' as const, width:'100%' }}>
+                      <img src={oForm.foto_referencia} alt="Referencia" style={{ maxHeight:160, maxWidth:'100%', borderRadius:8, objectFit:'cover' as const }}/>
+                      <button onClick={e=>{ e.stopPropagation(); setOForm(prev=>({...prev,foto_referencia:''})) }}
+                        style={{ position:'absolute' as const, top:4, right:4, background:'#ef4444', border:'none', borderRadius:'50%', width:22, height:22, cursor:'pointer', color:'#fff', fontWeight:700, fontSize:12, display:'flex', alignItems:'center', justifyContent:'center' }}>x</button>
+                    </div>
+                  ) : (
+                    <>
+                      <span style={{ fontSize:28 }}>+</span>
+                      <span style={{ fontSize:12, color:MUTED }}>Arrastra una foto o haz clic para adjuntar</span>
+                      <input type="file" accept="image/*" style={{ position:'absolute' as const, inset:0, opacity:0, cursor:'pointer', width:'100%', height:'100%' }}
+                        onChange={e=>{
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          const reader = new FileReader()
+                          reader.onload = ev => {
+                            const img = new window.Image()
+                            img.onload = () => {
+                              const MAX = 800
+                              const canvas = document.createElement('canvas')
+                              let w = img.width, h = img.height
+                              if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h*MAX/w); w=MAX } else { w=Math.round(w*MAX/h); h=MAX } }
+                              canvas.width=w; canvas.height=h
+                              canvas.getContext('2d')!.drawImage(img,0,0,w,h)
+                              const b64 = canvas.toDataURL('image/jpeg', 0.7)
+                              setOForm(prev=>({...prev, foto_referencia:b64}))
+                            }
+                            img.src = ev.target!.result as string
+                          }
+                          reader.readAsDataURL(file)
+                        }}/>
+                    </>
+                  )}
+                </div>
+              </div>
+             <div style={{ display:'flex', gap:10, justifyContent:'flex-end', paddingTop:12, borderTop:`1px solid ${BORDER}` }}>
                 <button onClick={()=>setShowOM(false)} style={{ background:CARD2, color:MUTED, border:`1px solid ${BORDER}`, borderRadius:8, padding:'9px 18px', cursor:'pointer', fontSize:14, fontWeight:600 }}>Cancelar</button>
                 <button onClick={saveO} disabled={saving} style={{ background:'#16a34a', color:'#fff', border:'none', borderRadius:8, padding:'9px 22px', cursor:saving?'not-allowed':'pointer', fontWeight:700, fontSize:14, opacity:saving?0.7:1 }}>{saving?'Guardando...':editO?'Actualizar':'Crear Orden'}</button>
               </div>

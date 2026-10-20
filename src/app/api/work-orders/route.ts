@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       technician_id, client_id, task_type,
       task_description, priority,
       scheduled_date, scheduled_time,
-      notes, created_by
+      notes, created_by, foto_referencia
     } = body;
 
     if (!technician_id || !client_id || !task_type) {
@@ -124,14 +124,14 @@ export async function POST(req: NextRequest) {
     const result = await db.execute({
       sql: `INSERT INTO work_orders
               (technician_id, client_id, task_type, task_description,
-               priority, scheduled_date, scheduled_time, notes, created_by, status, is_secondary)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+               priority, scheduled_date, scheduled_time, notes, created_by, status, is_secondary, foto_referencia)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
       args: [
         technician_id, client_id, task_type,
         task_description || '', priority || 'normal',
         scheduled_date || '', scheduled_time || '',
         notes || '', created_by || 'Ana Maria Ibarguen',
-        is_secondary
+        is_secondary, foto_referencia || ''
       ]
     });
 
@@ -164,13 +164,14 @@ export async function POST(req: NextRequest) {
       const secResult = await db.execute({
         sql: `INSERT INTO work_orders
                 (technician_id, client_id, task_type, task_description,
-                 priority, scheduled_date, scheduled_time, notes, created_by, status, is_secondary)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 1)`,
+                 priority, scheduled_date, scheduled_time, notes, created_by, status, is_secondary, foto_referencia)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 1, ?)`,
         args: [
           extraId, client_id, task_type,
           task_description || '', priority || 'normal',
           scheduled_date || '', scheduled_time || '',
-          notes || '', created_by || 'Ana Maria Ibarguen'
+          notes || '', created_by || 'Ana Maria Ibarguen',
+          foto_referencia || ''
         ]
       });
       const secId = secResult.lastInsertRowid ?? BigInt(0);
