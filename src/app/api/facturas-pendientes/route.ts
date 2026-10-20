@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     const result = await db.execute({
       sql: `SELECT
               c.id, c.name, c.cellphone, c.plan, c.plan_value,
-              c.incluye_tv, c.dia_pago,
+              c.incluye_tv, c.puntos_tv, c.dia_pago,
               CASE WHEN i.id IS NOT NULL THEN 1 ELSE 0 END as has_invoice
             FROM clients c
             LEFT JOIN invoices i

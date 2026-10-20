@@ -67,8 +67,7 @@ function buildMensaje(c: CobranzaClient, linkFactura: string): string {
     '',
     '*Medios de pago:*',
     `  • Bancolombia Ahorros: ${CUENTA}`,
-    `  • Bre-B: ${CUENTA}`,
-    `  • Nequi: ${CUENTA}`,
+    '  • Nequi: 3015080961',
     '  • Efectivo: comunicate con nosotros',
     '',
     'Envianos el comprobante a este WhatsApp una vez realices el pago.'
@@ -95,7 +94,7 @@ export default function CobranzasTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
     setLoading(true)
     try {
       const [rc, rf] = await Promise.all([
-        fetch('/api/cobros'),
+        fetch('/api/cobranzas'),
         fetch(`/api/facturas-pendientes?period=${getCurrentPeriod()}`)
       ])
       const dc = await rc.json()
@@ -103,7 +102,7 @@ export default function CobranzasTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
       const cobros: CobranzaClient[] = dc.clients || []
       const factMap: Record<number,number> = {}
       ;(df.clients || []).forEach((f: {id:number;has_invoice:number}) => { factMap[f.id] = f.has_invoice })
-      const merged = cobros.map(c => ({ ...c, has_invoice: factMap[c.id] ?? 0, puntos_tv: (c as CobranzaClient).puntos_tv || 0 }))
+      const merged = cobros.map(c => ({ ...c, has_invoice: factMap[c.id] ?? 0 }))
       setClients(merged)
       const ts: Record<number,string> = {}
       merged.forEach(c => {
@@ -249,17 +248,9 @@ export default function CobranzasTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
                               className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50'
                               style={{backgroundColor:'#4f6ef720',color:'#4f6ef7',border:'1px solid #4f6ef740'}}>
                               {isSending?<div className='w-3.5 h-3.5 border border-blue-500 border-t-transparent rounded-full animate-spin'/>:<FileText className='w-3.5 h-3.5'/>}
-                              <span>Factura + Enviar</span>
+                              <span>Emitir Factura</span>
                             </button>
-                            {!recentlySent&&(
-                              <button onClick={()=>enviarCobranza(c,false)} disabled={isSending}
-                                title='Enviar solo mensaje sin generar factura'
-                                className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50'
-                                style={{backgroundColor:'#25d36620',color:'#25d366',border:'1px solid #25d36640'}}>
-                                <MessageCircle className='w-3.5 h-3.5'/>
-                                <span>Enviar</span>
-                              </button>
-                            )}
+                            
                           </div>
                         )}
                         {isProt&&(
