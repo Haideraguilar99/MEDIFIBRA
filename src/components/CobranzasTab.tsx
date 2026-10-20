@@ -65,8 +65,13 @@ function buildMensaje(c: CobranzaClient, linkFactura: string): string {
     '',
     `*Ver factura:* ${linkFactura}`,
     '',
-    `Medios de pago: Bancolombia (cuenta de ahorros) o Bre-B, ${CUENTA}`,
-    'Envianos el comprobante a este WhatsApp una vez realices el pago.',
+    '*Medios de pago:*',
+    `  • Bancolombia Ahorros: ${CUENTA}`,
+    `  • Bre-B: ${CUENTA}`,
+    `  • Nequi: ${CUENTA}`,
+    '  • Efectivo: comunicate con nosotros',
+    '',
+    'Envianos el comprobante a este WhatsApp una vez realices el pago.'
   )
   if (OBSERVACION_ACTIVA) {
     partes.push('', OBS)
