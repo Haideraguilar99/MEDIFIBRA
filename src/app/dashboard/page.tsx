@@ -2,10 +2,7 @@
 import TecnicosTab from '@/components/TecnicosTab';
 import PagosTab from '@/components/PagosTab';
 import ResultadosTab from '@/components/ResultadosTab';
-import CobrosTab from '@/components/CobrosTab'
 import CobranzasTab from '@/components/CobranzasTab';
-import PorConfirmarTab from '@/components/PorConfirmarTab';
-import FacturasTab from '@/components/FacturasTab';
 import { useEffect, useState, useCallback, useMemo, memo } from 'react'
 import { CLASSIFICATIONS, CLASS_CONFIG, getCC, isProtected, type Classification } from '@/lib/classification'
 import { formatCurrency } from '@/lib/plans'
@@ -98,8 +95,7 @@ const NAV_ITEMS = [
   { key:'payments',  label:'Pagos',      icon: CreditCard      },
   { key:'reports',   label:'Reportes',   icon: BarChart2       },
   { key:'tecnicos',  label:'Técnicos',   icon: UserCheck       },
-  { key:'cobros',    label:'Cobros',      icon: DollarSign      },
-  { key:'facturas',     label:'Facturas',     icon: FileText        },
+  { key:'cobranzas', label:'Cobranzas',   icon: DollarSign      },
   { key:'sin_fecha',    label:'Sin Fecha',    icon: Calendar        },
 ] as const
 
