@@ -19,6 +19,12 @@ export async function GET() {
       WHERE c.status = 'active'
         AND c.dia_pago != ''
         AND c.classification != 'AL_DIA'
+        AND NOT EXISTS (
+          SELECT 1 FROM payments p
+          WHERE p.client_id = c.id
+            AND p.status = 'paid'
+            AND strftime('%Y-%m', p.created_at) = strftime('%Y-%m', 'now')
+        )
       ORDER BY
         CASE c.dia_pago
           WHEN '5'  THEN 1 WHEN '10' THEN 2 WHEN '12' THEN 3

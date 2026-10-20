@@ -650,7 +650,7 @@ export default function Dashboard() {
         {/* ── PAGOS ── */}
         {tab==='payments'&&(
           <div>
-            <PagosTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
+            <PagosTab key={tab} BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
           </div>
         )}
 
@@ -664,7 +664,7 @@ export default function Dashboard() {
         )}
         {tab==='cobranzas'&&(
           <div className="p-2">
-            <CobranzasTab BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
+            <CobranzasTab key={tab} BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
           </div>
         )}
 

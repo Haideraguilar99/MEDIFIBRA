@@ -67,7 +67,6 @@ function buildMensaje(c: CobranzaClient, linkFactura: string): string {
     '',
     '*Medios de pago:*',
     `  • Bancolombia Ahorros: ${CUENTA}`,
-    '  • Nequi: 3015080961',
     '  • Efectivo: comunicate con nosotros',
     '',
     'Envianos el comprobante a este WhatsApp una vez realices el pago.'
@@ -94,7 +93,7 @@ export default function CobranzasTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
     setLoading(true)
     try {
       const [rc, rf] = await Promise.all([
-        fetch('/api/cobranzas'),
+        fetch('/api/cobros'),
         fetch(`/api/facturas-pendientes?period=${getCurrentPeriod()}`)
       ])
       const dc = await rc.json()
