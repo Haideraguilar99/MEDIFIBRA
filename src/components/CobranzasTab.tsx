@@ -231,7 +231,7 @@ export default function CobranzasTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
                               <Phone className='w-3 h-3'/>{c.cellphone||'—'}
                             </span>
                             <span className='text-xs font-medium' style={{color:'#4f6ef7'}}>{c.plan}</span>
-                            <span className='text-xs font-bold' style={{color:TEXT}}>{fmt(c.plan_value+(c.incluye_tv||0))}</span>
+                            <span className='text-xs font-bold' style={{color:TEXT}}>{fmt(c.plan_value)}</span>
                             {c.incluye_tv>0&&<span className='text-xs' style={{color:'#f59e0b'}}>+ MediTV ({c.puntos_tv||0} pts)</span>}
                           </div>
                         </div>
