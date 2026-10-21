@@ -67,6 +67,7 @@ function buildMensaje(c: CobranzaClient, linkFactura: string): string {
     '',
     '*Medios de pago:*',
     `  • Bancolombia Ahorros: ${CUENTA}`,
+    '  • Nequi: 3015080961',
     '  • Efectivo: comunicate con nosotros',
     '',
     'Envianos el comprobante a este WhatsApp una vez realices el pago.'
