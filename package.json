@@ -13,6 +13,7 @@
     "@types/papaparse": "^5.5.2",
     "browser-image-compression": "^2.0.2",
     "eventsource-parser": "^3.1.0",
+    "exceljs": "^4.4.0",
     "html2canvas": "^1.4.1",
     "jose": "^6.2.8",
     "jsbarcode": "^3.12.3",
@@ -31,7 +32,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/jsbarcode": "^3.11.4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.43",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",

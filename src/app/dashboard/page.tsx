@@ -2,7 +2,8 @@
 import TecnicosTab from '@/components/TecnicosTab';
 import PagosTab from '@/components/PagosTab';
 import ResultadosTab from '@/components/ResultadosTab';
-import CobranzasTab from '@/components/CobranzasTab';
+import CobranzasTab from '@/components/CobranzasTab'
+import ReportesTab  from '@/components/ReportesTab';
 import { useEffect, useState, useCallback, useMemo, memo } from 'react'
 import { CLASSIFICATIONS, CLASS_CONFIG, getCC, isProtected, type Classification } from '@/lib/classification'
 import { formatCurrency } from '@/lib/plans'
@@ -15,7 +16,6 @@ import toast, { Toaster } from 'react-hot-toast'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import NotificationBell from '@/components/NotificationBell'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import { buildWAMessage as buildWATemplate } from '@/lib/wa-templates'
 
 type Client = {
@@ -716,92 +716,9 @@ export default function Dashboard() {
               </div>
             )}
 
-        {tab==='reports'&&(
-          <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-1">
-              <BarChart2 className="w-5 h-5" style={{color:BLUE}}/>
-              <h2 className="text-lg font-bold text-white">Reportes y Estadísticas</h2>
-            </div>
-            <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-5">
-              <h3 className="text-sm font-semibold mb-4" style={{color:LIGHT}}>Recaudo Mensual (últimos 12 meses)</h3>
-              {reports?.byMonth?.length?(
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={reports.byMonth} margin={{top:4,right:4,left:0,bottom:4}}>
-                    <XAxis dataKey="month" tick={{fill:MUTED,fontSize:11}} axisLine={false} tickLine={false}/>
-                    <YAxis tickFormatter={v=>formatCurrency(v).replace('$','')} tick={{fill:MUTED,fontSize:10}} axisLine={false} tickLine={false} width={70}/>
-                    <Tooltip content={customTooltip}/>
-                    <Bar dataKey="total" fill={BLUE} radius={[4,4,0,0]}/>
-                  </BarChart>
-                </ResponsiveContainer>
-              ):<div className="h-36 flex items-center justify-center text-sm" style={{color:MUTED}}>Sin datos de pagos aún</div>}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-5">
-                <h3 className="text-sm font-semibold mb-4" style={{color:LIGHT}}>Por Método de Pago</h3>
-                {reports?.byMethod?.length?(
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie data={reports.byMethod} dataKey="total" nameKey="method" cx="50%" cy="50%" outerRadius={75}>
-                        {reports.byMethod.map((_,i)=><Cell key={i} fill={[BLUE,'#16a34a','#8b5cf6','#ec4899','#f59e0b'][i%5]}/>)}
-                      </Pie>
-                      <Legend formatter={v=><span style={{color:LIGHT,fontSize:12}}>{v}</span>}/>
-                    </PieChart>
-                  </ResponsiveContainer>
-                ):<div className="h-36 flex items-center justify-center text-sm" style={{color:MUTED}}>Sin datos aún</div>}
-              </div>
-              <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl p-5">
-                <h3 className="text-sm font-semibold mb-4" style={{color:LIGHT}}>Clientes por Plan</h3>
-                <div className="space-y-3">
-                  {(reports?.byPlan??plans.map(p=>({plan:p.name,count:0,potential:0}))).map((row,i)=>{
-                    const planObj=plans.find(p=>p.name===row.plan)
-                    const total=reports?.byPlan?.reduce((s,r)=>s+Number(r.count),0)||1
-                    const pct=Math.round((Number(row.count)/total)*100)
-                    return (
-                      <div key={i}>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span style={{color:LIGHT}}>{row.plan}</span>
-                          <span style={{color:LIGHT}}>{row.count} · {pct}%</span>
-                        </div>
-                        <div className="h-1.5 rounded-full overflow-hidden" style={{backgroundColor:BG}}>
-                          <div className="h-full rounded-full transition-all duration-500" style={{width:`${pct}%`,backgroundColor:planObj?.color??'#64748b'}}/>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-            <div style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}} className="rounded-xl overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-4" style={{borderBottom:`1px solid ${BORDER}`}}>
-                <AlertCircle className="w-4 h-4 text-yellow-400"/>
-                <h3 className="font-semibold text-sm text-white">Sin pago este mes <span style={{color:MUTED}}>({reports?.pendingClients?.length??0})</span></h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr style={{borderBottom:`1px solid ${BORDER}`,backgroundColor:BG}}>
-                    {['Cliente','Celular','Plan','Valor','F. Pago','Acción'].map(h=>(
-                      <th key={h} className="text-left px-4 py-3 text-sm font-semibold uppercase tracking-wider whitespace-nowrap" style={{color:MUTED}}>{h}</th>
-                    ))}
-                  </tr></thead>
-                  <tbody>
-                    {reports?.pendingClients?.map(c=>(
-                      <tr key={c.id} style={{borderBottom:`1px solid ${BORDER}`}} className="hover:bg-white/5 transition-colors">
-                        <td className="px-4 py-3 font-medium text-white whitespace-nowrap">{c.name}</td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>{c.cellphone}</td>
-                        <td className="px-4 py-3 whitespace-nowrap"><span className="px-2 py-0.5 rounded text-xs text-white font-medium" style={{backgroundColor:getPlanColor(c.plan)}}>{c.plan}</span></td>
-                        <td className="px-4 py-3 text-yellow-400 font-semibold whitespace-nowrap">{formatCurrency(c.plan_value)}</td>
-                        <td className="px-4 py-3 text-sm whitespace-nowrap" style={{color:LIGHT}}>{c.payment_date}</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                        </td>
-                      </tr>
-                    ))}
-                    {!reports?.pendingClients?.length&&<tr><td colSpan={6} className="py-10 text-center text-green-400 font-medium text-sm">✅ Todos los clientes pagaron este mes</td></tr>}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
+            {tab==='reports'&&(
+              <ReportesTab key={tab} BG={BG} CARD={CARD} CARD2={CARD2} BORDER={BORDER} TEXT={TEXT} MUTED={MUTED}/>
+            )}
       </main>
       </div>{/* fin contenido principal */}
 
