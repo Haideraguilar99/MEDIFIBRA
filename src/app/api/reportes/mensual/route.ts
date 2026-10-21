@@ -136,10 +136,10 @@ export async function GET(req: NextRequest) {
   // Logo
   let logoId: number | undefined
   try {
-    const logoPath = path.join(process.cwd(), 'public', 'logofact.jpeg')
+    const logoPath = path.join(process.cwd(), 'public', 'medifibra_sin_fondo_1050.png')
     if (fs.existsSync(logoPath)) {
       const buf = fs.readFileSync(logoPath)
-      logoId = workbook.addImage({ buffer: buf as unknown as any, extension: 'jpeg' })
+      logoId = workbook.addImage({ buffer: buf as unknown as any, extension: 'png' })
     }
   } catch {}
 
@@ -156,18 +156,18 @@ export async function GET(req: NextRequest) {
     ws.mergeCells(`A1:${last}1`)
     const c1 = ws.getCell('A1')
     c1.value = title
-    c1.font = { bold: true, size: 14, color: { argb: C.white } }
+    c1.font = { bold: true, size: 15, color: { argb: C.white } }
     c1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } }
     c1.alignment = { horizontal: 'center', vertical: 'middle' }
-    ws.getRow(1).height = 34
+    ws.getRow(1).height = 42
 
     ws.mergeCells(`A2:${last}2`)
     const c2 = ws.getCell('A2')
     c2.value = subtitle
-    c2.font = { size: 9.5, color: { argb: C.white }, italic: true }
+    c2.font = { size: 11, color: { argb: C.white }, italic: true }
     c2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgSub } }
     c2.alignment = { horizontal: 'center', vertical: 'middle' }
-    ws.getRow(2).height = 20
+    ws.getRow(2).height = 24
   }
 
   const tableHeaders = (
@@ -180,12 +180,12 @@ export async function GET(req: NextRequest) {
       const col = String.fromCharCode(65 + i)
       const cell = ws.getCell(`${col}${row}`)
       cell.value = h
-      cell.font = { bold: true, size: 9, color: { argb: C.white } }
+      cell.font = { bold: true, size: 11, color: { argb: C.white } }
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.headerBg } }
       cell.alignment = { horizontal: aligns[i] ?? 'left', vertical: 'middle' }
       cell.border = { bottom: { style: 'medium', color: { argb: C.accent } } }
     })
-    ws.getRow(row).height = 22
+    ws.getRow(row).height = 26
   }
 
   const addRow = (
@@ -198,14 +198,14 @@ export async function GET(req: NextRequest) {
     isEven: boolean,
     numFmtCols: number[] = []
   ) => {
-    ws.getRow(rowNum).height = 20
+    ws.getRow(rowNum).height = 24
     values.forEach((v, i) => {
       const col = String.fromCharCode(65 + i)
       const cell = ws.getCell(`${col}${rowNum}`)
       cell.value = v
       cell.fill = { type: 'pattern', pattern: 'solid',
         fgColor: { argb: isEven ? evenBg : oddBg } }
-      cell.font = { size: 9.5, color: { argb: C.text } }
+      cell.font = { size: 11, color: { argb: C.text } }
       cell.alignment = { vertical: 'middle', horizontal: aligns[i] ?? 'left' }
       if (numFmtCols.includes(i)) cell.numFmt = '"$"#,##0'
     })
@@ -219,25 +219,22 @@ export async function GET(req: NextRequest) {
     {width:5},{width:30},{width:5},{width:22},{width:22},{width:5}
   ]
 
-  // Titulo
-  ws1.mergeCells('B1:E1')
-  const t1 = ws1.getCell('B1')
-  t1.value = 'MEDIFIBRA S.A.S'
-  t1.font = { bold:true, size:18, color:{argb:C.white} }
-  t1.fill = { type:'pattern', pattern:'solid', fgColor:{argb:C.headerBg} }
-  t1.alignment = { horizontal:'center', vertical:'middle' }
-  ws1.getRow(1).height = 44
-
-  ws1.mergeCells('B2:E2')
-  const sub1 = ws1.getCell('B2')
-  sub1.value = `Reporte Mensual — ${monthName} ${year}`
-  sub1.font = { size:12, color:{argb:C.white} }
-  sub1.fill = { type:'pattern', pattern:'solid', fgColor:{argb:C.accent} }
-  sub1.alignment = { horizontal:'center', vertical:'middle' }
-  ws1.getRow(2).height = 28
+  // Header: fondo oscuro + logo PNG centrado (sin texto)
+  ws1.mergeCells('A1:F1')
+  const h1Cell = ws1.getCell('A1')
+  h1Cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:C.headerBg} }
+  ws1.getRow(1).height = 90
 
   if (logoId !== undefined)
-    ws1.addImage(logoId, { tl:{col:4.6, row:0.1}, ext:{width:90, height:55} })
+    ws1.addImage(logoId, { tl:{col:0.3, row:0.15}, ext:{width:220, height:110} })
+
+  ws1.mergeCells('A2:F2')
+  const sub1 = ws1.getCell('A2')
+  sub1.value = `Reporte Mensual — ${monthName} ${year}`
+  sub1.font = { bold:true, size:14, color:{argb:C.white} }
+  sub1.fill = { type:'pattern', pattern:'solid', fgColor:{argb:C.accent} }
+  sub1.alignment = { horizontal:'center', vertical:'middle' }
+  ws1.getRow(2).height = 34
 
   ws1.getRow(3).height = 12
 
@@ -245,16 +242,16 @@ export async function GET(req: NextRequest) {
   ws1.mergeCells('B4:E4')
   const kpiT = ws1.getCell('B4')
   kpiT.value = 'INDICADORES CLAVE DEL MES'
-  kpiT.font = { bold:true, size:9, color:{argb:C.headerBg} }
+  kpiT.font = { bold:true, size:10, color:{argb:C.headerBg} }
   kpiT.alignment = { horizontal:'center' }
   kpiT.border = { bottom:{style:'medium', color:{argb:C.headerBg}} }
-  ws1.getRow(4).height = 18
+  ws1.getRow(4).height = 22
 
   const kpiRow = (r: number, label: string, value: string, argb: string) => {
-    ws1.getRow(r).height = 26
+    ws1.getRow(r).height = 32
     const lc = ws1.getCell(`B${r}`)
     lc.value = label
-    lc.font = { size:9.5, color:{argb:'475569'} }
+    lc.font = { size:11, color:{argb:'475569'} }
     lc.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'F8FAFC'} }
     lc.alignment = { vertical:'middle' }
     lc.border = { bottom:{style:'thin', color:{argb:'E2E8F0'}} }
@@ -262,7 +259,7 @@ export async function GET(req: NextRequest) {
     ws1.mergeCells(`C${r}:E${r}`)
     const vc = ws1.getCell(`C${r}`)
     vc.value = value
-    vc.font = { bold:true, size:13, color:{argb: argb} }
+    vc.font = { bold:true, size:15, color:{argb: argb} }
     vc.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'F8FAFC'} }
     vc.alignment = { horizontal:'right', vertical:'middle' }
     vc.border = { bottom:{style:'thin', color:{argb:'E2E8F0'}} }
@@ -283,10 +280,10 @@ export async function GET(req: NextRequest) {
   ws1.mergeCells('B12:E12')
   const metT = ws1.getCell('B12')
   metT.value = 'RECAUDO POR METODO DE PAGO'
-  metT.font = { bold:true, size:9, color:{argb:C.headerBg} }
+  metT.font = { bold:true, size:10, color:{argb:C.headerBg} }
   metT.alignment = { horizontal:'center' }
   metT.border = { bottom:{style:'medium', color:{argb:C.headerBg}} }
-  ws1.getRow(12).height = 18
+  ws1.getRow(12).height = 22
 
   // Headers metodos
   ;['B','C','D','E'].forEach((col, i) => {
@@ -318,25 +315,25 @@ export async function GET(req: NextRequest) {
     const data = metMap[key] ?? { total:0, count:0 }
     const isEven = (mr - 14) % 2 === 0
     const bg = isEven ? C.white : C.rowBlue
-    ws1.getRow(mr).height = 22
+    ws1.getRow(mr).height = 26
 
     ws1.mergeCells(`B${mr}:C${mr}`)
     const lc = ws1.getCell(`B${mr}`)
     lc.value = label
-    lc.font = { size:10, color:{argb:C.text} }
+    lc.font = { size:11, color:{argb:C.text} }
     lc.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bg} }
     lc.alignment = { vertical:'middle' }
 
     const dc = ws1.getCell(`D${mr}`)
     dc.value = data.count
-    dc.font = { size:10, color:{argb:C.text} }
+    dc.font = { size:11, color:{argb:C.text} }
     dc.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bg} }
     dc.alignment = { horizontal:'right', vertical:'middle' }
 
     const tc = ws1.getCell(`E${mr}`)
     tc.value = data.total
     tc.numFmt = '"$"#,##0'
-    tc.font = { bold:true, size:10,
+    tc.font = { bold:true, size:11,
       color:{argb: data.total > 0 ? C.green : C.text} }
     tc.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bg} }
     tc.alignment = { horizontal:'right', vertical:'middle' }
@@ -344,11 +341,11 @@ export async function GET(req: NextRequest) {
   }
 
   // Fila total metodos
-  ws1.getRow(mr).height = 26
+  ws1.getRow(mr).height = 30
   ;['B','C','D','E'].forEach((col, i) => {
     const cell = ws1.getCell(`${col}${mr}`)
     cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:C.headerBg} }
-    cell.font = { bold:true, size:10, color:{argb:C.white} }
+    cell.font = { bold:true, size:12, color:{argb:C.white} }
     cell.alignment = { horizontal: i < 2 ? 'left':'right', vertical:'middle' }
     cell.border = { top:{style:'thin', color:{argb:C.accent}} }
   })
@@ -417,11 +414,11 @@ export async function GET(req: NextRequest) {
   })
   // Total row ws3
   const lr3 = 5 + faltantePlanRes.rows.length
-  ws3.getRow(lr3).height = 26
+  ws3.getRow(lr3).height = 30
   ;['A','B','C','D','E'].forEach((col, i) => {
     const cell = ws3.getCell(`${col}${lr3}`)
     cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:C.headerBg} }
-    cell.font = { bold:true, size:10, color:{argb:C.white} }
+    cell.font = { bold:true, size:12, color:{argb:C.white} }
     cell.alignment = { horizontal: i < 2 ? 'left':'right', vertical:'middle' }
   })
   ws3.mergeCells(`A${lr3}:D${lr3}`)
