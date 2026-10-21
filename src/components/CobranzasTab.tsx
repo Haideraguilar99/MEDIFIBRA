@@ -110,7 +110,19 @@ export default function CobranzasTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
       })
       setCobradoTs(ts)
       const open: Record<string,boolean> = {}
-      DIAS.forEach(d => { open[d] = tabHabilitada(d) })
+      const today = new Date().getDate()
+      DIAS.forEach(d => {
+        const num = parseInt(d, 10)
+        const habilitada = tabHabilitada(d)
+        // Abrir automaticamente la pestaña mas cercana al dia actual
+        open[d] = habilitada && Math.abs(num - today) <= 3
+      })
+      // Si ninguna quedó abierta, abrir la primera habilitada
+      const hayAbierta = Object.values(open).some(Boolean)
+      if (!hayAbierta) {
+        const primera = DIAS.find(d => tabHabilitada(d))
+        if (primera) open[primera] = true
+      }
       setOpenDias(open)
     } catch (e) { console.error(e) }
     finally { setLoading(false) }

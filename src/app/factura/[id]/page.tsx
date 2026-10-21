@@ -39,7 +39,6 @@ export default function FacturaPage() {
   const [loading, setLoading]             = useState(true)
   const [downloading, setDownloading]     = useState(false)
   const [autoTriggered, setAutoTriggered] = useState(false)
-  const [mobileScale, setMobileScale]     = useState(1)
   const [isCapturing, setIsCapturing]     = useState(false)
   const invoiceRef = useRef<HTMLDivElement>(null)
 
@@ -52,16 +51,6 @@ export default function FacturaPage() {
   const dateStr     = now.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })
   const dueDateObj  = addBusinessDays(now, 3)
   const dueDate     = dueDateObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })
-
-  useEffect(() => {
-    const calc = () => {
-      const vw = window.innerWidth
-      setMobileScale(vw < W + 32 ? (vw - 8) / W : 1)
-    }
-    calc()
-    window.addEventListener('resize', calc)
-    return () => window.removeEventListener('resize', calc)
-  }, [])
 
   useEffect(() => {
     const now2 = new Date()
@@ -132,7 +121,6 @@ export default function FacturaPage() {
   const invoiceAmount = invoice?.amount ?? client.plan_value
   const speedMatch = client.plan.match(/\d+/)
   const speedMbps  = speedMatch ? `${speedMatch[0]} Mbps` : '—'
-  const viewZoom   = isCapturing ? 1 : mobileScale
 
   const lbl = {
     fontSize: 11, fontWeight: 700, color: '#1565c0',
@@ -146,14 +134,14 @@ export default function FacturaPage() {
           <ArrowLeft size={15} /> Dashboard
         </Link>
         <button onClick={handleDownload} disabled={downloading} style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: downloading ? '#374151' : '#2563eb', color: 'white', border: 'none', borderRadius: 7, padding: '8px 18px', fontSize: 14, fontWeight: 700, cursor: downloading ? 'not-allowed' : 'pointer', fontFamily: 'Arial' }}>
-          {downloading ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Generando...</> : <><Download size={14} /> Descargar PDF</>}
+          {downloading
+            ? <span style={{display:'flex',alignItems:'center',gap:6}}><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Generando...</span>
+            : <span style={{display:'flex',alignItems:'center',gap:6}}><Download size={14} /> Descargar PDF</span>
+          }
         </button>
       </div>
 
-      <style>{`
-        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        * { box-sizing:border-box; } body { margin:0; padding:0; }
-      `}</style>
+      <style dangerouslySetInnerHTML={{__html:`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}*{box-sizing:border-box}body{margin:0;padding:0}`}}/>
 
       <div style={{ minHeight: '100vh', backgroundColor: '#e8eef4', padding: '12px 0', overflow: 'hidden' }}>
         <div style={{ width: W, margin: '0 auto', transformOrigin: 'top center', transform: `scale(${viewZoom})`, marginBottom: viewZoom < 1 ? `${-W * (1 - viewZoom) * 1.35}px` : 0 }}>
@@ -161,12 +149,12 @@ export default function FacturaPage() {
           <div ref={invoiceRef} style={{ width: W, backgroundColor: '#ffffff', overflow: 'hidden', fontFamily: 'Arial, sans-serif' }}>
 
             {/* ═══ HEADER ═══ */}
-            <div style={{ background: 'linear-gradient(135deg,#0d1b3e 0%,#1a237e 55%,#0d47a1 100%)', padding: '18px 28px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ background: 'linear-gradient(135deg,#0d1b3e 0%,#1a237e 55%,#0d47a1 100%)', padding: '14px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                 {/* Logo + empresa */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <img src="/logofact.jpeg" alt="Medifibra" crossOrigin="anonymous"
-                    style={{ width: 110, height: 110, objectFit: 'contain', borderRadius: 10, background: 'white', padding: 4 }} />
+                    style={{ width: 72, height: 72, objectFit: 'contain', borderRadius: 10, background: 'white', padding: 4 }} />
                   <div>
                     <div style={{ color: 'white', fontSize: 30, fontWeight: 900, letterSpacing: 2, lineHeight: 1, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA <span style={{ fontSize: 30, fontWeight: 900, letterSpacing: 2, color: '#ffffff' }}>S.A.S</span></div>
                     <div style={{ color: '#90caf9', fontSize: 13, marginTop: 10 }}>NIT: 902060057-8</div>
@@ -191,7 +179,7 @@ export default function FacturaPage() {
             {/* ═══ FILA: CLIENTE | COBRO | QR ═══ */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '2px solid #e8eaf6' }}>
               {/* Cliente */}
-              <div style={{ padding: '14px 20px', borderRight: '1px solid #e8eaf6' }}>
+              <div style={{ padding: '12px 14px', borderRight: '1px solid #e8eaf6' }}>
                 <div style={lbl}>Informacion del Cliente</div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: '#0d1b3e', marginBottom: 8, lineHeight: 1.25 }}>{client.name}</div>
                 {client.address && (
@@ -231,7 +219,7 @@ export default function FacturaPage() {
               </div>
 
               {/* Cobro */}
-              <div style={{ padding: '14px 20px', borderRight: '1px solid #e8eaf6' }}>
+              <div style={{ padding: '12px 14px', borderRight: '1px solid #e8eaf6' }}>
                 <div style={lbl}>Detalles de Cobro</div>
                 {[
                   { label: 'N de Factura',          value: invoiceNum, color: '#1565c0', bold: false },
@@ -251,9 +239,10 @@ export default function FacturaPage() {
             </div>
 
             {/* ═══ SERVICIOS ═══ */}
-            <div style={{ padding: '12px 22px 8px' }}>
+            <div style={{ padding: '10px 10px 8px' }}>
               <div style={lbl}>Detalle de Servicios</div>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', minWidth: 460, borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#0d1b3e' }}>
                     <th style={{ padding: '10px 14px', textAlign: 'left',   color: 'white', fontWeight: 700, fontSize: 14 }}>Descripcion del Servicio</th>
@@ -287,7 +276,7 @@ export default function FacturaPage() {
                   <tr style={{ borderTop: '3px solid #0d1b3e', backgroundColor: '#eef2ff' }}>
                     <td colSpan={2} style={{ padding: '10px 14px', fontSize: 12, color: '#9ca3af', fontStyle: 'italic' }}>IVA (Art. 481, literal h) — $ 0 &nbsp;·&nbsp; Internet residencial exento</td>
                     <td style={{ padding: '10px 14px', textAlign: 'right', fontSize: 15, fontWeight: 800, color: '#0d1b3e' }}>TOTAL A PAGAR</td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', fontSize: 28, fontWeight: 900, color: '#0d1b3e' }}>{formatCurrency(invoiceAmount)}</td>
+                    <td style={{ padding: '10px 14px', textAlign: 'right', fontSize: 20, fontWeight: 900, color: '#0d1b3e', whiteSpace: 'nowrap' }}>{formatCurrency(invoiceAmount)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -307,7 +296,7 @@ export default function FacturaPage() {
                   </div>
                 </div>
                 <div style={{ fontSize: 12, color: '#999', marginBottom: 2 }}>Numero de cuenta</div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: '#0d1b3e', letterSpacing: 1, marginBottom: 6 }}>{CUENTA}</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: '#0d1b3e', letterSpacing: 1, marginBottom: 6 }}>{CUENTA}</div>
                 <div style={{ fontSize: 12, color: '#999', marginBottom: 1 }}>A nombre de</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Medifibra S.A.S</div>
               </div>
@@ -323,7 +312,7 @@ export default function FacturaPage() {
                   </div>
                 </div>
                 <div style={{ fontSize: 12, color: '#999', marginBottom: 2 }}>Llave / Referencia de pago</div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: '#1b5e20', letterSpacing: 1, marginBottom: 6 }}>{CUENTA}</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: '#1b5e20', letterSpacing: 1, marginBottom: 6 }}>{CUENTA}</div>
                 <div style={{ fontSize: 12, color: '#999', marginBottom: 1 }}>A nombre de</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#333' }}>Medifibra S.A.S</div>
               </div>
@@ -347,8 +336,8 @@ export default function FacturaPage() {
             </div>
 
             {/* ═══ FOOTER UNIFICADO ═══ */}
-            <div style={{ backgroundColor: '#0d1b3e', padding: '14px 28px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ backgroundColor: '#0d1b3e', padding: '14px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 10 }}>
                 <div>
                   <div style={{ color: '#90caf9', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 3 }}>Contacto y Soporte</div>
                   <div style={{ color: 'white', fontSize: 18, fontWeight: 700 }}>WhatsApp: 333 728 8745</div>
