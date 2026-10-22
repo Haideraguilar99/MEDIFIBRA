@@ -580,10 +580,50 @@ export default function Dashboard() {
                       </button>
                     )
                   })}
-                  {(search||filterPlan||filterStatus||filterClass)&&(
-                    <button onClick={()=>{setSearch('');setFilterPlan('');setFilterStatus('');setFilterClass('')}}
+                  {(search||filterPlan||filterStatus||filterClass||filterDia)&&(
+                    <button onClick={()=>{setSearch('');setFilterPlan('');setFilterStatus('');setFilterClass('');setFilterDia('')}}
                       style={{border:`1px solid ${BORDER}`,color:LIGHT}} className="px-3 py-1 rounded-full text-xs hover:text-white transition-colors">
                       ✕ Limpiar
+                    </button>
+                  )}
+                </div>
+                {/* ── Filtro por Día de Pago ── */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-xs font-medium" style={{color:MUTED}}>Día de pago:</span>
+                  <button onClick={()=>setFilterDia('')}
+                    className="px-2.5 py-1 rounded-full text-xs font-medium transition-all border"
+                    style={{
+                      backgroundColor: !filterDia ? '#2563EB22' : 'transparent',
+                      color: !filterDia ? 'white' : LIGHT,
+                      border: `1px solid ${!filterDia ? '#2563EB' : 'transparent'}`,
+                    }}>
+                    Todos
+                  </button>
+                  {['1','5','15','20','25','30'].map(dia => {
+                    const n = clients.filter(c => c.dia_pago === dia).length
+                    if (n === 0) return null
+                    const active = filterDia === dia
+                    return (
+                      <button key={dia} onClick={()=>setFilterDia(active ? '' : dia)}
+                        className="px-2.5 py-1 rounded-full text-xs font-semibold transition-all"
+                        style={{
+                          backgroundColor: active ? '#7c3aed22' : 'transparent',
+                          color: active ? '#a78bfa' : LIGHT,
+                          border: `1px solid ${active ? '#7c3aed' : 'transparent'}`,
+                        }}>
+                        Día {dia} <span style={{opacity:0.7}}>({n})</span>
+                      </button>
+                    )
+                  })}
+                  {clients.filter(c => !c.dia_pago || c.dia_pago === '').length > 0 && (
+                    <button onClick={()=>setFilterDia(filterDia==='sin_definir'?'':'sin_definir')}
+                      className="px-2.5 py-1 rounded-full text-xs font-semibold transition-all"
+                      style={{
+                        backgroundColor: filterDia==='sin_definir' ? '#64748b22' : 'transparent',
+                        color: filterDia==='sin_definir' ? '#94a3b8' : LIGHT,
+                        border: `1px solid ${filterDia==='sin_definir' ? '#64748b' : 'transparent'}`,
+                      }}>
+                      Sin definir <span style={{opacity:0.7}}>({clients.filter(c=>!c.dia_pago||c.dia_pago==='').length})</span>
                     </button>
                   )}
                 </div>
