@@ -19,6 +19,9 @@ const PUBLIC = [
   '/orden-publica',
   '/api/orden-publica',
   '/api/cron',
+  '/factura',
+  '/api/clients/',
+  '/api/invoices',
 ]
 
 export async function proxy(req: NextRequest) {
