@@ -48,9 +48,15 @@ export default function FacturaPage() {
   const [autoTriggered, setAutoTriggered] = useState(false)
   const [isCapturing, setIsCapturing]     = useState(false)
   const invoiceRef = useRef<HTMLDivElement>(null)
-  const [viewZoom, setViewZoom] = useState(1)
+  const [viewZoom, setViewZoom]     = useState(1)
+  const [leftOffset, setLeftOffset] = useState(0)
   useEffect(() => {
-    function onResize() { setViewZoom(getViewZoom()) }
+    function onResize() {
+      const vw   = window.innerWidth
+      const zoom = vw >= W + 32 ? 1 : Math.max(0.45, (vw - 16) / W)
+      setViewZoom(zoom)
+      setLeftOffset(zoom < 1 ? Math.round((vw - W * zoom) / 2) : 0)
+    }
     onResize()
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
@@ -157,8 +163,8 @@ export default function FacturaPage() {
 
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}*{box-sizing:border-box}body{margin:0;padding:0}`}</style>
 
-      <div style={{ minHeight: '100vh', backgroundColor: '#e8eef4', padding: '12px 0', overflow: 'hidden' }}>
-        <div style={{ width: W, margin: '0 auto', transformOrigin: 'top center', transform: `scale(${viewZoom})`, marginBottom: viewZoom < 1 ? `${-W * (1 - viewZoom) * 1.35}px` : 0 }}>
+      <div style={{ minHeight: '100vh', backgroundColor: '#e8eef4', padding: '12px 0', overflowX: 'hidden' }}>
+        <div style={{ width: W, transformOrigin: 'top left', transform: `translateX(${leftOffset}px) scale(${viewZoom})`, marginBottom: viewZoom < 1 ? `${-W * (1 - viewZoom) * 1.35}px` : 0 }}>
 
           <div ref={invoiceRef} style={{ width: W, backgroundColor: '#ffffff', overflow: 'hidden', fontFamily: 'Arial, sans-serif' }}>
 
