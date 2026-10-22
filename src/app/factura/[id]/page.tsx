@@ -164,7 +164,7 @@ export default function FacturaPage() {
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}*{box-sizing:border-box}body{margin:0;padding:0}`}</style>
 
       <div style={{ minHeight: '100vh', backgroundColor: '#e8eef4', padding: '12px 0', overflowX: 'hidden' }}>
-        <div style={{ width: W, transformOrigin: 'top left', transform: `translateX(${leftOffset}px) scale(${viewZoom})`, marginBottom: viewZoom < 1 ? `${-W * (1 - viewZoom) * 1.35}px` : 0 }}>
+        <div style={{ width: W, margin: viewZoom === 1 ? '0 auto' : '0', transformOrigin: 'top left', transform: viewZoom < 1 ? `translateX(${leftOffset}px) scale(${viewZoom})` : 'none', marginBottom: viewZoom < 1 ? `${-W * (1 - viewZoom) * 1.35}px` : 0 }}>
 
           <div ref={invoiceRef} style={{ width: W, backgroundColor: '#ffffff', overflow: 'hidden', fontFamily: 'Arial, sans-serif' }}>
 
@@ -174,7 +174,7 @@ export default function FacturaPage() {
                 {/* Logo + empresa */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <img src="/logofact.jpeg" alt="Medifibra" crossOrigin="anonymous"
-                    style={{ width: 72, height: 72, objectFit: 'contain', borderRadius: 10, background: 'white', padding: 4 }} />
+                    style={{ width: 120, height: 120, objectFit: 'contain', borderRadius: 10, background: 'white', padding: 4 }} />
                   <div>
                     <div style={{ color: 'white', fontSize: 30, fontWeight: 900, letterSpacing: 2, lineHeight: 1, fontFamily: 'Arial Black, Arial' }}>MEDIFIBRA <span style={{ fontSize: 30, fontWeight: 900, letterSpacing: 2, color: '#ffffff' }}>S.A.S</span></div>
                     <div style={{ color: '#90caf9', fontSize: 13, marginTop: 10 }}>NIT: 902060057-8</div>
