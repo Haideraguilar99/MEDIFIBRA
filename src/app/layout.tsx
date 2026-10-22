@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'MEDIFIBRA S.A.S | Recordatorio de pago',
     description: 'Plataforma de administración de clientes y servicios de fibra óptica',
-    images: [{ url: 'https://medifibra-filc.vercel.app/og-medifibra.png', width: 1200, height: 630, alt: 'Medifibra S.A.S' }],
+    images: [{ url: 'https://medifibra-filc.vercel.app/logofact.jpeg', width: 512, height: 512, alt: 'Medifibra S.A.S' }],
     siteName: 'MEDIFIBRA — Sistema de Gestión',
   },
 }
