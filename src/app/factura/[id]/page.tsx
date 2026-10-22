@@ -32,6 +32,13 @@ function addBusinessDays(date: Date, days: number): Date {
 const CUENTA = '00995202514'
 const W = 794
 
+function getViewZoom() {
+  if (typeof window === 'undefined') return 1
+  const vw = window.innerWidth
+  if (vw >= W + 32) return 1
+  return Math.max(0.45, (vw - 16) / W)
+}
+
 export default function FacturaPage() {
   const { id } = useParams()
   const [client, setClient]               = useState<Client | null>(null)
@@ -41,6 +48,13 @@ export default function FacturaPage() {
   const [autoTriggered, setAutoTriggered] = useState(false)
   const [isCapturing, setIsCapturing]     = useState(false)
   const invoiceRef = useRef<HTMLDivElement>(null)
+  const [viewZoom, setViewZoom] = useState(1)
+  useEffect(() => {
+    function onResize() { setViewZoom(getViewZoom()) }
+    onResize()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   const now         = new Date()
   // Periodo = mes ANTERIOR al dia actual
@@ -280,6 +294,7 @@ export default function FacturaPage() {
                   </tr>
                 </tfoot>
               </table>
+              </div>
             </div>
 
             {/* ═══ PAGOS + POLITICA ═══ */}
