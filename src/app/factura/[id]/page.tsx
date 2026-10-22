@@ -141,7 +141,7 @@ export default function FacturaPage() {
         </button>
       </div>
 
-      <style dangerouslySetInnerHTML={{__html:`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}*{box-sizing:border-box}body{margin:0;padding:0}`}}/>
+      <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}*{box-sizing:border-box}body{margin:0;padding:0}`}</style>
 
       <div style={{ minHeight: '100vh', backgroundColor: '#e8eef4', padding: '12px 0', overflow: 'hidden' }}>
         <div style={{ width: W, margin: '0 auto', transformOrigin: 'top center', transform: `scale(${viewZoom})`, marginBottom: viewZoom < 1 ? `${-W * (1 - viewZoom) * 1.35}px` : 0 }}>
