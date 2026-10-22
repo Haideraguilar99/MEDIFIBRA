@@ -8,6 +8,16 @@ const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin']
 export const metadata: Metadata = {
   title: 'MEDIFIBRA — Sistema de Gestión',
   description: 'Plataforma de administración de clientes y servicios de fibra óptica',
+  icons: {
+    icon: '/logofact.jpeg',
+    apple: '/logofact.jpeg',
+  },
+  openGraph: {
+    title: 'MEDIFIBRA S.A.S | Recordatorio de pago',
+    description: 'Plataforma de administración de clientes y servicios de fibra óptica',
+    images: [{ url: '/logofact.jpeg', width: 512, height: 512, alt: 'Medifibra S.A.S' }],
+    siteName: 'MEDIFIBRA — Sistema de Gestión',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
