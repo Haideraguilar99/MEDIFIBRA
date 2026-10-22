@@ -54,7 +54,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         b.telefono_alternativo ?? c.telefono_alternativo ?? '',
         b.fecha_instalacion    ?? c.fecha_instalacion    ?? '',
         b.incluye_tv !== undefined ? b.incluye_tv : (c.incluye_tv ?? 0),
-        b.dia_pago         ?? c.dia_pago         ?? '30',
+        b.dia_pago         ?? c.dia_pago         ?? '',
         b.referido_nombre     ?? c.referido_nombre     ?? '',
         b.referido_telefono   ?? c.referido_telefono   ?? '',
         b.puntos_tv ?? c.puntos_tv ?? 0,
