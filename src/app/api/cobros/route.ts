@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+export const dynamic = 'force-dynamic'
 
+// Devuelve clientes activos que están en PROXIMO_PAGAR o SUSPENDIDO_TEMP
+// El motor de clasificación ya garantiza que estos estados son correctos.
 export async function GET() {
   try {
     const result = await db.execute(`
       SELECT
         c.id, c.name, c.cellphone, c.plan, c.plan_value,
-        c.classification, c.dia_pago, c.incluye_tv,
+        c.classification, c.dia_pago, c.incluye_tv, c.puntos_tv,
         nl.sent_at as cobro_enviado_at
       FROM clients c
       LEFT JOIN (
@@ -18,22 +21,17 @@ export async function GET() {
       ) nl ON nl.client_id = c.id
       WHERE c.status = 'active'
         AND c.dia_pago != ''
-        AND c.classification != 'AL_DIA'
-        AND NOT EXISTS (
-          SELECT 1 FROM payments p
-          WHERE p.client_id = c.id
-            AND p.status = 'paid'
-            AND strftime('%Y-%m', p.created_at) = strftime('%Y-%m', 'now')
-        )
+        AND c.classification IN ('PROXIMO_PAGAR', 'SUSPENDIDO_TEMP')
       ORDER BY
-        CASE c.dia_pago
-          WHEN '5'  THEN 1 WHEN '10' THEN 2 WHEN '12' THEN 3
-          WHEN '15' THEN 4 WHEN '20' THEN 5 WHEN '25' THEN 6
-          WHEN '30' THEN 7 ELSE 8 END,
+        CAST(c.dia_pago AS INTEGER) ASC,
+        CASE c.classification
+          WHEN 'SUSPENDIDO_TEMP' THEN 1
+          WHEN 'PROXIMO_PAGAR'   THEN 2
+          ELSE 3 END,
         c.name ASC
     `)
     return NextResponse.json({ clients: result.rows })
-  } catch {
-    return NextResponse.json({ error: 'Error al cargar cobros' }, { status: 500 })
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 })
   }
 }
