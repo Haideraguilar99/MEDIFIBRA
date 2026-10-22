@@ -83,7 +83,7 @@ export default function FacturasTab({
 
       const phone = (c.cellphone ?? '').replace(/\D/g, '')
       const monto = fmt(c.plan_value + (c.incluye_tv || 0))
-      const linkFactura = `${window.location.origin}/factura/${c.id}`
+      const linkFactura = `https://medifibra-filc.vercel.app/factura/${c.id}`
       const msg = encodeURIComponent(mensajeFactura(c.name, c.plan, monto, period, linkFactura, c.dia_pago))
       window.open(`https://wa.me/57${phone}?text=${msg}`, '_blank')
 

@@ -142,14 +142,14 @@ export default function CobranzasTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
         body: JSON.stringify({ period, dia_pago: c.dia_pago })
       })
       if (!r.ok) { alert('Error al generar factura'); return null }
-      return `${window.location.origin}/factura/${c.id}`
+      return `https://medifibra-filc.vercel.app/factura/${c.id}`
     } catch { return null }
   }
 
   const enviarCobranza = async (c: CobranzaClient, incluirFactura: boolean) => {
     setSending(c.id)
     try {
-      let link = `${window.location.origin}/factura/${c.id}`
+      let link = `https://medifibra-filc.vercel.app/factura/${c.id}`
       if (incluirFactura) {
         const generado = await generarFactura(c)
         if (!generado) { setSending(null); return }
