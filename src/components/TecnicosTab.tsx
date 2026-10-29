@@ -30,7 +30,7 @@ const ORDER_STATUSES = [
 ];
 const TECH_ROLES = ['Tecnico Lider','Tecnico','Auxiliar Tecnico','Instalador','Supervisor'];
 const EMPTY_T = { name:'',cedula:'',phone:'',cellphone:'',email:'',photo_url:'',role:'Tecnico',specialty:'',status:'active',notes:'' };
-const EMPTY_O = { technician_ids:[] as number[],technician_id:0,client_id:0,task_type:'',task_description:'',priority:'normal',scheduled_date:'',scheduled_time:'',notes:'',created_by:'Ana María Ibarguen',foto_referencia:'' };
+const EMPTY_O = { technician_ids:[] as number[],technician_id:0,client_id:0,task_type:'',task_description:'',priority:'normal',scheduled_date:'',scheduled_time:'',notes:'',created_by:'Ana María Ibarguen',fotos_referencia:[] as string[] };
 
 const tCfg = (v:string) => TASK_TYPES.find(t=>t.value===v);
 const pCfg = (v:string) => PRIORITIES.find(p=>p.value===v);
@@ -104,7 +104,7 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
   async function delT(id:number,name:string){ if(!confirm(`Eliminar a ${name}?`))return; const r=await fetch(`/api/technicians/${id}`,{method:'DELETE'}); if(!r.ok){const e=await r.json();alert(e.error??'Error');return;} fetchT(); }
 
   function openNO(){ setEditO(null); setOForm({...EMPTY_O}); setSelC(null); setCs(''); setShowOM(true); }
-  function openEO(o:WorkOrder){ setEditO(o); setOForm({technician_ids:[o.technician_id],technician_id:o.technician_id,client_id:o.client_id,task_type:o.task_type,task_description:o.task_description,priority:o.priority,scheduled_date:o.scheduled_date,scheduled_time:o.scheduled_time,notes:o.notes,created_by:o.created_by,foto_referencia:o.foto_referencia??''}); setSelC({id:o.client_id,name:o.client_name??'',address:o.client_address??'',neighborhood:o.client_neighborhood??'',commune:'',cellphone:o.client_phone??'',plan:o.client_plan??'',status:o.client_status??'',cedula:'',punto_referencia:o.client_punto_referencia??''}); setCs(o.client_name??'');setShowOM(true); }
+  function openEO(o:WorkOrder){ setEditO(o); setOForm({technician_ids:[o.technician_id],technician_id:o.technician_id,client_id:o.client_id,task_type:o.task_type,task_description:o.task_description,priority:o.priority,scheduled_date:o.scheduled_date,scheduled_time:o.scheduled_time,notes:o.notes,created_by:o.created_by,fotos_referencia: (() => { try { const v = o.foto_referencia ?? ''; if (!v) return []; const p = JSON.parse(v); return Array.isArray(p) ? p : [v]; } catch { return o.foto_referencia ? [o.foto_referencia] : []; } })()}); setSelC({id:o.client_id,name:o.client_name??'',address:o.client_address??'',neighborhood:o.client_neighborhood??'',commune:'',cellphone:o.client_phone??'',plan:o.client_plan??'',status:o.client_status??'',cedula:'',punto_referencia:o.client_punto_referencia??''}); setCs(o.client_name??'');setShowOM(true); }
   async function saveO(){
     const ids=oForm.technician_ids??[];
     if(ids.length===0){alert('Selecciona al menos un tecnico');return;}
@@ -124,12 +124,12 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
         notesVal = notesVal ? notesVal+' | '+extraLine : extraLine;
       }
       if(editO){
-        const body={...oForm,technician_id:oForm.technician_id,notes:notesVal,status:editO.status,whatsapp_tech_sent:editO.whatsapp_tech_sent,whatsapp_client_sent:editO.whatsapp_client_sent};
+        const body={...oForm,technician_id:oForm.technician_id,notes:notesVal,status:editO.status,whatsapp_tech_sent:editO.whatsapp_tech_sent,whatsapp_client_sent:editO.whatsapp_client_sent,foto_referencia:JSON.stringify(oForm.fotos_referencia??[])};
         const r=await fetch(`/api/work-orders/${editO.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         if(!r.ok){const e=await r.json();alert(e.error??'Error');return;}
       } else {
         const allNames = [primaryTech?primaryTech.name:'Tecnico principal',...extraTechs].join(', ');
-        const body={...oForm,technician_id:primaryId,notes:notesVal};
+        const body={...oForm,technician_id:primaryId,notes:notesVal,foto_referencia:JSON.stringify(oForm.fotos_referencia??[])};
         const r=await fetch('/api/work-orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         if(!r.ok){const e=await r.json();alert(e.error??'Error');return;}
         // Notificacion push al tecnico principal
@@ -486,41 +486,22 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
                   Foto de referencia del hogar (opcional)
                 </label>
                 <div
-                  onDragOver={e=>{ e.preventDefault(); e.currentTarget.style.borderColor='#2563eb' }}
-                  onDragLeave={e=>{ e.currentTarget.style.borderColor=BORDER }}
-                  onDrop={e=>{
-                    e.preventDefault()
-                    e.currentTarget.style.borderColor=BORDER
-                    const file = e.dataTransfer.files[0]
-                    if (!file || !file.type.startsWith('image/')) return
-                    const reader = new FileReader()
-                    reader.onload = ev => {
-                      const img = new window.Image()
-                      img.onload = () => {
-                        const MAX = 800
-                        const canvas = document.createElement('canvas')
-                        let w = img.width, h = img.height
-                        if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h*MAX/w); w=MAX } else { w=Math.round(w*MAX/h); h=MAX } }
-                        canvas.width=w; canvas.height=h
-                        canvas.getContext('2d')!.drawImage(img,0,0,w,h)
-                        const b64 = canvas.toDataURL('image/jpeg', 0.7)
-                        setOForm(prev=>({...prev, foto_referencia:b64}))
-                      }
-                      img.src = ev.target!.result as string
-                    }
-                    reader.readAsDataURL(file)
-                  }}
-                  style={{ border:`2px dashed ${BORDER}`, borderRadius:10, padding:16, textAlign:'center' as const, cursor:'pointer', position:'relative' as const, minHeight:90, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column' as const, gap:8 }}>
-                  {oForm.foto_referencia ? (
-                    <div style={{ position:'relative' as const, width:'100%' }}>
-                      <img src={oForm.foto_referencia} alt="Referencia" style={{ maxHeight:160, maxWidth:'100%', borderRadius:8, objectFit:'cover' as const }}/>
-                      <button onClick={e=>{ e.stopPropagation(); setOForm(prev=>({...prev,foto_referencia:''})) }}
-                        style={{ position:'absolute' as const, top:4, right:4, background:'#ef4444', border:'none', borderRadius:'50%', width:22, height:22, cursor:'pointer', color:'#fff', fontWeight:700, fontSize:12, display:'flex', alignItems:'center', justifyContent:'center' }}>x</button>
+                  style={{ border:`2px dashed ${BORDER}`, borderRadius:10, padding:12, minHeight:90 }}>
+                  {(oForm.fotos_referencia??[]).length > 0 && (
+                    <div style={{ display:'flex', gap:8, flexWrap:'wrap' as const, marginBottom:8 }}>
+                      {(oForm.fotos_referencia??[]).map((src,idx)=>(
+                        <div key={idx} style={{ position:'relative' as const, width:90, height:90 }}>
+                          <img src={src} alt={`Ref ${idx+1}`} style={{ width:90, height:90, borderRadius:8, objectFit:'cover' as const, border:`1px solid ${BORDER}` }}/>
+                          <button onClick={e=>{ e.stopPropagation(); setOForm(prev=>({...prev,fotos_referencia:(prev.fotos_referencia??[]).filter((_,i)=>i!==idx)})) }}
+                            style={{ position:'absolute' as const, top:2, right:2, background:'#ef4444', border:'none', borderRadius:'50%', width:20, height:20, cursor:'pointer', color:'#fff', fontWeight:700, fontSize:11, display:'flex', alignItems:'center', justifyContent:'center' }}>x</button>
+                        </div>
+                      ))}
                     </div>
-                  ) : (
-                    <>
-                      <span style={{ fontSize:28 }}>+</span>
-                      <span style={{ fontSize:12, color:MUTED }}>Arrastra una foto o haz clic para adjuntar</span>
+                  )}
+                  {(oForm.fotos_referencia??[]).length < 3 && (
+                    <div style={{ position:'relative' as const, display:'inline-flex', alignItems:'center', gap:6, cursor:'pointer', color:MUTED, fontSize:13 }}>
+                      <span style={{ fontSize:22 }}>+</span>
+                      <span>{(oForm.fotos_referencia??[]).length===0 ? 'Agregar fotos de referencia (max 3)' : 'Agregar otra foto'}</span>
                       <input type="file" accept="image/*" style={{ position:'absolute' as const, inset:0, opacity:0, cursor:'pointer', width:'100%', height:'100%' }}
                         onChange={e=>{
                           const file = e.target.files?.[0]
@@ -529,20 +510,20 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
                           reader.onload = ev => {
                             const img = new window.Image()
                             img.onload = () => {
-                              const MAX = 800
+                              const MAX = 600
                               const canvas = document.createElement('canvas')
                               let w = img.width, h = img.height
                               if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h*MAX/w); w=MAX } else { w=Math.round(w*MAX/h); h=MAX } }
                               canvas.width=w; canvas.height=h
                               canvas.getContext('2d')!.drawImage(img,0,0,w,h)
-                              const b64 = canvas.toDataURL('image/jpeg', 0.7)
-                              setOForm(prev=>({...prev, foto_referencia:b64}))
+                              const b64 = canvas.toDataURL('image/jpeg', 0.65)
+                              setOForm(prev=>({ ...prev, fotos_referencia:[...(prev.fotos_referencia??[]),b64].slice(0,3) }))
                             }
                             img.src = ev.target!.result as string
                           }
                           reader.readAsDataURL(file)
                         }}/>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>

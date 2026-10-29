@@ -53,7 +53,7 @@ export async function PUT(
     const {
       technician_id, client_id, task_type, task_description,
       priority, scheduled_date, scheduled_time,
-      status, notes, whatsapp_tech_sent, whatsapp_client_sent
+      status, notes, whatsapp_tech_sent, whatsapp_client_sent, foto_referencia
     } = body;
     // tech_resultado NO se toca aqui — solo el portal tecnico lo escribe
 
@@ -62,13 +62,14 @@ export async function PUT(
             SET technician_id=?, client_id=?, task_type=?, task_description=?,
                 priority=?, scheduled_date=?, scheduled_time=?, status=?,
                 notes=?, whatsapp_tech_sent=?, whatsapp_client_sent=?,
-                updated_at=datetime('now')
+                foto_referencia=?, updated_at=datetime('now')
             WHERE id=?`,
       args: [
         technician_id, client_id, task_type, task_description || '',
         priority || 'normal', scheduled_date || '', scheduled_time || '',
         status || 'pending', notes || '',
         whatsapp_tech_sent ?? 0, whatsapp_client_sent ?? 0,
+        foto_referencia ?? '',
         id
       ]
     });
