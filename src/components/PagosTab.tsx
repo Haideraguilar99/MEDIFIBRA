@@ -77,8 +77,10 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
           status: 'paid', notes: f.notes || 'Registrado desde modulo Pagos' })
       })
       if (!res.ok) { const e = await res.json(); alert('Error: '+(e.error||res.status)); return }
+      const data = await res.json()
+      const newClass = data.client?.classification ?? 'AL_DIA'
       setPagados(prev => new Set([...prev, c.id]))
-      setAllClients(prev => prev.map(x => x.id===c.id ? {...x, classification:'AL_DIA'} : x))
+      setAllClients(prev => prev.map(x => x.id===c.id ? {...x, classification: newClass} : x))
       const nuevo: PagoReciente = { id: Date.now(), client_name: c.name, cellphone: c.cellphone,
         amount: f.amount, method: f.method, period: new Date().toISOString().slice(0,7),
         created_at: new Date().toISOString() }

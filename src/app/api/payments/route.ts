@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
     broadcast('new-payment',    newPayment.rows[0])
     broadcast('update-client',  updatedClient.rows[0])
 
-    return NextResponse.json({ payment: newPayment.rows[0] }, { status: 201 })
+    return NextResponse.json({ payment: newPayment.rows[0], client: updatedClient.rows[0] }, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }

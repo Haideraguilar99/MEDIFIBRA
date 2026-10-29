@@ -39,7 +39,9 @@ export async function POST(req: NextRequest) {
   try {
     const b = await req.json()
     // Calcular clasificacion automatica segun dia_pago (ignora lo que mande el form)
-    const autoClass = computeAutoClassification('', b.dia_pago ?? '', null)
+    // Cliente nuevo: lastPaymentDate = hoy para que el motor no lo suspenda
+    const todayISO = new Date().toISOString()
+    const autoClass = computeAutoClassification('', b.dia_pago ?? '', todayISO)
     // Verificar celular duplicado solo si se proporcionó
     if (b.cellphone) {
       const dup = await db.execute({
