@@ -13,36 +13,34 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       args: [body.client_id, body.amount, body.period, body.method, body.status, body.notes, id],
     })
 
-    // ── Recalcular clasificación con el motor central ─────────────────────
+    // Recalcular clasificacion con el motor v10.0
     const clientRow = await db.execute({
-      sql: 'SELECT classification, dia_pago FROM clients WHERE id = ?',
+      sql: 'SELECT classification, dia_pago, created_at FROM clients WHERE id = ?',
       args: [body.client_id],
     })
 
     if (clientRow.rows[0]) {
-      const current = String(clientRow.rows[0].classification ?? '')
-      const diaPago = clientRow.rows[0].dia_pago
-        ? String(clientRow.rows[0].dia_pago)
-        : null
+      const current         = String(clientRow.rows[0].classification ?? '')
+      const diaPago         = clientRow.rows[0].dia_pago ? String(clientRow.rows[0].dia_pago) : null
+      const clientCreatedAt = clientRow.rows[0].created_at ? String(clientRow.rows[0].created_at) : null
 
-      let lastPaymentDate: string | null = null
+      let lastPaymentPeriod: string | null = null
       if (body.status === 'paid') {
-        lastPaymentDate = new Date().toISOString()
+        lastPaymentPeriod = body.period
       } else {
         const lastPaid = await db.execute({
-          sql: `SELECT MAX(created_at) as lp FROM payments
+          sql: `SELECT MAX(period) as lp FROM payments
                 WHERE client_id = ? AND status = 'paid' AND id != ?`,
           args: [body.client_id, id],
         })
-        lastPaymentDate = lastPaid.rows[0]?.lp
-          ? String(lastPaid.rows[0].lp)
-          : null
+        lastPaymentPeriod = lastPaid.rows[0]?.lp ? String(lastPaid.rows[0].lp) : null
       }
 
       const { classification: newClass } = computeClassification({
         currentClassification: current,
         diaPago,
-        lastPaymentDate,
+        lastPaymentPeriod,
+        clientCreatedAt,
       })
 
       await db.execute({
@@ -51,7 +49,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       })
     }
 
-    // ── Leer resultados finales y emitir SSE ──────────────────────────────
+    // Leer resultados finales y emitir SSE
     const updated = await db.execute({
       sql: `SELECT p.*, c.name as client_name, c.plan, c.cellphone
             FROM payments p LEFT JOIN clients c ON p.client_id = c.id WHERE p.id = ?`,

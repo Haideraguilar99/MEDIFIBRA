@@ -4,8 +4,9 @@ import { computeClassification, isProtected } from '@/lib/classification'
 export const dynamic = 'force-dynamic'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MEDIFIBRA — Cron de auto-clasificación diaria v9.0
-// Usa el motor central computeClassification — sin lógica duplicada.
+// MEDIFIBRA — Cron de auto-clasificacion diaria v10.0
+// Usa el motor central computeClassification — sin logica duplicada.
+// Fuente de verdad: payments.period (YYYY-MM)
 // Ejecutar: GET /api/cron  con header Authorization: Bearer <CRON_SECRET>
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -24,9 +25,10 @@ export async function GET(req: Request) {
         c.classification,
         c.dia_pago,
         c.status,
-        MAX(p.created_at) AS last_payment_date
+        c.created_at,
+        MAX(CASE WHEN p.status = 'paid' THEN p.period END) AS last_payment_period
       FROM clients c
-      LEFT JOIN payments p ON p.client_id = c.id AND p.status = 'paid'
+      LEFT JOIN payments p ON p.client_id = c.id
       WHERE c.status = 'active'
       GROUP BY c.id
     `)
@@ -39,12 +41,12 @@ export async function GET(req: Request) {
     const errors: string[] = []
 
     for (const row of result.rows) {
-      const clientId     = Number(row.id)
-      const current      = String(row.classification ?? '')
-      const diaPago      = row.dia_pago ? String(row.dia_pago) : null
-      const lastPayment  = row.last_payment_date ? String(row.last_payment_date) : null
+      const clientId          = Number(row.id)
+      const current           = String(row.classification ?? '')
+      const diaPago           = row.dia_pago ? String(row.dia_pago) : null
+      const lastPaymentPeriod = row.last_payment_period ? String(row.last_payment_period) : null
+      const clientCreatedAt   = row.created_at ? String(row.created_at) : null
 
-      // Estados protegidos: nunca tocar desde el cron
       if (isProtected(current)) {
         skipped.push({ id: clientId, classification: current, reason: 'estado protegido' })
         continue
@@ -54,7 +56,8 @@ export async function GET(req: Request) {
         const { classification: newClass, reason } = computeClassification({
           currentClassification: current,
           diaPago,
-          lastPaymentDate: lastPayment,
+          lastPaymentPeriod,
+          clientCreatedAt,
           today,
         })
 

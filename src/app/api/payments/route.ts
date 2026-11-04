@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     const payStatus = body.status ?? 'paid'
 
-    // ── Insertar el pago ──────────────────────────────────────────────────
+    // Insertar el pago
     const result = await db.execute({
       sql: `INSERT INTO payments (client_id, amount, period, method, status, notes)
             VALUES (?, ?, ?, ?, ?, ?)`,
@@ -52,54 +52,44 @@ export async function POST(req: NextRequest) {
     })
     const rowId = result.lastInsertRowid?.toString() ?? '0'
 
-    // ── Recalcular clasificación con el motor central ─────────────────────
-    // Leemos el cliente para tener dia_pago y la fecha del pago recién creado
+    // Recalcular clasificacion con el motor v10.0
     const clientRow = await db.execute({
-      sql: 'SELECT classification, dia_pago FROM clients WHERE id = ?',
+      sql: 'SELECT classification, dia_pago, created_at FROM clients WHERE id = ?',
       args: [body.client_id],
     })
 
     if (clientRow.rows[0]) {
-      const current     = String(clientRow.rows[0].classification ?? '')
-      const diaPago     = clientRow.rows[0].dia_pago
-        ? String(clientRow.rows[0].dia_pago)
-        : null
+      const current         = String(clientRow.rows[0].classification ?? '')
+      const diaPago         = clientRow.rows[0].dia_pago ? String(clientRow.rows[0].dia_pago) : null
+      const clientCreatedAt = clientRow.rows[0].created_at ? String(clientRow.rows[0].created_at) : null
 
-      // Último pago pagado — si acabamos de registrar uno 'paid', lo incluimos
-      let lastPaymentDate: string | null = null
+      // Ultimo period pagado — si acabamos de registrar uno paid, usamos su period
+      let lastPaymentPeriod: string | null = null
       if (payStatus === 'paid') {
-        // El pago que acabamos de insertar es el más reciente
-        const now = new Date()
-        lastPaymentDate = now.toISOString()
+        lastPaymentPeriod = body.period
       } else {
-        // Para pagos 'pending', consultar el último pago real
         const lastPaid = await db.execute({
-          sql: `SELECT MAX(created_at) as lp FROM payments
+          sql: `SELECT MAX(period) as lp FROM payments
                 WHERE client_id = ? AND status = 'paid'`,
           args: [body.client_id],
         })
-        lastPaymentDate = lastPaid.rows[0]?.lp
-          ? String(lastPaid.rows[0].lp)
-          : null
+        lastPaymentPeriod = lastPaid.rows[0]?.lp ? String(lastPaid.rows[0].lp) : null
       }
 
       const { classification: newClass } = computeClassification({
         currentClassification: current,
         diaPago,
-        lastPaymentDate,
+        lastPaymentPeriod,
+        clientCreatedAt,
       })
 
       await db.execute({
         sql:  'UPDATE clients SET classification = ?, status = ? WHERE id = ?',
-        args: [
-          newClass,
-          payStatus === 'paid' ? 'active' : 'active',
-          body.client_id,
-        ],
+        args: [newClass, 'active', body.client_id],
       })
     }
 
-    // ── Leer resultados finales y emitir SSE ──────────────────────────────
+    // Leer resultados finales y emitir SSE
     const newPayment = await db.execute({
       sql: `SELECT p.*, c.name as client_name, c.plan, c.cellphone
             FROM payments p
@@ -112,8 +102,8 @@ export async function POST(req: NextRequest) {
       args: [body.client_id],
     })
 
-    broadcast('new-payment',    newPayment.rows[0])
-    broadcast('update-client',  updatedClient.rows[0])
+    broadcast('new-payment',   newPayment.rows[0])
+    broadcast('update-client', updatedClient.rows[0])
 
     return NextResponse.json({ payment: newPayment.rows[0], client: updatedClient.rows[0] }, { status: 201 })
   } catch (error) {

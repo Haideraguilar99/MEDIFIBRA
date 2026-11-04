@@ -11,7 +11,8 @@ export async function POST() {
         c.id,
         c.classification,
         c.dia_pago,
-        MAX(CASE WHEN p.status = 'paid' THEN p.created_at END) as last_payment_date
+        c.created_at,
+        MAX(CASE WHEN p.status = 'paid' THEN p.period END) as last_payment_period
       FROM clients c
       LEFT JOIN payments p ON p.client_id = c.id
       GROUP BY c.id
@@ -25,10 +26,11 @@ export async function POST() {
     const skipped: Array<{ id: number; classification: string }> = []
 
     for (const row of result.rows) {
-      const clientId    = Number(row.id)
-      const current     = String(row.classification ?? 'AL_DIA')
-      const diaPago     = row.dia_pago ? String(row.dia_pago) : null
-      const lastPayment = row.last_payment_date ? String(row.last_payment_date) : null
+      const clientId          = Number(row.id)
+      const current           = String(row.classification ?? 'AL_DIA')
+      const diaPago           = row.dia_pago ? String(row.dia_pago) : null
+      const lastPaymentPeriod = row.last_payment_period ? String(row.last_payment_period) : null
+      const clientCreatedAt   = row.created_at ? String(row.created_at) : null
 
       if (isProtected(current)) {
         skipped.push({ id: clientId, classification: current })
@@ -38,7 +40,8 @@ export async function POST() {
       const { classification: newClass, reason } = computeClassification({
         currentClassification: current,
         diaPago,
-        lastPaymentDate: lastPayment,
+        lastPaymentPeriod,
+        clientCreatedAt,
         today,
       })
 
@@ -49,7 +52,6 @@ export async function POST() {
         args: [newClass, clientId],
       })
 
-      // Emitir actualización en tiempo real
       const updatedRow = await db.execute({
         sql:  'SELECT * FROM clients WHERE id = ?',
         args: [clientId],
