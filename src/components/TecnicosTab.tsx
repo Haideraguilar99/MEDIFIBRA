@@ -129,11 +129,9 @@ export default function TecnicosTab({ dark, BG, CARD, CARD2, BORDER, TEXT, MUTED
         if(!r.ok){const e=await r.json();alert(e.error??'Error');return;}
       } else {
         const allNames = [primaryTech?primaryTech.name:'Tecnico principal',...extraTechs].join(', ');
-        const body={...oForm,technician_id:primaryId,notes:notesVal,foto_referencia:JSON.stringify(oForm.fotos_referencia??[])};
+        const body={...oForm,technician_id:primaryId,extra_technician_ids:extraIds,notes:notesVal,foto_referencia:JSON.stringify(oForm.fotos_referencia??[])};
         const r=await fetch('/api/work-orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         if(!r.ok){const e=await r.json();alert(e.error??'Error');return;}
-        // Notificacion push al tecnico principal
-        const rData=await r.json();
 
           }
       setShowOM(false);fetchO();
