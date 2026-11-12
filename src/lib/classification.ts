@@ -1,5 +1,5 @@
 // ============================================================
-// MEDIFIBRA — Motor de Clasificacion de Cartera v10.0
+// MEDIFIBRA — Motor de Clasificacion de Cartera v10.1
 // Fuente de verdad unica para frontend, backend y cron.
 // CICLO: basado en payments.period (YYYY-MM)
 // Un cliente esta AL_DIA solo si tiene pago en el ciclo vigente
@@ -52,7 +52,7 @@ export const PROTECTED_CLASSIFICATIONS: ReadonlySet<string> = new Set([
 export function getCC(cls: string) {
   return (
     CLASS_CONFIG[cls as Classification] ?? {
-      bg: '#111827', text: '#6b7280', border: '#374151', label: cls || 'Sin estado',
+      bg: '#111827', text: '#6b7280', border: '#374151', label:cls || 'Sin estado',
     }
   )
 }
@@ -69,9 +69,6 @@ function clampPayDay(payDay: number, year: number, month: number): number {
   return Math.min(payDay, lastDayOf(year, month))
 }
 
-// Calcula el cycleKey vigente (YYYY-MM) segun dia_pago y fecha actual
-// Si hoy ya paso el dia D de este mes -> ciclo vigente es este mes
-// Si hoy NO ha llegado al dia D -> ciclo vigente es el mes anterior
 export function getCycleKey(payDay: number, today: Date): string {
   const y = today.getFullYear()
   const m = today.getMonth()
@@ -85,36 +82,11 @@ export function getCycleKey(payDay: number, today: Date): string {
   return String(prevY) + '-' + String(prevM + 1).padStart(2, '0')
 }
 
-// REGLAS DE NEGOCIO v10.0:
-//
-// FUENTE DE VERDAD: payments.period (YYYY-MM)
-//
-// CICLO VIGENTE: getCycleKey(payDay, today)
-//   Si hoy >= dia D de este mes -> cycleKey = YYYY-MM de este mes
-//   Si hoy <  dia D de este mes -> cycleKey = YYYY-MM del mes anterior
-//
-// CLIENTE NUEVO: sin ningun pago registrado Y created_at >= cycleStart
-//   -> AL_DIA (ya pago instalacion, primer cobro es el mes siguiente)
-//
-// CASO A — tiene pago con period == cycleKey:
-//   faltan > 3 dias para proximo D  -> AL_DIA
-//   faltan <= 3 dias para proximo D -> PROXIMO_PAGAR
-//
-// CASO B — NO tiene pago en cycleKey (y no es cliente nuevo):
-//   daysSinceDue < -3   -> AL_DIA      (mas de 3 dias antes del vencimiento)
-//   -3 <= daysSinceDue <= 0 -> PROXIMO_PAGAR (aviso preventivo)
-//   1 <= daysSinceDue <= 3  -> SUSPENDIDO_TEMP (gracia 3 dias)
-//   daysSinceDue >= 4       -> SUSPENDIDO (corte real)
-//   daysSinceDue >= 30      -> RECOGER_EQUIPO (un ciclo completo sin pagar)
-//
-// SIN_FECHA: dia_pago ausente o invalido
-// PROTECTED: nunca se toca automaticamente
-
 export interface ClassificationInput {
   currentClassification: string
   diaPago: string | null | undefined
-  lastPaymentPeriod: string | null | undefined  // YYYY-MM del ultimo pago pagado
-  clientCreatedAt: string | null | undefined    // ISO string — para detectar cliente nuevo
+  lastPaymentPeriod: string | null | undefined
+  clientCreatedAt: string | null | undefined
   today?: Date
 }
 
@@ -142,24 +114,18 @@ export function computeClassification(input: ClassificationInput): Classificatio
   const todayD = today.getDate()
   const MS = 86_400_000
 
-  // Dia de vencimiento este mes (ajustado a ultimo dia del mes si es necesario)
   const dueDayThisMonth = clampPayDay(payDay, todayY, todayM)
   const dueDate = new Date(todayY, todayM, dueDayThisMonth)
   dueDate.setHours(0, 0, 0, 0)
   const daysSinceDue = Math.round((today.getTime() - dueDate.getTime()) / MS)
 
-  // Ciclo vigente
   const cycleKey = getCycleKey(payDay, today)
 
-  // cycleStart: dia D del mes del cycleKey
   const [ckY, ckM] = cycleKey.split('-').map(Number)
   const cycleStartDay = clampPayDay(payDay, ckY, ckM - 1)
   const cycleStart = new Date(ckY, ckM - 1, cycleStartDay)
   cycleStart.setHours(0, 0, 0, 0)
 
-  const totalDaysSinceStart = Math.round((today.getTime() - cycleStart.getTime()) / MS)
-
-  // CLIENTE NUEVO: sin historial de pagos Y fue creado en este ciclo
   const isNewClient = !lastPaymentPeriod && clientCreatedAt
     ? new Date(clientCreatedAt) >= cycleStart
     : false
@@ -171,11 +137,9 @@ export function computeClassification(input: ClassificationInput): Classificatio
     }
   }
 
-  // CASO A: tiene pago en el ciclo vigente
   const hasPaidThisCycle = lastPaymentPeriod === cycleKey
 
   if (hasPaidThisCycle) {
-    // Calcular dias para el proximo vencimiento
     let nextM = todayM
     let nextY = todayY
     if (todayD >= dueDayThisMonth) {
@@ -200,42 +164,53 @@ export function computeClassification(input: ClassificationInput): Classificatio
   }
 
   // CASO B: NO tiene pago en el ciclo vigente (y no es cliente nuevo)
-  // RECOGER_EQUIPO: mas de 30 dias sin pagar
-  if (totalDaysSinceStart >= 30) {
+  // FIX v10.1: mora real desde el primer vencimiento incumplido
+  let realDaysSinceDue = daysSinceDue
+  if (!lastPaymentPeriod && clientCreatedAt) {
+    const created = new Date(clientCreatedAt)
+    created.setHours(0, 0, 0, 0)
+    const createdY = created.getFullYear()
+    const createdM = created.getMonth()
+    const dueDayCreatedMonth = clampPayDay(payDay, createdY, createdM)
+    let firstDueY = createdY
+    let firstDueM = createdM
+    if (created.getDate() >= dueDayCreatedMonth) {
+      firstDueM += 1
+      if (firstDueM > 11) { firstDueM = 0; firstDueY++ }
+    }
+    const firstDueDay = clampPayDay(payDay, firstDueY, firstDueM)
+    const firstDue = new Date(firstDueY, firstDueM, firstDueDay)
+    firstDue.setHours(0, 0, 0, 0)
+    realDaysSinceDue = Math.round((today.getTime() - firstDue.getTime()) / MS)
+  }
+
+  if (realDaysSinceDue >= 30) {
     return {
       classification: 'RECOGER_EQUIPO',
-      reason: totalDaysSinceStart + ' dias sin pagar ciclo ' + cycleKey + ' — recoger equipo (dia ' + payDay + ')',
+      reason: realDaysSinceDue + ' dias de mora real — recoger equipo (dia ' + payDay + ')',
     }
   }
-
-  // SUSPENDIDO: 4 o mas dias despues del vencimiento
-  if (daysSinceDue >= 4) {
+  if (realDaysSinceDue >= 4) {
     return {
       classification: 'SUSPENDIDO',
-      reason: 'vencio hace ' + daysSinceDue + ' dias (dia ' + payDay + ') — sin pago ciclo ' + cycleKey,
+      reason: 'mora real ' + realDaysSinceDue + ' dias (dia ' + payDay + ') — sin pago ciclo ' + cycleKey,
     }
   }
-
-  // SUSPENDIDO_TEMP: 1 a 3 dias despues del vencimiento (gracia)
-  if (daysSinceDue >= 1) {
+  if (realDaysSinceDue >= 1) {
     return {
       classification: 'SUSPENDIDO_TEMP',
-      reason: 'vencio hace ' + daysSinceDue + ' dia(s) (dia ' + payDay + ') — gracia ' + (3 - daysSinceDue + 1) + ' dia(s) restante(s)',
+      reason: 'mora real ' + realDaysSinceDue + ' dia(s) (dia ' + payDay + ') — gracia ' + (3 - realDaysSinceDue + 1) + ' dia(s) restante(s)',
     }
   }
-
-  // PROXIMO_PAGAR: 3 dias antes del vencimiento hasta el dia D
-  if (daysSinceDue >= -3) {
+  if (realDaysSinceDue >= -3) {
     return {
       classification: 'PROXIMO_PAGAR',
-      reason: 'vence en ' + (-daysSinceDue) + ' dia(s) (dia ' + payDay + ') — aviso preventivo',
+      reason: 'vence en ' + (-realDaysSinceDue) + ' dia(s) (dia ' + payDay + ') — aviso preventivo',
     }
   }
-
-  // AL_DIA: mas de 3 dias antes del vencimiento
   return {
     classification: 'AL_DIA',
-    reason: 'faltan ' + (-daysSinceDue) + ' dias para vencimiento (dia ' + payDay + ')',
+    reason: 'faltan ' + (-realDaysSinceDue) + ' dias para vencimiento (dia ' + payDay + ')',
   }
 }
 
