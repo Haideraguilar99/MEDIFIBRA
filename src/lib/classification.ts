@@ -1,9 +1,11 @@
 // ============================================================
-// MEDIFIBRA — Motor de Clasificacion de Cartera v10.1
+// MEDIFIBRA — Motor de Clasificacion de Cartera v10.2
 // Fuente de verdad unica para frontend, backend y cron.
 // CICLO: basado en payments.period (YYYY-MM)
 // Un cliente esta AL_DIA solo si tiene pago en el ciclo vigente
 // o si es cliente nuevo sin historial (primer cobro mes siguiente)
+// v10.2: Caso B corregido — mora real cuando lastPaymentPeriod existe
+//        pero es anterior al cycleKey vigente
 // ============================================================
 
 export const CLASSIFICATIONS = [
@@ -26,23 +28,22 @@ export const CLASS_CONFIG: Record<
   Classification,
   { bg: string; text: string; border: string; label: string }
 > = {
-  AL_DIA:             { bg: '#0a1f14', text: '#6ee7b7', border:'#047857', label: 'Al dia'               },
-  PROXIMO_PAGAR:      { bg: '#1c1008', text: '#fb923c', border:'#9a3412', label: 'Proximo a pagar'      },
-  RECORDAR_RECIBO:    { bg: '#1a1500', text: '#fbbf24', border:'#92400e', label: 'Enviar recibo'        },
-  NOVEDAD_PAGO:       { bg: '#150d24', text: '#a78bfa', border:'#5b21b6', label: 'Novedad de pago'      },
-  NO_PAGA_AUTORIZADO: { bg: '#071820', text: '#5eead4', border:'#0f766e', label: 'No paga - autorizado' },
-  SUSPENDIDO_TEMP:    { bg: '#0f1723', text: '#94a3b8', border:'#334155', label: 'Suspendido temporal'  },
-  SUSPENDIDO:         { bg: '#1c1714', text: '#d6bcaa', border:'#78716c', label: 'Suspendido'           },
-  RECOGER_EQUIPO:     { bg: '#1a0808', text: '#fca5a5', border:'#991b1b', label: 'Recoger equipo'       },
-  USUARIO_PERDIDO:    { bg: '#111827', text: '#6b7280', border:'#374151', label: 'Usuario perdido'      },
-  SIN_FECHA:          { bg: '#0d1a2e', text: '#60a5fa', border:'#1d4ed8', label: 'Sin fecha'            },
-  INHABILITADO:       { bg: '#1a0a1a', text: '#e879f9', border:'#86198f', label: 'Inhabilitado'         },
+  AL_DIA:             { bg: '#0a1f14', text: '#6ee7b7',border:'#047857', label: 'Al dia'               },
+  PROXIMO_PAGAR:      { bg: '#1c1008', text: '#fb923c',border:'#9a3412', label: 'Proximo a pagar'      },
+  RECORDAR_RECIBO:    { bg: '#1a1500', text: '#fbbf24',border:'#92400e', label: 'Enviar recibo'        },
+  NOVEDAD_PAGO:       { bg: '#150d24', text: '#a78bfa',border:'#5b21b6', label: 'Novedad de pago'      },
+  NO_PAGA_AUTORIZADO: { bg: '#071820', text: '#5eead4',border:'#0f766e', label: 'No paga - autorizado' },
+  SUSPENDIDO_TEMP:    { bg: '#0f1723', text: '#94a3b8',border:'#334155', label: 'Suspendido temporal'  },
+  SUSPENDIDO:         { bg: '#1c1714', text: '#d6bcaa',border:'#78716c', label: 'Suspendido'           },
+  RECOGER_EQUIPO:     { bg: '#1a0808', text: '#fca5a5',border:'#991b1b', label: 'Recoger equipo'       },
+  USUARIO_PERDIDO:    { bg: '#111827', text: '#6b7280',border:'#374151', label: 'Usuario perdido'      },
+  SIN_FECHA:          { bg: '#0d1a2e', text: '#60a5fa',border:'#1d4ed8', label: 'Sin fecha'            },
+  INHABILITADO:       { bg: '#1a0a1a', text: '#e879f9',border:'#86198f', label: 'Inhabilitado'         },
 }
 
 export const PROTECTED_CLASSIFICATIONS: ReadonlySet<string> = new Set([
   'NOVEDAD_PAGO',
   'NO_PAGA_AUTORIZADO',
-  'SUSPENDIDO',
   'RECOGER_EQUIPO',
   'USUARIO_PERDIDO',
   'INHABILITADO',
@@ -61,7 +62,7 @@ export function isProtected(cls: string): boolean {
   return PROTECTED_CLASSIFICATIONS.has(cls)
 }
 
-function lastDayOf(year: number, month: number): number {
+function lastDayOf(year: number, month: number): number{
   return new Date(year, month + 1, 0).getDate()
 }
 
@@ -164,9 +165,16 @@ export function computeClassification(input: ClassificationInput): Classificatio
   }
 
   // CASO B: NO tiene pago en el ciclo vigente (y no es cliente nuevo)
-  // FIX v10.1: mora real desde el primer vencimiento incumplido
+  // v10.2: calcular mora real desde el primer vencimiento incumplido,
+  //        independientemente de si tiene pagos previos o no.
+  //
+  // - Sin pagos previos (!lastPaymentPeriod): mora desde primer vencimiento post created_at (v10.1)
+  // - Con pagos previos pero atrasados (lastPaymentPeriod < cycleKey):
+  //   mora desde el vencimiento del ciclo inmediatamente siguiente al último pago
   let realDaysSinceDue = daysSinceDue
+
   if (!lastPaymentPeriod && clientCreatedAt) {
+    // v10.1: primer vencimiento real post created_at
     const created = new Date(clientCreatedAt)
     created.setHours(0, 0, 0, 0)
     const createdY = created.getFullYear()
@@ -182,6 +190,18 @@ export function computeClassification(input: ClassificationInput): Classificatio
     const firstDue = new Date(firstDueY, firstDueM, firstDueDay)
     firstDue.setHours(0, 0, 0, 0)
     realDaysSinceDue = Math.round((today.getTime() - firstDue.getTime()) / MS)
+
+  } else if (lastPaymentPeriod && lastPaymentPeriod < cycleKey) {
+    // v10.2: mora real desde vencimiento del ciclo siguiente al último pago
+    // lastPaymentPeriod = 'YYYY-MM' (1-indexed month)
+    const [lpY, lpM] = lastPaymentPeriod.split('-').map(Number)
+    // siguiente mes en 0-indexed: lpM % 12 (si lpM=9 → oct=índice 9; si lpM=12 → ene=0)
+    const nextCycleM = lpM % 12
+    const nextCycleY = lpM === 12 ? lpY + 1 : lpY
+    const nextDueDay = clampPayDay(payDay, nextCycleY, nextCycleM)
+    const nextDue = new Date(nextCycleY, nextCycleM, nextDueDay)
+    nextDue.setHours(0, 0, 0, 0)
+    realDaysSinceDue = Math.round((today.getTime() - nextDue.getTime()) / MS)
   }
 
   if (realDaysSinceDue >= 30) {
