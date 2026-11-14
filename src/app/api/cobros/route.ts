@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 export const dynamic = 'force-dynamic'
 
-// Devuelve clientes activos que están en PROXIMO_PAGAR o SUSPENDIDO_TEMP
-// El motor de clasificación ya garantiza que estos estados son correctos.
+// Devuelve clientes activos en SUSPENDIDO, SUSPENDIDO_TEMP o PROXIMO_PAGAR
+// El motor de clasificacion ya garantiza que estos estados son correctos.
 export async function GET() {
   try {
     const result = await db.execute(`
@@ -21,13 +21,14 @@ export async function GET() {
       ) nl ON nl.client_id = c.id
       WHERE c.status = 'active'
         AND c.dia_pago != ''
-        AND c.classification IN ('PROXIMO_PAGAR', 'SUSPENDIDO_TEMP')
+        AND c.classification IN ('PROXIMO_PAGAR', 'SUSPENDIDO_TEMP', 'SUSPENDIDO')
       ORDER BY
         CAST(c.dia_pago AS INTEGER) ASC,
         CASE c.classification
-          WHEN 'SUSPENDIDO_TEMP' THEN 1
-          WHEN 'PROXIMO_PAGAR'   THEN 2
-          ELSE 3 END,
+          WHEN 'SUSPENDIDO'      THEN 1
+          WHEN 'SUSPENDIDO_TEMP' THEN 2
+          WHEN 'PROXIMO_PAGAR'   THEN 3
+          ELSE 4 END,
         c.name ASC
     `)
     return NextResponse.json({ clients: result.rows })
