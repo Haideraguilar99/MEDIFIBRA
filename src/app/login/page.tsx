@@ -91,7 +91,7 @@ export default function LoginPage() {
         writeGuard({ attempts: 0, lockoutUntil: 0 })
         const uname = (data.user?.username ?? '') as string
         const dname = NAME_MAP[uname] ?? uname
-        setWelcome(`Bienvenido, ${dname}`)
+        setWelcome(`Bienvenida, ${dname}`)
         if (barRef.current) {
           barRef.current.style.transition = 'width 1.8s linear'
           barRef.current.style.width      = '100%'
