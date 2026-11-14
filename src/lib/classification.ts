@@ -1,11 +1,12 @@
 // ============================================================
-// MEDIFIBRA — Motor de Clasificacion de Cartera v10.2
+// MEDIFIBRA — Motor de Clasificacion de Cartera v10.3
 // Fuente de verdad unica para frontend, backend y cron.
 // CICLO: basado en payments.period (YYYY-MM)
 // Un cliente esta AL_DIA solo si tiene pago en el ciclo vigente
 // o si es cliente nuevo sin historial (primer cobro mes siguiente)
-// v10.2: Caso B corregido — mora real cuando lastPaymentPeriod existe
-//        pero es anterior al cycleKey vigente
+// v10.2: mora real cuando lastPaymentPeriod existe pero < cycleKey
+// v10.3: clientes sin pagos usan daysSinceDue del ciclo vigente
+//        (elimina calculo de mora historica para sin-pagos)
 // ============================================================
 
 export const CLASSIFICATIONS = [
@@ -165,37 +166,15 @@ export function computeClassification(input: ClassificationInput): Classificatio
   }
 
   // CASO B: NO tiene pago en el ciclo vigente (y no es cliente nuevo)
-  // v10.2: calcular mora real desde el primer vencimiento incumplido,
-  //        independientemente de si tiene pagos previos o no.
-  //
-  // - Sin pagos previos (!lastPaymentPeriod): mora desde primer vencimiento post created_at (v10.1)
-  // - Con pagos previos pero atrasados (lastPaymentPeriod < cycleKey):
-  //   mora desde el vencimiento del ciclo inmediatamente siguiente al último pago
+  // v10.3: todos los casos sin pago en ciclo vigente usan realDaysSinceDue
+  //   - Sin pagos previos: daysSinceDue contra ciclo vigente (NO mora historica)
+  //   - Con pagos previos atrasados (lastPaymentPeriod < cycleKey):
+  //     mora desde vencimiento del ciclo siguiente al ultimo pago
   let realDaysSinceDue = daysSinceDue
 
-  if (!lastPaymentPeriod && clientCreatedAt) {
-    // v10.1: primer vencimiento real post created_at
-    const created = new Date(clientCreatedAt)
-    created.setHours(0, 0, 0, 0)
-    const createdY = created.getFullYear()
-    const createdM = created.getMonth()
-    const dueDayCreatedMonth = clampPayDay(payDay, createdY, createdM)
-    let firstDueY = createdY
-    let firstDueM = createdM
-    if (created.getDate() >= dueDayCreatedMonth) {
-      firstDueM += 1
-      if (firstDueM > 11) { firstDueM = 0; firstDueY++ }
-    }
-    const firstDueDay = clampPayDay(payDay, firstDueY, firstDueM)
-    const firstDue = new Date(firstDueY, firstDueM, firstDueDay)
-    firstDue.setHours(0, 0, 0, 0)
-    realDaysSinceDue = Math.round((today.getTime() - firstDue.getTime()) / MS)
-
-  } else if (lastPaymentPeriod && lastPaymentPeriod < cycleKey) {
-    // v10.2: mora real desde vencimiento del ciclo siguiente al último pago
-    // lastPaymentPeriod = 'YYYY-MM' (1-indexed month)
+  if (lastPaymentPeriod && lastPaymentPeriod < cycleKey) {
+    // v10.2: mora real desde vencimiento del ciclo siguiente al ultimo pago
     const [lpY, lpM] = lastPaymentPeriod.split('-').map(Number)
-    // siguiente mes en 0-indexed: lpM % 12 (si lpM=9 → oct=índice 9; si lpM=12 → ene=0)
     const nextCycleM = lpM % 12
     const nextCycleY = lpM === 12 ? lpY + 1 : lpY
     const nextDueDay = clampPayDay(payDay, nextCycleY, nextCycleM)
@@ -203,6 +182,7 @@ export function computeClassification(input: ClassificationInput): Classificatio
     nextDue.setHours(0, 0, 0, 0)
     realDaysSinceDue = Math.round((today.getTime() - nextDue.getTime()) / MS)
   }
+  // Sin pagos previos: usa daysSinceDue del ciclo vigente (ya asignado por defecto)
 
   if (realDaysSinceDue >= 30) {
     return {
