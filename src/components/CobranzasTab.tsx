@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import { CheckCircle, ChevronDown, ChevronRight, Phone, FileText, AlertTriangle, Clock } from 'lucide-react'
+import { CheckCircle, ChevronDown, ChevronRight, Phone, FileText, AlertTriangle, Clock, Copy } from 'lucide-react'
 import { nombreLimpio } from '@/lib/wa-templates'
 
 type CobranzaClient = {
@@ -253,12 +253,13 @@ export default function CobranzasTab({
       {diasConClientes.map(dia => {
         const grupo     = clients.filter(c => c.dia_pago === dia)
         const isOpen    = openDias[dia] ?? true
-        const nSusp     = grupo.filter(c => c.classification === 'SUSPENDIDO_TEMP').length
+        const nSusp     = grupo.filter(c => c.classification === 'SUSPENDIDO').length
+        const nSuspTemp = grupo.filter(c => c.classification === 'SUSPENDIDO_TEMP').length
         const nProximo  = grupo.filter(c => c.classification === 'PROXIMO_PAGAR').length
 
         return (
           <div key={dia} className='rounded-xl overflow-hidden'
-            style={{ border: `1px solid ${nSusp > 0 ? '#f8717160' : '#4f6ef760'}` }}>
+            style={{ border: `1px solid ${nSusp > 0 ? '#fca5a560' : nSuspTemp > 0 ? '#f8717160' : '#4f6ef760'}` }}>
 
             {/* Cabecera de la pestaña */}
             <button
@@ -275,8 +276,14 @@ export default function CobranzasTab({
                 </span>
                 {nSusp > 0 && (
                   <span className='text-xs px-2 py-0.5 rounded-full font-semibold'
-                    style={{ backgroundColor: '#f8717120', color: '#f87171', border: '1px solid #f8717140' }}>
+                    style={{ backgroundColor: '#7f1d1d30', color: '#fca5a5', border: '1px solid #fca5a540' }}>
                     {nSusp} suspendido{nSusp > 1 ? 's' : ''}
+                  </span>
+                )}
+                {nSuspTemp > 0 && (
+                  <span className='text-xs px-2 py-0.5 rounded-full font-semibold'
+                    style={{ backgroundColor: '#f8717120', color: '#f87171', border: '1px solid #f8717140' }}>
+                    {nSuspTemp} susp. temp
                   </span>
                 )}
                 {nProximo > 0 && (
@@ -338,6 +345,27 @@ export default function CobranzasTab({
                               Enviado ✓
                             </span>
                           )}
+                          <button
+                            onClick={() => {
+                              const link = `https://medifibra-filc.vercel.app/factura/${c.id}`
+                              const msg = buildMensaje(c, link)
+                              navigator.clipboard.writeText(msg).catch(() => {
+                                const ta = document.createElement('textarea')
+                                ta.value = msg
+                                document.body.appendChild(ta)
+                                ta.select()
+                                document.execCommand('copy')
+                                document.body.removeChild(ta)
+                              })
+                            }}
+                            disabled={isSending}
+                            title='Copiar mensaje al portapapeles'
+                            className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50'
+                            style={{ backgroundColor: '#25d36618', color: '#25d366', border: '1px solid #25d36640' }}
+                          >
+                            <Copy className='w-3.5 h-3.5' />
+                            <span>Copiar</span>
+                          </button>
                           <button
                             onClick={() => enviarCobranza(c, true)}
                             disabled={isSending}
