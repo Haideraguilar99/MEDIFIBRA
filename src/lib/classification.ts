@@ -1,5 +1,5 @@
 // ============================================================
-// MEDIFIBRA — Motor de Clasificacion de Cartera v10.3
+// MEDIFIBRA — Motor de Clasificacion de Cartera v10.4
 // Fuente de verdad unica para frontend, backend y cron.
 // CICLO: basado en payments.period (YYYY-MM)
 // Un cliente esta AL_DIA solo si tiene pago en el ciclo vigente
@@ -7,6 +7,7 @@
 // v10.2: mora real cuando lastPaymentPeriod existe pero < cycleKey
 // v10.3: clientes sin pagos usan daysSinceDue del ciclo vigente
 //        (elimina calculo de mora historica para sin-pagos)
+// v10.4: fix newDate()->new Date(); pago adelantado (lastPaymentPeriod>cycleKey) -> AL_DIA
 // ============================================================
 
 export const CLASSIFICATIONS = [
@@ -136,6 +137,31 @@ export function computeClassification(input: ClassificationInput): Classificatio
     return {
       classification: 'AL_DIA',
       reason: 'cliente nuevo — primer cobro en el proximo ciclo (dia ' + payDay + ')',
+    }
+  }
+
+  // v10.4: pago adelantado — el cliente pago un ciclo futuro (lastPaymentPeriod > cycleKey)
+  // Tratar igual que hasPaidThisCycle: calcular dias hasta proximo vencimiento
+  if (lastPaymentPeriod && lastPaymentPeriod > cycleKey) {
+    let nextM = todayM
+    let nextY = todayY
+    if (todayD >= dueDayThisMonth) {
+      nextM = todayM + 1
+      if (nextM > 11) { nextM = 0; nextY++ }
+    }
+    const nextDueDay = clampPayDay(payDay, nextY, nextM)
+    const nextDue = new Date(nextY, nextM, nextDueDay)
+    nextDue.setHours(0, 0, 0, 0)
+    const daysUntilNext = Math.round((nextDue.getTime() - today.getTime()) / MS)
+    if (daysUntilNext <= 3) {
+      return {
+        classification: 'PROXIMO_PAGAR',
+        reason: 'pago adelantado ciclo ' + lastPaymentPeriod + ', faltan ' + daysUntilNext + ' dia(s) para vencimiento (dia ' + payDay + ')',
+      }
+    }
+    return {
+      classification: 'AL_DIA',
+      reason: 'pago adelantado ciclo ' + lastPaymentPeriod + ', faltan ' + daysUntilNext + ' dias para vencimiento (dia ' + payDay + ')',
     }
   }
 
