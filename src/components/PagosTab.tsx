@@ -109,6 +109,11 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
         created_at: new Date().toISOString()
       }
       setAllPagos(prev => [nuevo, ...prev])
+      // Recargar lista completa para reflejar clasificacion actualizada
+      const rc2 = await fetch('/api/clients?limit=600')
+      const dc2 = await rc2.json()
+      const todos2: Cliente[] = dc2.clients || []
+      setAllClients(todos2)
     } catch (e) { alert('Error: '+String(e)) }
     finally { setSaving(null) }
   }
