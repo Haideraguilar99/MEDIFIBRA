@@ -1,10 +1,10 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import { Search, CheckCircle, DollarSign } from 'lucide-react'
+import { Search, CheckCircle, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react'
 
 type Cliente = {
   id: number; name: string; cellphone: string; plan: string
-  plan_value: number; classification: string; dia_pago: string; incluye_tv: number
+  plan_value: number; classification: string; dia_pago:string; incluye_tv: number
 }
 type PagoReciente = {
   id: number; client_name: string; cellphone: string
@@ -22,19 +22,36 @@ function puedeRegistrar(diaPago: string): boolean {
   if (isNaN(dia)) return true
   return new Date().getDate() >= dia - 3
 }
+function getPeriodKey(date: Date): string {
+  return date.toISOString().slice(0, 7)
+}
+function formatPeriodLabel(period: string): string {
+  const [y, m] = period.split('-').map(Number)
+  const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+  return nombres[m - 1] + ' ' + y
+}
+function addMonths(period: string, delta: number): string {
+  const [y, m] = period.split('-').map(Number)
+  const date = new Date(y, m - 1 + delta, 1)
+  return getPeriodKey(date)
+}
+
 export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
   BG: string; CARD: string; CARD2: string; BORDER: string; TEXT: string; MUTED: string
 }) {
+  const currentPeriod = getPeriodKey(new Date())
+  const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod)
   const [search, setSearch] = useState('')
   const [results, setResults] = useState<Cliente[]>([])
   const [allClients, setAllClients] = useState<Cliente[]>([])
   const [searching, setSearching] = useState(false)
-  const [recientes, setRecientes] = useState<PagoReciente[]>([])
+  const [allPagos, setAllPagos] = useState<PagoReciente[]>([])
   const [loadingInit, setLoadingInit] = useState(true)
   const [saving, setSaving] = useState<number | null>(null)
   const [pagados, setPagados] = useState<Set<number>>(new Set())
-  const [forms, setForms] = useState<Record<number,{amount:number;method:string;notes:string}>>({}) 
-  const [cobradoMes, setCobradoMes] = useState(0)
+  const [forms, setForms] = useState<Record<number,{amount:number;method:string;notes:string}>>({})
+
   const loadInit = useCallback(async () => {
     setLoadingInit(true)
     try {
@@ -46,13 +63,13 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
       const f: Record<number,{amount:number;method:string;notes:string}> = {}
       todos.forEach(c => { f[c.id] = { amount: c.plan_value, method: 'efectivo', notes: '' } })
       setForms(f)
-      const pagos: PagoReciente[] = (dp.payments || []).slice(0, 20)
-      setRecientes(pagos)
-      setCobradoMes(pagos.reduce((s, p) => s + (p.amount || 0), 0))
+      setAllPagos(dp.payments || [])
     } catch (e) { console.error('Error:', e) }
     finally { setLoadingInit(false) }
   }, [])
+
   useEffect(() => { loadInit() }, [loadInit])
+
   useEffect(() => {
     const q = normalizar(search.trim())
     if (!q) { setResults([]); return }
@@ -65,6 +82,11 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
     }, 150)
     return () => clearTimeout(t)
   }, [search, allClients])
+
+  const pagosMes = allPagos.filter(p => p.period === selectedPeriod)
+  const cobradoMes = pagosMes.reduce((s, p) => s + (p.amount || 0), 0)
+  const isCurrentMonth = selectedPeriod === currentPeriod
+
   const registrarPago = async (c: Cliente) => {
     const f = forms[c.id]
     if (!f?.amount) { alert('Ingresa un monto valido'); return }
@@ -73,7 +95,7 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
       const res = await fetch('/api/payments', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ client_id: c.id, amount: f.amount,
-          period: new Date().toISOString().slice(0,7), method: f.method,
+          period: selectedPeriod, method: f.method,
           status: 'paid', notes: f.notes || 'Registrado desde modulo Pagos' })
       })
       if (!res.ok) { const e = await res.json(); alert('Error: '+(e.error||res.status)); return }
@@ -81,16 +103,19 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
       const newClass = data.client?.classification ?? 'AL_DIA'
       setPagados(prev => new Set([...prev, c.id]))
       setAllClients(prev => prev.map(x => x.id===c.id ? {...x, classification: newClass} : x))
-      const nuevo: PagoReciente = { id: Date.now(), client_name: c.name, cellphone: c.cellphone,
-        amount: f.amount, method: f.method, period: new Date().toISOString().slice(0,7),
-        created_at: new Date().toISOString() }
-      setRecientes(prev => [nuevo, ...prev.slice(0,19)])
-      setCobradoMes(prev => prev + f.amount)
+      const nuevo: PagoReciente = {
+        id: Date.now(), client_name: c.name, cellphone: c.cellphone,
+        amount: f.amount, method: f.method, period: selectedPeriod,
+        created_at: new Date().toISOString()
+      }
+      setAllPagos(prev => [nuevo, ...prev])
     } catch (e) { alert('Error: '+String(e)) }
     finally { setSaving(null) }
   }
+
   const upd = (id: number, field: string, value: string|number) =>
     setForms(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }))
+
   const renderC = (c: Cliente, i: number) => {
     const ya = pagados.has(c.id) || CLS_AL_DIA.includes(c.classification)
     const isSaving = saving === c.id
@@ -145,6 +170,7 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
       </div>
     )
   }
+
   if (loadingInit) return (
     <div className='flex items-center justify-center h-64'>
       <div className='text-center'>
@@ -153,11 +179,12 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
       </div>
     </div>
   )
+
   return (
     <div className='space-y-4 max-w-5xl mx-auto'>
       <div className='grid grid-cols-2 gap-3'>
         <div className='rounded-xl p-4' style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}}>
-          <p className='text-xs' style={{color:MUTED}}>Cobrado este mes</p>
+          <p className='text-xs' style={{color:MUTED}}>Cobrado — {formatPeriodLabel(selectedPeriod)}</p>
           <p className='text-2xl font-black mt-1' style={{color:'#6ee7b7'}}>{fmt(cobradoMes)}</p>
         </div>
         <div className='rounded-xl p-4' style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}}>
@@ -165,6 +192,7 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
           <p className='text-2xl font-black mt-1' style={{color:TEXT}}>{allClients.length}</p>
         </div>
       </div>
+
       <div className='rounded-xl p-4' style={{backgroundColor:CARD,border:`1px solid ${BORDER}`}}>
         <h2 className='text-base font-bold mb-3' style={{color:TEXT}}>Registro de pagos</h2>
         <div className='relative'>
@@ -188,14 +216,49 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
           </p>
         )}
       </div>
-      {recientes.length>0&&(
-        <div className='rounded-xl overflow-hidden' style={{border:`1px solid ${BORDER}`}}>
-          <div className='flex items-center gap-2 px-4 py-3'
-            style={{backgroundColor:CARD,borderBottom:`1px solid ${BORDER}`}}>
+
+      <div className='rounded-xl overflow-hidden' style={{border:`1px solid ${BORDER}`}}>
+        <div className='flex items-center justify-between px-4 py-3'
+          style={{backgroundColor:CARD,borderBottom:`1px solid ${BORDER}`}}>
+          <div className='flex items-center gap-2'>
             <DollarSign className='w-4 h-4' style={{color:'#6ee7b7'}}/>
-            <span className='text-sm font-bold' style={{color:TEXT}}>Pagos recientes</span>
+            <span className='text-sm font-bold' style={{color:TEXT}}>
+              Pagos — {formatPeriodLabel(selectedPeriod)}
+            </span>
+            {!isCurrentMonth&&(
+              <span className='text-xs px-2 py-0.5 rounded-full'
+                style={{backgroundColor:'#4f6ef720',color:'#4f6ef7',border:'1px solid #4f6ef740'}}>
+                historial
+              </span>
+            )}
           </div>
-          {recientes.map((p,i)=>(
+          <div className='flex items-center gap-1'>
+            <button onClick={()=>setSelectedPeriod(p=>addMonths(p,-1))}
+              className='p-1.5 rounded-lg transition-all hover:opacity-70'
+              style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`,color:TEXT}}>
+              <ChevronLeft className='w-4 h-4'/>
+            </button>
+            <button
+              onClick={()=>setSelectedPeriod(currentPeriod)}
+              disabled={isCurrentMonth}
+              className='text-xs px-2 py-1 rounded-lg transition-all disabled:opacity-40'
+              style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`,color:TEXT}}>
+              Hoy
+            </button>
+            <button
+              onClick={()=>setSelectedPeriod(p=>addMonths(p,1))}
+              disabled={isCurrentMonth}
+              className='p-1.5 rounded-lg transition-all hover:opacity-70 disabled:opacity-40'
+              style={{backgroundColor:CARD2,border:`1px solid ${BORDER}`,color:TEXT}}>
+              <ChevronRight className='w-4 h-4'/>
+            </button>
+          </div>
+        </div>
+        {pagosMes.length===0
+          ?<p className='text-xs px-4 py-4 text-center' style={{color:MUTED}}>
+            Sin pagos registrados en {formatPeriodLabel(selectedPeriod)}
+          </p>
+          :pagosMes.slice(0,50).map((p,i)=>(
             <div key={p.id} className='flex items-center justify-between px-4 py-2.5 text-sm'
               style={{backgroundColor:i%2===0?CARD:BG,borderTop:i>0?`1px solid ${BORDER}`:undefined}}>
               <div className='min-w-0 flex-1'>
@@ -207,9 +270,14 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
                 <span className='text-xs ml-2' style={{color:MUTED}}>{p.period}</span>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        }
+        {pagosMes.length>50&&(
+          <p className='text-xs px-4 py-2 text-center' style={{color:MUTED}}>
+            Mostrando 50 de {pagosMes.length} pagos
+          </p>
+        )}
+      </div>
     </div>
   )
 }
