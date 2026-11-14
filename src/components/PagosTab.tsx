@@ -103,17 +103,13 @@ export default function PagosTab({ BG, CARD, CARD2, BORDER, TEXT, MUTED }: {
       const newClass = data.client?.classification ?? 'AL_DIA'
       setPagados(prev => new Set([...prev, c.id]))
       setAllClients(prev => prev.map(x => x.id===c.id ? {...x, classification: newClass} : x))
+      setResults(prev => prev.map(x => x.id===c.id ? {...x, classification: newClass} : x))
       const nuevo: PagoReciente = {
         id: Date.now(), client_name: c.name, cellphone: c.cellphone,
         amount: f.amount, method: f.method, period: selectedPeriod,
         created_at: new Date().toISOString()
       }
       setAllPagos(prev => [nuevo, ...prev])
-      // Recargar lista completa para reflejar clasificacion actualizada
-      const rc2 = await fetch('/api/clients?limit=600')
-      const dc2 = await rc2.json()
-      const todos2: Cliente[] = dc2.clients || []
-      setAllClients(todos2)
     } catch (e) { alert('Error: '+String(e)) }
     finally { setSaving(null) }
   }
