@@ -52,41 +52,38 @@ export async function POST(req: NextRequest) {
     })
     const rowId = result.lastInsertRowid?.toString() ?? '0'
 
-    // Recalcular clasificacion con el motor v10.0
-    const clientRow = await db.execute({
-      sql: 'SELECT classification, dia_pago, created_at FROM clients WHERE id = ?',
-      args: [body.client_id],
-    })
-
-    if (clientRow.rows[0]) {
-      const current         = String(clientRow.rows[0].classification ?? '')
-      const diaPago         = clientRow.rows[0].dia_pago ? String(clientRow.rows[0].dia_pago) : null
-      const clientCreatedAt = clientRow.rows[0].created_at ? String(clientRow.rows[0].created_at) : null
-
-      // Ultimo period pagado — si acabamos de registrar uno paid, usamos su period
-      let lastPaymentPeriod: string | null = null
-      if (payStatus === 'paid') {
-        lastPaymentPeriod = body.period
-      } else {
-        const lastPaid = await db.execute({
-          sql: `SELECT MAX(period) as lp FROM payments
-                WHERE client_id = ? AND status = 'paid'`,
-          args: [body.client_id],
-        })
-        lastPaymentPeriod = lastPaid.rows[0]?.lp ? String(lastPaid.rows[0].lp) : null
-      }
-
-      const { classification: newClass } = computeClassification({
-        currentClassification: current,
-        diaPago,
-        lastPaymentPeriod,
-        clientCreatedAt,
-      })
-
+    // Pago 'paid': siempre AL_DIA inmediatamente (regla de negocio)
+    // Pago 'pending': usar motor para calcular clasificacion real
+    if (payStatus === 'paid') {
       await db.execute({
         sql:  'UPDATE clients SET classification = ?, status = ? WHERE id = ?',
-        args: [newClass, 'active', body.client_id],
+        args: ['AL_DIA', 'active', body.client_id],
       })
+    } else {
+      const clientRow = await db.execute({
+        sql: 'SELECT classification, dia_pago, created_at FROM clients WHERE id = ?',
+        args: [body.client_id],
+      })
+      if (clientRow.rows[0]) {
+        const current         = String(clientRow.rows[0].classification ?? '')
+        const diaPago         = clientRow.rows[0].dia_pago ? String(clientRow.rows[0].dia_pago) : null
+        const clientCreatedAt = clientRow.rows[0].created_at ? String(clientRow.rows[0].created_at) : null
+        const lastPaid = await db.execute({
+          sql: `SELECT MAX(period) as lp FROM payments WHERE client_id = ? AND status = 'paid'`,
+          args: [body.client_id],
+        })
+        const lastPaymentPeriod = lastPaid.rows[0]?.lp ? String(lastPaid.rows[0].lp) : null
+        const { classification: newClass } = computeClassification({
+          currentClassification: current,
+          diaPago,
+          lastPaymentPeriod,
+          clientCreatedAt,
+        })
+        await db.execute({
+          sql:  'UPDATE clients SET classification = ?, status = ? WHERE id = ?',
+          args: [newClass, 'active', body.client_id],
+        })
+      }
     }
 
     // Leer resultados finales y emitir SSE
