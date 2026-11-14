@@ -76,19 +76,22 @@ function buildMensaje(c: CobranzaClient, linkFactura: string): string {
 
 // Badge de clasificación
 function ClaseBadge({ cls }: { cls: string }) {
-  const esSusp = cls === 'SUSPENDIDO_TEMP'
+  if (cls === 'SUSPENDIDO') return (
+    <span className='text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1'
+      style={{ backgroundColor: '#7f1d1d30', color: '#fca5a5', border: '1px solid #fca5a540' }}>
+      <AlertTriangle className='w-3 h-3' />Suspendido
+    </span>
+  )
+  if (cls === 'SUSPENDIDO_TEMP') return (
+    <span className='text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1'
+      style={{ backgroundColor: '#f8717120', color: '#f87171', border: '1px solid #f8717140' }}>
+      <AlertTriangle className='w-3 h-3' />Suspendido Temp
+    </span>
+  )
   return (
-    <span
-      className='text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1'
-      style={{
-        backgroundColor: esSusp ? '#f8717120' : '#fb923c20',
-        color:           esSusp ? '#f87171'   : '#fb923c',
-        border:          `1px solid ${esSusp ? '#f8717140' : '#fb923c40'}`,
-      }}
-    >
-      {esSusp
-        ? <><AlertTriangle className='w-3 h-3' />Suspendido Temp</>
-        : <><Clock className='w-3 h-3' />Próximo a pagar</>}
+    <span className='text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1'
+      style={{ backgroundColor: '#fb923c20', color: '#fb923c', border: '1px solid #fb923c40' }}>
+      <Clock className='w-3 h-3' />Próximo a pagar
     </span>
   )
 }
@@ -209,6 +212,7 @@ export default function CobranzasTab({
 
   // Totales para el header
   const totalClientes  = clients.length
+  const totalSusp      = clients.filter(c => c.classification === 'SUSPENDIDO').length
   const totalSuspTemp  = clients.filter(c => c.classification === 'SUSPENDIDO_TEMP').length
   const totalProximo   = clients.filter(c => c.classification === 'PROXIMO_PAGAR').length
 
