@@ -1,5 +1,4 @@
 import { db } from '@/lib/db'
-import { broadcast } from '@/lib/sse'
 import { computeClassification, isProtected } from '@/lib/classification'
 import { NextResponse } from 'next/server'
 import { safeError } from '@/lib/errors'
@@ -7,11 +6,6 @@ export const dynamic = 'force-dynamic'
 
 export async function POST() {
   try {
-    // Validar Content-Type
-    const ct = req.headers.get('content-type')
-    if (!ct?.includes('application/json')) {
-      return NextResponse.json({ error: 'Content-Type debe ser application/json' }, { status: 415 })
-    }
 
     const result = await db.execute(`
       SELECT
@@ -59,11 +53,6 @@ export async function POST() {
         args: [newClass, clientId],
       })
 
-      const updatedRow = await db.execute({
-        sql:  'SELECT * FROM clients WHERE id = ?',
-        args: [clientId],
-      })
-      if (updatedRow.rows[0]) broadcast('update-client', updatedRow.rows[0])
 
       changes.push({ id: clientId, from: current, to: newClass, reason })
       updated++
