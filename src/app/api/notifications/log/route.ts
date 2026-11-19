@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { safeError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('[notifications/log] Error:', error)
     return NextResponse.json(
-      { error: 'Error al registrar la notificación', detail: String(error) },
+      { error: 'Error al registrar la notificación', detail: safeError(error) },
       { status: 500 }
     )
   }
@@ -51,6 +52,6 @@ export async function GET() {
     return NextResponse.json({ logs: result.rows, total: result.rows.length })
   } catch (error) {
     console.error('[notifications/log] GET Error:', error)
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: safeError(error) }, { status: 500 })
   }
 }

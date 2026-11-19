@@ -1,6 +1,9 @@
 import { SignJWT, jwtVerify } from 'jose'
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET ?? 'medifibra-secret-2026')
+if (!process.env.JWT_SECRET) {
+  throw new Error('[tecnico-auth] JWT_SECRET no está configurado en las variables de entorno')
+}
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 
 export interface TechPayload {
   techId: number

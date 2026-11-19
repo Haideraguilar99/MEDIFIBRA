@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { NextResponse } from 'next/server'
+import { safeError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
@@ -45,7 +46,7 @@ export async function GET() {
   } catch (error) {
     console.error('[upcoming-payments] Error:', error)
     return NextResponse.json(
-      { error: 'Error al consultar los pagos próximos', detail: String(error) },
+      { error: 'Error al consultar los pagos próximos', detail: safeError(error) },
       { status: 500 }
     )
   }

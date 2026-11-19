@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { broadcast } from '@/lib/sse'
 import { computeClassification } from '@/lib/classification'
 import { NextRequest, NextResponse } from 'next/server'
+import { safeError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
@@ -20,7 +21,7 @@ export async function GET() {
       FROM payments`)
     return NextResponse.json({ payments: result.rows, stats: stats.rows[0] })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: safeError(error) }, { status: 500 })
   }
 }
 
@@ -104,6 +105,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ payment: newPayment.rows[0], client: updatedClient.rows[0] }, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: safeError(error) }, { status: 500 })
   }
 }

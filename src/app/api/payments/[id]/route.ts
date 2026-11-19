@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { broadcast } from '@/lib/sse'
 import { computeClassification } from '@/lib/classification'
 import { NextRequest, NextResponse } from 'next/server'
+import { safeError } from '@/lib/errors'
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -65,7 +66,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ payment: updated.rows[0] })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: safeError(error) }, { status: 500 })
   }
 }
 
@@ -76,6 +77,6 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     broadcast('delete-payment', { id })
     return NextResponse.json({ success: true })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: safeError(error) }, { status: 500 })
   }
 }

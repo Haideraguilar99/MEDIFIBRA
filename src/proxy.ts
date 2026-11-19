@@ -4,23 +4,19 @@ import { jwtVerify } from 'jose'
 if (!process.env.JWT_SECRET) throw new Error('[proxy] JWT_SECRET no configurado')
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 
+// Rutas genuinamente públicas — mínimo necesario
+// NUNCA agregar rutas admin aquí sin autenticación propia en el handler
 const PUBLIC = [
   '/login',
   '/api/auth/login',
   '/registro',
   '/api/registro',
-  '/api/auth/seed',
-  '/api/init',
-  '/api/sse',
-  '/api/push',
-  '/api/webhook',
   '/tecnico',
   '/api/tecnico/',
   '/orden-publica',
   '/api/orden-publica',
   '/api/cron',
   '/factura',
-  '/api/clients/',
   '/api/invoices',
 ]
 

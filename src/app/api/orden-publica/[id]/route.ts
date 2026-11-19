@@ -8,6 +8,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+
+    // Validar que el ID sea un entero positivo razonable
+    const numId = parseInt(id, 10)
+    if (isNaN(numId) || numId <= 0 || numId > 9999999) {
+      return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
+    }
+
     const db = getDb()
     const result = await db.execute({
       sql: `SELECT
@@ -16,11 +23,8 @@ export async function GET(
               wo.status, wo.notes, wo.created_at,
               t.name         AS technician_name,
               t.role         AS technician_role,
-              t.phone        AS technician_phone,
-              t.cedula       AS technician_cedula,
               t.photo_url    AS technician_photo,
               c.name         AS client_name,
-              c.cedula       AS client_cedula,
               c.address      AS client_address,
               c.cellphone    AS client_phone,
               c.neighborhood AS client_neighborhood,
@@ -30,9 +34,9 @@ export async function GET(
               c.punto_referencia AS client_punto_referencia
             FROM work_orders wo
             LEFT JOIN technicians t ON wo.technician_id = t.id
-            LEFT JOIN clients     c ON wo.client_id     = c.id
+            LEFT JOIN clients     c ON wo.client_id = c.id
             WHERE wo.id = ?`,
-      args: [id]
+      args: [numId]
     })
     if (!result.rows.length)
       return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 })

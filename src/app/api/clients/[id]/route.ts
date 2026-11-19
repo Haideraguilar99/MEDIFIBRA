@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { broadcast } from '@/lib/sse'
 import { NextRequest, NextResponse } from 'next/server'
+import { safeError } from '@/lib/errors'
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -9,7 +10,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
     if (!r.rows[0]) return NextResponse.json({ error: 'Cliente no encontrado' }, { status: 404 })
     return NextResponse.json({ client: r.rows[0] })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: safeError(error) }, { status: 500 })
   }
 }
 
@@ -66,7 +67,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     broadcast('update-client', updated.rows[0])
     return NextResponse.json({ client: updated.rows[0] })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: safeError(error) }, { status: 500 })
   }
 }
 
@@ -98,6 +99,6 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     broadcast('delete-client', { id })
     return NextResponse.json({ success: true })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: safeError(error) }, { status: 500 })
   }
 }

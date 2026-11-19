@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { broadcast } from '@/lib/sse'
 import { computeClassification, isProtected } from '@/lib/classification'
 import { NextResponse } from 'next/server'
+import { safeError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export async function POST() {
@@ -71,6 +72,6 @@ export async function POST() {
       changes,
     })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: safeError(error) }, { status: 500 })
   }
 }

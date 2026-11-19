@@ -1,6 +1,6 @@
 import { db, initDB } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 const PLANS_SEED = [
@@ -12,8 +12,19 @@ const PLANS_SEED = [
   { name: 'FIBRA 500 MBPS', speed_mbps: 500, price: 130000, color: '#0f172a' },
 ]
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    // Bloqueado completamente en producción
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'No disponible en producción' }, { status: 403 })
+    }
+
+    // Requiere CRON_SECRET como segunda línea de defensa en desarrollo
+    const auth = req.headers.get('authorization')
+    if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
     await initDB()
 
     // ── Usuario admin ──────────────────────────────────────────────
@@ -24,7 +35,7 @@ export async function GET() {
         sql: 'INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)',
         args: ['admin', hashPassword('admin123'), 'admin']
       })
-      userMsg = 'Usuario admin creado (pass: admin123) — CAMBIA LA CONTRASEÑA'
+      userMsg = 'Usuario admin creado con contraseña temporal — CAMBIA LA CONTRASEÑA INMEDIATAMENTE'
     }
 
     // ── Planes ─────────────────────────────────────────────────────
@@ -42,6 +53,7 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, user: userMsg, plans: plansMsg })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    console.error('[seed] Error interno:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

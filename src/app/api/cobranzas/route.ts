@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getSession } from '@/lib/auth'
 
 export async function GET() {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
     const result = await db.execute(`
       SELECT
         c.id, c.name, c.cellphone, c.plan, c.plan_value,
@@ -27,7 +33,8 @@ export async function GET() {
         c.name ASC
     `)
     return NextResponse.json({ clients: result.rows })
-  } catch {
-    return NextResponse.json({ error: 'Error al cargar cobranzas' }, { status: 500 })
+  } catch (error) {
+    console.error('[cobranzas] Error interno:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

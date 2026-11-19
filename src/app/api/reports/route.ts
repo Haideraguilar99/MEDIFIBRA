@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+import { safeError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
@@ -47,6 +48,6 @@ export async function GET() {
       pendingClients: pendingClients.rows,
     })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: safeError(error) }, { status: 500 })
   }
 }

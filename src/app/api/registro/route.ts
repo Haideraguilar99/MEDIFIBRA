@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { safeError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
@@ -49,6 +50,6 @@ export async function POST(req: NextRequest) {
     const rowId = result.lastInsertRowid?.toString() ?? '0'
     return NextResponse.json({ ok: true, id: rowId }, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    return NextResponse.json({ error: safeError(error) }, { status: 500 })
   }
 }
