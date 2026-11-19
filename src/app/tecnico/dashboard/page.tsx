@@ -12,7 +12,7 @@ interface Stats {
   total: number; completadas: number; pendientes: number
   in_progress: number; promedio: number | null
 }
-interface TechData { id: number; name: string; cedula: string; role: string }
+interface TechData { id: number; name: string; role: string }
 
 const S_LABEL: Record<string, string> = {
   pending: 'Pendiente', in_progress: 'En progreso',
@@ -35,34 +35,31 @@ export default function TecnicoDashboard() {
   const [loading, setLoading] = useState(true)
   const fetchRef = useRef<() => void>(() => {})
 
-  const getToken = () => typeof window !== 'undefined' ? localStorage.getItem('tech_token') : null
-
   const fetchData = useCallback(async () => {
-    const token = getToken()
-    if (!token) { router.replace('/tecnico'); return }
     try {
-      const techData = JSON.parse(localStorage.getItem('tech_data') ?? '{}')
-      setTech(techData)
+      // Cookie mft_token enviada automáticamente por el browser (httpOnly)
       const [oRes, sRes] = await Promise.all([
-        fetch('/api/tecnico/ordenes', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/tecnico/stats',   { headers: { Authorization: `Bearer ${token}` } })
+        fetch('/api/tecnico/ordenes', { credentials: 'include' }),
+        fetch('/api/tecnico/stats',   { credentials: 'include' })
       ])
-      if (oRes.status === 401 || sRes.status === 401) { clearAuthAndRedirect(); return }
+      if (oRes.status === 401 || sRes.status === 401) {
+        router.replace('/tecnico')
+        return
+      }
       const [oData, sData] = await Promise.all([oRes.json(), sRes.json()])
       setOrders(oData.orders ?? [])
       setStats(sData.stats ?? null)
+      // Datos del técnico vienen de la API — no de localStorage
+      if (sData.tech) setTech(sData.tech)
     } catch (e) { console.error('[dashboard]', e) }
     finally { setLoading(false) }
   }, [router])
 
   fetchRef.current = fetchData
 
-  useEffect(() => {
-    if (!getToken()) { router.replace('/tecnico'); return }
-    fetchData()
-  }, [fetchData, router])
+  useEffect(() => { fetchData() }, [fetchData])
 
-  // Polling cada 60s — reemplaza SSE para reducir consumo Vercel
+  // Polling cada 60s
   useEffect(() => {
     const interval = setInterval(() => {
       if (document.visibilityState === 'hidden') return
@@ -71,14 +68,11 @@ export default function TecnicoDashboard() {
     return () => clearInterval(interval)
   }, [])
 
-  function clearAuthAndRedirect() {
-    localStorage.removeItem('tech_token')
-    localStorage.removeItem('tech_data')
+  async function logout() {
+    try {
+      await fetch('/api/tecnico/logout', { method: 'POST', credentials: 'include' })
+    } catch {}
     router.replace('/tecnico')
-  }
-
-  function logout() {
-    clearAuthAndRedirect()
   }
 
   const filtered = filter === 'todas' ? orders : orders.filter(o => o.status === filter)
@@ -96,7 +90,7 @@ export default function TecnicoDashboard() {
       <div style={{ background: '#0f1117', borderBottom: '1px solid #1c1f27', padding: '0.875rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontWeight: 700, color: '#f1f5f9', fontSize: '0.95rem' }}>{tech?.name ?? 'Técnico'}</div>
-          <div style={{ color: '#374151', fontSize: '0.7rem', marginTop: '0.1rem' }}>{tech?.role} · CC {tech?.cedula}</div>
+          <div style={{ color: '#374151', fontSize: '0.7rem', marginTop: '0.1rem' }}>{tech?.role}</div>
         </div>
         <button onClick={logout} style={{ color: '#374151', background: 'none', border: '1px solid #1c1f27', borderRadius: '6px', padding: '0.375rem 0.75rem', fontSize: '0.75rem', cursor: 'pointer' }}>
           Salir
@@ -107,7 +101,7 @@ export default function TecnicoDashboard() {
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.5rem', padding: '0.75rem' }}>
           {[
-            { label: 'Total',      value: stats.total,                                               color: '#94a3b8' },
+            { label: 'Total',      value: stats.total,                                              color: '#94a3b8' },
             { label: 'Pendientes', value: stats.pendientes,                                          color: '#f59e0b' },
             { label: 'En curso',   value: stats.in_progress ?? 0,                                   color: '#22c55e' },
             { label: '★ Prom.',    value: stats.promedio ? Number(stats.promedio).toFixed(1) : '—', color: '#f59e0b' }

@@ -8,9 +8,11 @@ export default function TecnicoLogin() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Si ya hay sesión activa (cookie válida), redirigir al dashboard
   useEffect(() => {
-    if (typeof window !== 'undefined' && localStorage.getItem('tech_token'))
-      router.replace('/tecnico/dashboard')
+    fetch('/api/tecnico/stats', { credentials: 'include' })
+      .then(r => { if (r.ok) router.replace('/tecnico/dashboard') })
+      .catch(() => {})
   }, [router])
 
   async function handleLogin() {
@@ -21,12 +23,12 @@ export default function TecnicoLogin() {
       const res = await fetch('/api/tecnico/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // incluir cookie en la respuesta
         body: JSON.stringify({ cedula: val })
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Acceso no autorizado'); return }
-      localStorage.setItem('tech_token', data.token)
-      localStorage.setItem('tech_data', JSON.stringify(data.tech))
+      // Cookie httpOnly seteada por el servidor — no tocar localStorage
       router.push('/tecnico/dashboard')
     } catch {
       setError('Error de conexión. Intenta nuevamente.')

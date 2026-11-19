@@ -1,21 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 
-const CRON_SECRET = process.env.CRON_SECRET
-
 // ─── Autenticación ───────────────────────────────────────────────────────────
+// Solo Bearer CRON_SECRET — sin opción cookie para evitar escalada de privilegios
+// Para ejecución manual usar: curl -H "Authorization: Bearer <CRON_SECRET>" <url>
 function isAuthorized(req: NextRequest): boolean {
-  // Opción A: header Bearer (cron automático / curl)
+  if (!process.env.CRON_SECRET) {
+    console.error('[corte-mensual] CRON_SECRET no configurado')
+    return false
+  }
   const authHeader = req.headers.get('authorization')
-  if (authHeader && CRON_SECRET && authHeader === `Bearer ${CRON_SECRET}`) {
-    return true
-  }
-  // Opción B: cookie admin (ejecución manual desde panel)
-  const cookie = req.cookies.get('mf_token')
-  if (cookie?.value) {
-    return true
-  }
-  return false
+  return authHeader === `Bearer ${process.env.CRON_SECRET}`
 }
 
 // ─── Lógica de período ───────────────────────────────────────────────────────

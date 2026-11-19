@@ -48,14 +48,12 @@ export default function OrdenPage() {
   const [estrellas, setEstrellas] = useState(0)
 
   const fileRef = useRef<HTMLInputElement>(null)
-  const token = () => typeof window !== 'undefined' ? localStorage.getItem('tech_token') : null
+  // Cookie mft_token enviada automáticamente por el browser (httpOnly)
 
   const fetchOrder = useCallback(async () => {
-    const t = token()
-    if (!t) { router.replace('/tecnico'); return }
     try {
       const res = await fetch(`/api/tecnico/ordenes/${id}`, {
-        headers: { Authorization: `Bearer ${t}` }
+        credentials: 'include'
       })
       if (res.status === 401) { router.replace('/tecnico'); return }
       if (!res.ok) { setError('Orden no encontrada'); setLoading(false); return }
@@ -106,11 +104,10 @@ export default function OrdenPage() {
   }
 
   async function callPut(body: Record<string, unknown>) {
-    const t = token()
-    if (!t) throw new Error('Sin sesión')
     const res = await fetch(`/api/tecnico/ordenes/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     })
     const data = await res.json()

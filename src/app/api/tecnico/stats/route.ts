@@ -71,6 +71,8 @@ export async function GET(req: Request) {
         total_ratings: totalRatings,
         avg_duracion:  avgDuracion,
       },
+      // Datos del técnico para el dashboard — reemplaza localStorage
+      tech: { id: tech.techId, name: tech.name, role: tech.role },
       recent
     })
   } catch (e) {
