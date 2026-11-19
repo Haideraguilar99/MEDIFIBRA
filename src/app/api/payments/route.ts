@@ -27,6 +27,12 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    // Validar Content-Type
+    const ct = req.headers.get('content-type')
+    if (!ct?.includes('application/json')) {
+      return NextResponse.json({ error: 'Content-Type debe ser application/json' }, { status: 415 })
+    }
+
     const body = await req.json()
 
     if (!body.client_id || !body.amount || !body.period) {

@@ -38,6 +38,12 @@ export async function GET(req: Request) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Validar Content-Type
+    const ct = req.headers.get('content-type')
+    if (!ct?.includes('application/json')) {
+      return NextResponse.json({ error: 'Content-Type debe ser application/json' }, { status: 415 })
+    }
+
     const b = await req.json()
     // Calcular clasificacion automatica segun dia_pago (ignora lo que mande el form)
     // Cliente nuevo: siempre AL_DIA — su primer cobro es un mes despues

@@ -85,7 +85,7 @@ export async function GET(req: Request) {
     }
 
     console.log(`[cron] ${updates.length} actualizados, ${skipped.length} protegidos, ${errors.length} errores`)
-    if (errors.length) console.error('[cron] errores:', errors)
+    if (errors.length) console.error(`[cron] ${errors.length} errores — revisar Vercel logs`)
 
     return NextResponse.json(summary)
   } catch (e) {

@@ -5,6 +5,12 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
+    // Validar Content-Type
+    const ct = req.headers.get('content-type')
+    if (!ct?.includes('application/json')) {
+      return NextResponse.json({ error: 'Content-Type debe ser application/json' }, { status: 415 })
+    }
+
     const b = await req.json()
 
     if (!b.client_id || !b.channel || !b.type) {
