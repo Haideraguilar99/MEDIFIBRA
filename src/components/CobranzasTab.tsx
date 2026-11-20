@@ -23,8 +23,7 @@ const DIAS = ['1', '5', '15', '20', '25', '30']
 const EMPRESA  = 'Medifibra S.A.S'
 const WA       = '333 728 8745'
 const CUENTA   = '00995202514'
-const OBSERVACION_ACTIVA = true
-const OBS = 'Observacion: a partir de octubre se realizara un ajuste minimo en el valor de nuestros planes. Agradecemos tu comprension y confianza en MEDIFIBRA.'
+
 
 function fmt(v: number) { return '$' + v.toLocaleString('es-CO') }
 
@@ -42,34 +41,63 @@ function buildMensaje(c: CobranzaClient, linkFactura: string): string {
   const monto  = fmt(c.plan_value)
   const tv     = c.incluye_tv > 0
   const puntos = c.puntos_tv || 0
+  const suspendido = c.classification === 'SUSPENDIDO'
+
   const partes: string[] = [
-    `*${EMPRESA.toUpperCase()}* | Recordatorio de pago`,
+    `*${EMPRESA.toUpperCase()}* | ${suspendido ? 'Aviso de suspension' : 'Recordatorio de pago'}`,
     '',
     `Hola ${nombre},`,
     '',
-    'Te informamos que tu fecha de pago se acerca. A continuacion el detalle de tu servicio:',
-    '',
-    `*Plan:* ${c.plan}`,
   ]
-  if (tv) {
-    partes.push(`*MediTV:* incluido (${puntos} punto${puntos !== 1 ? 's' : ''} TV)`)
+
+  if (suspendido) {
+    partes.push(
+      'Tu servicio de internet se encuentra *suspendido* por falta de pago. Para restablecer la conexion es necesario ponerse al dia.',
+      '',
+      `*Plan:* ${c.plan}`,
+    )
+    if (tv) {
+      partes.push(`*MediTV:* incluido (${puntos} punto${puntos !== 1 ? 's' : ''} TV)`)
+    }
+    partes.push(
+      `*Valor a pagar:* ${monto}`,
+      '*Costo de reconexion:* $10.000',
+      '',
+      'El costo de reconexion se aplica una sola vez y evita tramites adicionales para restablecer el servicio. Realizando tu pago hoy puedes evitarlo.',
+      '',
+      `*Ver factura:* ${linkFactura}`,
+      '',
+      '*Medios de pago:*',
+      `  • Bancolombia Ahorros: ${CUENTA}`,
+      '  • Nequi: 3015080961',
+      '  • Efectivo: comunicate con nosotros',
+      '',
+      'Envianos el comprobante a este WhatsApp para gestionar tu reconexion a la mayor brevedad.'
+    )
+  } else {
+    partes.push(
+      'Te informamos que tu fecha de pago se acerca. A continuacion el detalle de tu servicio:',
+      '',
+      `*Plan:* ${c.plan}`,
+    )
+    if (tv) {
+      partes.push(`*MediTV:* incluido (${puntos} punto${puntos !== 1 ? 's' : ''} TV)`)
+    }
+    partes.push(
+      `*Fecha de pago:* dia ${c.dia_pago} de cada mes`,
+      `*Valor a pagar:* ${monto}`,
+      '',
+      `*Ver factura:* ${linkFactura}`,
+      '',
+      '*Medios de pago:*',
+      `  • Bancolombia Ahorros: ${CUENTA}`,
+      '  • Nequi: 3015080961',
+      '  • Efectivo: comunicate con nosotros',
+      '',
+      'Envianos el comprobante a este WhatsApp una vez realices el pago.'
+    )
   }
-  partes.push(
-    `*Fecha de pago:* dia ${c.dia_pago} de cada mes`,
-    `*Valor a pagar:* ${monto}`,
-    '',
-    `*Ver factura:* ${linkFactura}`,
-    '',
-    '*Medios de pago:*',
-    `  • Bancolombia Ahorros: ${CUENTA}`,
-    '  • Nequi: 3015080961',
-    '  • Efectivo: comunicate con nosotros',
-    '',
-    'Envianos el comprobante a este WhatsApp una vez realices el pago.'
-  )
-  if (OBSERVACION_ACTIVA) {
-    partes.push('', OBS)
-  }
+
   partes.push('', `${EMPRESA} | ${WA}`)
   return partes.join('\n')
 }
